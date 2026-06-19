@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+import Starfield from '../components/Starfield.astro';
+import Cursor from '../components/Cursor.astro';
+import ProgressBar from '../components/ProgressBar.astro';
+import Nav from '../components/Nav.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import Experience from '../components/Experience.astro';
+import Projects from '../components/Projects.astro';
+import Skills from '../components/Skills.astro';
+import Contact from '../components/Contact.astro';
+import Footer from '../components/Footer.astro';
+import BackToTop from '../components/BackToTop.astro';
+import EasterEgg from '../components/EasterEgg.astro';
+---
+
+<Base>
+  <span id="top"></span>
+  <Starfield />
+  <ProgressBar />
+  <Cursor />
+  <Nav />
+
+  <main>
+    <Hero />
+    <About />
+    <Experience />
+    <Projects />
+    <Skills />
+    <Contact />
+  </main>
+
+  <Footer />
+  <BackToTop />
+  <EasterEgg />
+</Base>

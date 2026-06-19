@@ -1,0 +1,36 @@
+---
+---
+
+<div id="progress" aria-hidden="true"></div>
+
+<style>
+  #progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--violet), var(--purple-lt), var(--magenta));
+    box-shadow: 0 0 8px rgba(168,85,247,0.7);
+    z-index: 9998;
+    pointer-events: none;
+    transition: width 0.1s linear;
+  }
+</style>
+
+<script>
+  const bar = document.getElementById('progress');
+  if (bar) {
+    let ticking = false;
+    const update = () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      const pct = max > 0 ? (h.scrollTop / max) * 100 : 0;
+      bar.style.width = pct + '%';
+      ticking = false;
+    };
+    window.addEventListener('scroll', () => {
+      if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+    update();
+  }
+</script>

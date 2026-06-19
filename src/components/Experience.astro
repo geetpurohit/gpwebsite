@@ -1,0 +1,156 @@
+---
+const jobs = [
+  {
+    company: 'Verizon',
+    date: 'Nov 2024 — Present',
+    role: 'Data Scientist III · Engineer III',
+    bullets: [
+      'Architected a credit-risk fullstack app — synthetically generating a customer database to monitor policy changes impacting <strong>$1.2B+ in bad-debt writeoff</strong>.',
+      'Engineered 9 Python &amp; SQL anomaly-detection microservices with Verizon EDW integration, saving <strong>50+ hours/month</strong> across 15 teams.',
+      'Led 2 ML XAI frameworks (Streamlit + Qlik), reducing hypothesis-generation time by <strong>73%</strong> for shareholder calls.',
+      'Built churn-forecasting models and intervention simulators (SMS, email, fee adjustments) — increased decisioning coverage from <strong>0% → 60%</strong>.',
+      'Presented to 100+ stakeholders, directly influencing product roadmap and reducing future development costs.',
+    ],
+    impact: '$1.2B impact · 50h/mo saved · 73% faster',
+  },
+  {
+    company: 'Verizon',
+    date: 'Jan 2023 — Nov 2024',
+    role: 'Data Scientist I',
+    bullets: [
+      'Established a centralized DS pipeline framework/API for Corporate Finance via GitLab + Domino + GCP — <strong>63% more efficient</strong> collaboration.',
+      'Built a real-time AT&amp;T and T-Mobile port-in EDA pipeline using DataRobot to forecast competitor market-share trajectories.',
+      'Automated serverless forecasting for 9 major value brands (Walmart, Tracfone, Straight Talk, FiOS), pioneering a 12h email-report system.',
+      'Developed Tableau dashboards on GCP/BigQuery, eliminating <strong>10+ hours</strong> of weekly manual reporting.',
+      'K-Means customer segmentation — identified 3 at-risk cohorts that directly informed new retention campaigns.',
+    ],
+    impact: '63% efficiency gain · 10h/wk eliminated',
+  },
+  {
+    company: 'Verizon',
+    date: 'Jun 2022 — Aug 2022',
+    role: 'Predictive & Prescriptive Analytics Intern',
+    bullets: [
+      'First exposure to Verizon\'s data infrastructure — the internship that turned into 3+ years.',
+    ],
+    impact: '',
+  },
+  {
+    company: 'Human Genetics Institute of NJ',
+    date: 'Oct 2021 — Jun 2022',
+    role: 'Data Science Intern',
+    bullets: [
+      'Trained DeepLabCut ML models for kinematic pose estimation on wet-lab mouse video — Python, TensorFlow, NVIDIA CUDA.',
+      'Statistical validation via ANOVA and T-tests, benchmarked against published findings (Jones et al. 2020).',
+      'Sponsored 4 Oxford iMARS Python extensions for retinal-cord tissue post-microscopy analysis.',
+    ],
+    impact: 'Neuroscience × ML',
+  },
+  {
+    company: 'RankSense',
+    date: 'Jan 2021 — Oct 2021',
+    role: 'Data Science Intern',
+    bullets: [
+      'Researched SEO optimization across 100+ client domains — A/B testing via Bayesian methods and CausalImpact.',
+      'Improved click-through and baseline-conversion rates by ~32%.',
+    ],
+    impact: '32% CTR improvement',
+  },
+];
+---
+
+<section id="experience" class="section">
+  <div class="container">
+    <span class="section-label reveal">Experience</span>
+    <h2 class="section-title reveal">Where I've been,<br>what I've <s>broken</s> built</h2>
+    <p class="section-sub reveal">3+ years turning data into decisions at scale. Every number below is real.</p>
+
+    <div class="timeline">
+      {jobs.map((j) => (
+        <article class="exp reveal">
+          <div class="exp-left">
+            <div class="exp-company">{j.company}</div>
+            <div class="exp-date">{j.date}</div>
+          </div>
+          <div class="exp-right">
+            <h3 class="exp-role">{j.role}</h3>
+            <ul class="exp-bullets">
+              {j.bullets.map((b) => <li set:html={b} />)}
+            </ul>
+            {j.impact && <span class="exp-impact">↑ {j.impact}</span>}
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  #experience .section-title s { color: var(--muted); text-decoration-color: rgba(168,85,247,0.5); }
+  .section-sub { margin-bottom: clamp(48px, 6vw, 72px); }
+
+  .timeline { display: flex; flex-direction: column; }
+  .exp {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: clamp(20px, 4vw, 44px);
+    padding: 34px 0;
+    border-top: 1px solid var(--border);
+  }
+  .exp:first-child { border-top: none; }
+
+  .exp-company {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--purple-lt);
+    margin-bottom: 4px;
+  }
+  .exp-date { font-size: 13.5px; color: var(--muted); }
+
+  .exp-right { padding-left: 26px; border-left: 1px solid var(--border); transition: border-color 0.3s; }
+  .exp:hover .exp-right { border-left-color: rgba(168,85,247,0.4); }
+
+  .exp-role {
+    font-family: var(--font-display);
+    font-size: clamp(18px, 1.8vw, 22px);
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    margin-bottom: 14px;
+  }
+  .exp-bullets { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+  .exp-bullets li {
+    position: relative;
+    padding-left: 20px;
+    font-size: 16.5px;
+    color: var(--text-dim);
+    font-weight: 300;
+    line-height: 1.78;
+  }
+  .exp-bullets li::before {
+    content: '';
+    position: absolute; left: 0; top: 13px;
+    width: 9px; height: 1px;
+    background: var(--purple);
+  }
+  .exp-bullets strong { color: var(--text); font-weight: 600; }
+
+  .exp-impact {
+    display: inline-flex; align-items: center;
+    margin-top: 18px;
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+    color: var(--lilac);
+    border: 1px solid rgba(168,85,247,0.28);
+    background: rgba(168,85,247,0.06);
+    padding: 5px 13px;
+    border-radius: 999px;
+  }
+
+  @media (max-width: 680px) {
+    .exp { grid-template-columns: 1fr; gap: 14px; }
+    .exp-left { padding-bottom: 4px; }
+    .exp-right { padding-left: 16px; }
+  }
+</style>

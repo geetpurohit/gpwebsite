@@ -1,0 +1,65 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer>
+  <p class="note">© {year} Geet Purohit · Built from scratch · Powered by <span>coffee</span> &amp; existential curiosity</p>
+  <div class="right">
+    <span class="domain">geetpurohit.com</span>
+    <span class="signal" aria-hidden="true">∿</span>
+    <button class="ow-trigger" id="ow-trigger" title="You found it." aria-label="Open hidden easter egg">
+      <img src="/Eye_Symbol.webp" alt="" width="16" height="16" />
+    </button>
+  </div>
+</footer>
+
+<style>
+  footer {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 30px var(--pad-x);
+    border-top: 1px solid var(--border);
+  }
+  .note { font-size: 13.5px; color: var(--muted); }
+  .note span { color: var(--purple-lt); }
+  .right { display: flex; align-items: center; gap: 14px; }
+  .domain { font-size: 12.5px; color: var(--muted); }
+
+  .signal {
+    font-size: 13px;
+    color: rgba(168,85,247,0.3);
+    user-select: none;
+    animation: sig 4s ease-in-out infinite 2s;
+  }
+  .ow-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    animation: sig 4s ease-in-out infinite;
+    transition: transform 0.5s var(--ease), opacity 0.3s;
+  }
+  .ow-trigger img {
+    width: 18px; height: 18px;
+    filter: sepia(1) hue-rotate(245deg) saturate(4) brightness(0.9)
+            drop-shadow(0 0 4px rgba(168,85,247,0.7));
+  }
+  .ow-trigger:hover { animation: none; opacity: 0.85; transform: rotate(22deg) scale(1.22); }
+  @keyframes sig {
+    0%, 100% { opacity: 0.22; }
+    50%      { opacity: 0.55; }
+  }
+
+  @media (max-width: 560px) {
+    footer { flex-direction: column; text-align: center; }
+  }
+</style>

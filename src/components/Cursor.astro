@@ -1,0 +1,108 @@
+---
+---
+
+<div id="cursor-dot" aria-hidden="true"></div>
+<div id="cursor-ring" aria-hidden="true"></div>
+
+<style>
+  #cursor-dot, #cursor-ring {
+    position: fixed;
+    top: 0; left: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    will-change: transform;
+  }
+  #cursor-dot {
+    width: 6px; height: 6px;
+    background: #f3ecff;
+    box-shadow: 0 0 10px 2px rgba(192,132,252,0.9);
+    transform: translate(-50%, -50%);
+  }
+  #cursor-ring {
+    width: 34px; height: 34px;
+    border: 1px solid rgba(192,132,252,0.55);
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s ease, width 0.25s var(--ease),
+                height 0.25s var(--ease), border-color 0.25s ease,
+                background 0.25s ease;
+  }
+  #cursor-ring.hot {
+    width: 56px; height: 56px;
+    border-color: rgba(232,121,249,0.8);
+    background: rgba(168,85,247,0.10);
+  }
+
+  @media (pointer: fine) {
+    html.has-custom-cursor,
+    html.has-custom-cursor * { cursor: none !important; }
+    html.has-custom-cursor #cursor-dot,
+    html.has-custom-cursor #cursor-ring { opacity: 1; }
+    html.cursor-hidden #cursor-dot,
+    html.cursor-hidden #cursor-ring { opacity: 0 !important; }
+  }
+  @media (pointer: coarse) {
+    #cursor-dot, #cursor-ring { display: none; }
+  }
+</style>
+
+<script>
+  const fine = window.matchMedia('(pointer: fine)').matches;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const dot = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+
+  if (fine && dot && ring) {
+    document.documentElement.classList.add('has-custom-cursor');
+    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    let rx = mx, ry = my;
+
+    const lensPoint = (ax: number, ay: number): [number, number] => {
+      const holes = (window as any).__bhs as Array<{ x: number; y: number; R: number; E: number }> | undefined;
+      if (reduce || !holes || !holes.length) return [ax, ay];
+      let dx = 0, dy = 0;
+      for (const h of holes) {
+        const rx = ax - h.x, ry = ay - h.y;
+        const beta = Math.hypot(rx, ry);
+        const E = h.E, o0 = E * 3, o1 = E * 6;
+        if (beta >= o1) continue;
+        let w = 1;
+        if (beta > o0) { const t = (beta - o0) / (o1 - o0); w = 1 - t * t * (3 - 2 * t); }
+        const soft = Math.min(1, beta / h.R);
+        const delta = 0.5 * (Math.sqrt(beta * beta + 4 * E * E) - beta) * w * soft;
+        const ux = rx / (beta || 1), uy = ry / (beta || 1);
+        dx += ux * delta; dy += uy * delta;
+      }
+      return [ax + dx, ay + dy];
+    };
+
+    window.addEventListener('pointermove', (e) => { mx = e.clientX; my = e.clientY; }, { passive: true });
+
+    const loop = () => {
+      const [lx, ly] = lensPoint(mx, my);
+      dot.style.transform = `translate(${lx}px, ${ly}px) translate(-50%, -50%)`;
+      if (reduce) {
+        ring.style.transform = `translate(${lx}px, ${ly}px) translate(-50%, -50%)`;
+      } else {
+        rx += (lx - rx) * 0.22;
+        ry += (ly - ry) * 0.22;
+        ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
+      }
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+
+    const hot = 'a, button, [role="button"], input, .interactive';
+    document.addEventListener('pointerover', (e) => {
+      if ((e.target as Element)?.closest?.(hot)) ring.classList.add('hot');
+    });
+    document.addEventListener('pointerout', (e) => {
+      if ((e.target as Element)?.closest?.(hot)) ring.classList.remove('hot');
+    });
+
+    document.addEventListener('mouseleave', () => document.documentElement.classList.add('cursor-hidden'));
+    document.addEventListener('mouseenter', () => document.documentElement.classList.remove('cursor-hidden'));
+  }
+</script>
