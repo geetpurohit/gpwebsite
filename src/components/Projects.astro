@@ -1,0 +1,154 @@
+---
+const projects = [
+  {
+    num: '01',
+    featured: true,
+    title: 'Credit Risk Intelligence Platform',
+    desc: 'Fullstack app that synthetically generates customer databases to monitor credit-policy changes and their downstream impact on bad-debt writeoff. Built end-to-end — data pipeline, ML models, and Streamlit frontend — so finance teams can simulate policy scenarios without ever touching production data.',
+    tags: ['Python', 'Streamlit', 'GCP', 'SQL', 'Synthetic Data'],
+    impact: '$1.2B+ in bad debt monitored',
+  },
+  {
+    num: '02',
+    title: 'XAI Gross-Adds Framework',
+    desc: 'Explainable-AI framework isolating the real-time drivers of Verizon Gross Adds. Cut hypothesis-generation time by 73% for shareholder calls — no more “we think it might be…” moments.',
+    tags: ['XAI', 'Qlik', 'Python', 'ML'],
+    impact: '73% faster decision-making',
+  },
+  {
+    num: '03',
+    title: 'Gravitational Microlensing Sim',
+    desc: 'Academic project simulating gravitational microlensing events — the same physics that bends light around black holes. Built in Python with Jupyter. The astrophysics degree, paying dividends.',
+    tags: ['Python', 'Astrophysics', 'NumPy'],
+    impact: 'github.com/geetpurohit',
+  },
+  {
+    num: '04',
+    title: 'Churn Prediction & Intervention Engine',
+    desc: 'ML models forecasting customer churn and simulating responses to interventions (SMS, email, fee adjustments). Pushed internal decisioning coverage from 0% → 60%, cutting outsourced engagement volume by ~35%.',
+    tags: ['ML', 'Python', 'Simulation', 'DataRobot'],
+    impact: '0% → 60% coverage',
+  },
+  {
+    num: '05',
+    title: 'DeepLabCut Pose Estimation',
+    desc: 'Trained computer-vision models to track mouse joint positions in wet-lab video experiments. Kinematic data benchmarked against published neuroscience research. The weirdest and most interesting project I\'ve worked on.',
+    tags: ['TensorFlow', 'CUDA', 'Computer Vision', 'R'],
+    impact: 'Neuroscience × Deep Learning',
+  },
+  {
+    num: '06',
+    title: 'AniParty — Video Sync Extension',
+    desc: 'Personal project: a browser extension that syncs video playback between computers. Built in JavaScript, because watching anime with friends across the country shouldn\'t require a scheduling meeting.',
+    tags: ['JavaScript', 'Browser Extension', 'WebSockets'],
+    impact: 'Solving the important problems',
+  },
+];
+---
+
+<section id="projects" class="section">
+  <div class="container">
+    <span class="section-label reveal">Projects & Case Studies</span>
+    <h2 class="section-title reveal">Things I've built<br>that actually worked</h2>
+    <p class="section-sub reveal">A mix of work projects (sanitized), academic deep cuts, and personal experiments.</p>
+
+    <div class="grid">
+      {projects.map((p) => (
+        <article class:list={['card', 'reveal', 'interactive', { featured: p.featured }]}>
+          <div class="card-num">{p.num}{p.featured ? ' · Featured' : ''}</div>
+          <h3 class="card-title">{p.title}</h3>
+          <p class="card-desc">{p.desc}</p>
+          <div class="card-tags">
+            {p.tags.map((t) => <span class="card-tag">{t}</span>)}
+          </div>
+          <div class="card-impact">↑ {p.impact}</div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  #projects { border-top: 1px solid var(--border-soft); }
+  .section-sub { margin-bottom: clamp(48px, 6vw, 72px); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: linear-gradient(165deg, rgba(255,255,255,0.025), rgba(168,85,247,0.012));
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s, background 0.3s;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: var(--grad-line);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .card:hover {
+    border-color: rgba(168,85,247,0.4);
+    transform: translateY(-5px);
+    background: linear-gradient(165deg, rgba(168,85,247,0.08), rgba(124,58,237,0.03));
+  }
+  .card:hover::before { opacity: 1; }
+
+  .card.featured {
+    grid-column: span 2;
+    background: linear-gradient(140deg, rgba(168,85,247,0.10), rgba(124,58,237,0.04));
+    border-color: rgba(168,85,247,0.28);
+  }
+  .card.featured .card-title { font-size: clamp(22px, 2.6vw, 28px); }
+
+  .card-num {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1.22;
+    margin-bottom: 11px;
+  }
+  .card-desc {
+    font-size: 15.5px;
+    color: var(--text-dim);
+    font-weight: 300;
+    line-height: 1.72;
+    margin-bottom: 18px;
+  }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; margin-top: auto; }
+  .card-tag {
+    font-size: 11.5px;
+    padding: 4px 11px;
+    border-radius: 6px;
+    background: rgba(168,85,247,0.08);
+    color: var(--lilac);
+    border: 1px solid rgba(168,85,247,0.16);
+  }
+  .card-impact { font-size: 14px; color: var(--purple-lt); font-weight: 500; }
+
+  @media (max-width: 920px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .card.featured { grid-column: span 2; }
+  }
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .card.featured { grid-column: span 1; }
+  }
+</style>

@@ -1,0 +1,38 @@
+---
+---
+
+<a href="#top" id="back-to-top" aria-label="Back to top">↑</a>
+
+<style>
+  #back-to-top {
+    position: fixed;
+    bottom: 26px; right: 26px;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: rgba(11,7,18,0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 17px; line-height: 1;
+    z-index: 95;
+    opacity: 0;
+    transform: translateY(14px);
+    pointer-events: none;
+    transition: opacity 0.35s var(--ease), transform 0.35s var(--ease), background 0.25s, border-color 0.25s, color 0.25s;
+  }
+  #back-to-top.show { opacity: 1; transform: none; pointer-events: auto; }
+  #back-to-top:hover {
+    background: rgba(168,85,247,0.12);
+    border-color: rgba(168,85,247,0.45);
+    color: var(--purple-lt);
+  }
+  @media (max-width: 560px) { #back-to-top { bottom: 18px; right: 18px; } }
+</style>
+
+<script>
+  const btt = document.getElementById('back-to-top');
+  window.addEventListener('scroll', () => {
+    btt?.classList.toggle('show', window.scrollY > window.innerHeight * 0.8);
+  }, { passive: true });
+</script>
