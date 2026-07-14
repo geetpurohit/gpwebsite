@@ -4,43 +4,61 @@ const groups = [
     title: 'Languages',
     items: [
       { name: 'Python', level: 96 },
-      { name: 'SQL', level: 92 },
-      { name: 'Java', level: 78 },
-      { name: 'JavaScript', level: 70 },
-      { name: 'R', level: 72 },
+      { name: 'SQL', level: 94 },
+      { name: 'R', level: 82 },
+      { name: 'Scala', level: 76 },
+      { name: 'Java', level: 74 },
     ],
   },
   {
-    title: 'ML / Data',
+    title: 'ML & Modeling',
     items: [
-      { name: 'Pandas / NumPy', level: 95 },
-      { name: 'Scikit-learn', level: 90 },
-      { name: 'DataRobot', level: 88 },
-      { name: 'TensorFlow', level: 85 },
-      { name: 'Apache Spark', level: 75 },
+      { name: 'scikit-learn', level: 92 },
+      { name: 'XGBoost / LightGBM', level: 90 },
+      { name: 'PyTorch', level: 88 },
+      { name: 'TensorFlow', level: 86 },
+      { name: 'Hugging Face / LLMs', level: 84 },
     ],
   },
   {
-    title: 'Infrastructure',
+    title: 'Data & Cloud',
     items: [
-      { name: 'GCP / BigQuery', level: 88 },
-      { name: 'PostgreSQL', level: 85 },
-      { name: 'GitLab CI/CD', level: 82 },
-      { name: 'Docker', level: 78 },
-      { name: 'MongoDB', level: 70 },
+      { name: 'Apache Spark', level: 88 },
+      { name: 'BigQuery / GCP', level: 90 },
+      { name: 'Airflow', level: 84 },
+      { name: 'dbt', level: 80 },
+      { name: 'Docker / Kubernetes', level: 78 },
     ],
   },
   {
-    title: 'Visualization',
+    title: 'Experimentation',
     items: [
-      { name: 'Tableau', level: 90 },
-      { name: 'Streamlit', level: 88 },
-      { name: 'QlikSense', level: 85 },
-      { name: 'Plotly', level: 82 },
-      { name: 'D-Tale', level: 80 },
+      { name: 'A/B Testing', level: 92 },
+      { name: 'Causal Inference', level: 88 },
+      { name: 'Statistics', level: 90 },
+      { name: 'Looker / Tableau', level: 86 },
+      { name: 'MLflow', level: 80 },
     ],
   },
 ];
+
+// Map mastery to orbital tiers: the deeper the skill, the tighter it orbits
+// the core. No false-precision percentages, just gravitational binding.
+const tierOf = (lvl: number) => (lvl >= 90 ? 0 : lvl >= 80 ? 1 : 2);
+const tierRadius = [0.36, 0.64, 0.94];           // fraction of the system's max orbit
+const baseAngles = [-90, -18, 54, 126, 198];      // evenly spread around the circle
+
+const systems = groups.map((g, gi) => ({
+  title: g.title,
+  bodies: [...g.items]
+    .sort((a, b) => b.level - a.level) // strongest first → reads core-first on mobile
+    .map((it, i) => {
+      const tier = tierOf(it.level);
+      const angle = baseAngles[i % baseAngles.length] + gi * 16;
+      const side = Math.cos((angle * Math.PI) / 180) >= 0 ? 'right' : 'left';
+      return { name: it.name, tier, r: tierRadius[tier], angle, side };
+    }),
+}));
 ---
 
 <section id="skills" class="section">
@@ -49,21 +67,34 @@ const groups = [
     <h2 class="section-title reveal">The toolkit</h2>
     <p class="section-sub reveal">Proficiency built by shipping things, not just finishing courses.</p>
 
+    <div class="legend reveal">
+      <span class="leg"><i class="dot t0"></i>Core</span>
+      <span class="leg"><i class="dot t1"></i>Strong</span>
+      <span class="leg"><i class="dot t2"></i>Working knowledge</span>
+      <span class="leg-note">distance from the core = depth</span>
+    </div>
+
     <div class="grid">
-      {groups.map((g) => (
-        <div class="group reveal">
-          <h3 class="group-title">{g.title}</h3>
-          <div class="list">
-            {g.items.map((it) => (
-              <div class="skill">
-                <div class="skill-head">
-                  <span class="skill-name">{it.name}</span>
-                  <span class="skill-pct">{it.level}</span>
-                </div>
-                <div class="bar"><div class="fill" data-level={it.level}></div></div>
-              </div>
-            ))}
+      {systems.map((sys) => (
+        <div class="system reveal">
+          <span class="sys-title">{sys.title}</span>
+          <div class="orbit-rings" aria-hidden="true">
+            <span class="ring r0"></span>
+            <span class="ring r1"></span>
+            <span class="ring r2"></span>
           </div>
+          <div class="core" aria-hidden="true"><span class="singularity"></span></div>
+          <ul class="bodies">
+            {sys.bodies.map((b) => (
+              <li
+                class:list={['body', b.side, `tier-${b.tier}`]}
+                style={`--a:${b.angle}deg; --r:${b.r};`}
+              >
+                <span class="node" aria-hidden="true"></span>
+                <span class="label">{b.name}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       ))}
     </div>
@@ -72,62 +103,187 @@ const groups = [
 
 <style>
   #skills { border-top: 1px solid var(--border-soft); }
-  .section-sub { margin-bottom: clamp(48px, 6vw, 72px); }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 22px;
+    margin-bottom: clamp(40px, 5vw, 60px);
+  }
+  .leg {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+  }
+  .leg .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .dot.t0 { background: #f0e6ff; box-shadow: 0 0 8px 2px rgba(192,132,252,0.8); }
+  .dot.t1 { background: var(--lilac); box-shadow: 0 0 6px 1px rgba(168,85,247,0.5); }
+  .dot.t2 { background: rgba(216,180,254,0.5); }
+  .leg-note {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-left: auto;
+  }
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
   }
-  .group {
-    padding: 28px 26px;
+
+  .system {
+    --orbit: clamp(110px, 15vw, 152px);
+    position: relative;
+    min-height: clamp(300px, 36vw, 380px);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    background: rgba(255,255,255,0.02);
-    transition: border-color 0.3s;
-  }
-  .group:hover { border-color: rgba(168,85,247,0.3); }
-  .group-title {
-    font-family: var(--font-display);
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--purple-lt);
-    margin-bottom: 20px;
-  }
-  .list { display: flex; flex-direction: column; gap: 16px; }
-  .skill-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px; }
-  .skill-name { font-size: 15px; color: var(--text-dim); font-weight: 300; }
-  .skill-pct { font-family: var(--font-display); font-size: 11.5px; color: var(--muted); }
-  .bar {
-    height: 4px;
-    background: rgba(255,255,255,0.06);
-    border-radius: 999px;
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 50% 52%, rgba(168,85,247,0.10), rgba(168,85,247,0) 58%),
+      rgba(255,255,255,0.015);
     overflow: hidden;
+    transition: border-color 0.3s, background 0.3s;
   }
-  .fill {
-    height: 100%;
-    width: 0;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--violet-deep), var(--purple), var(--lilac));
-    transition: width 1.1s var(--ease);
+  .system:hover { border-color: rgba(168,85,247,0.3); }
+
+  .sys-title {
+    position: absolute;
+    top: 20px; left: 22px;
+    z-index: 4;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--purple-lt);
   }
 
-  @media (max-width: 920px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+  /* Concentric orbit paths */
+  .orbit-rings { position: absolute; inset: 0; }
+  .ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    border-radius: 50%;
+    border: 1px solid rgba(168,130,255,0.10);
+    transform: translate(-50%, -50%);
+  }
+  .ring.r0 { width: calc(var(--orbit) * 0.72); height: calc(var(--orbit) * 0.72); }
+  .ring.r1 { width: calc(var(--orbit) * 1.28); height: calc(var(--orbit) * 1.28); }
+  .ring.r2 {
+    width: calc(var(--orbit) * 1.88); height: calc(var(--orbit) * 1.88);
+    border-style: dashed;
+    border-color: rgba(168,130,255,0.07);
+  }
+
+  /* The singularity at the heart of each system */
+  .core {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+  }
+  .singularity {
+    display: block;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #1a1023 0%, #07040c 70%);
+    box-shadow:
+      0 0 0 2px rgba(192,132,252,0.55),
+      0 0 26px 7px rgba(168,85,247,0.5);
+  }
+  .singularity::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: conic-gradient(from 0deg, rgba(232,121,249,0), rgba(192,132,252,0.5), rgba(232,121,249,0));
+    filter: blur(3px);
+    opacity: 0.7;
+    animation: accretion 6s linear infinite;
+  }
+  @keyframes accretion { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  /* Orbiting skill bodies */
+  .bodies { list-style: none; position: absolute; inset: 0; }
+  .body {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform:
+      translate(-50%, -50%)
+      rotate(var(--a))
+      translateX(calc(var(--orbit) * var(--r)))
+      rotate(calc(var(--a) * -1));
+    z-index: 2;
+  }
+  .node {
+    display: block;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    transition: transform 0.25s var(--ease), box-shadow 0.25s;
+  }
+  .label {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    font-size: 13.5px;
+    font-weight: 300;
+    color: var(--text-dim);
+    transition: color 0.25s;
+  }
+  .body.right .label { left: 17px; }
+  .body.left  .label { right: 17px; }
+
+  .tier-0 .node { background: #f0e6ff; box-shadow: 0 0 13px 3px rgba(192,132,252,0.85); }
+  .tier-1 .node { background: var(--lilac); box-shadow: 0 0 9px 2px rgba(168,85,247,0.55); }
+  .tier-2 .node { background: rgba(216,180,254,0.55); box-shadow: 0 0 6px 1px rgba(168,85,247,0.3); }
+
+  .body:hover { z-index: 5; }
+  .body:hover .node { transform: scale(1.55); }
+  .body:hover .label { color: var(--text); }
+  .tier-0 .label { color: var(--text); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .singularity::before { animation: none; }
+  }
+
+  /* Collapse the orbital diagram into a readable, strongest-first chip list */
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+    .legend { gap: 8px 18px; }
+    .leg-note { margin-left: 0; }
+    .system {
+      min-height: auto;
+      padding: 24px 22px 20px;
+      overflow: visible;
+    }
+    .orbit-rings, .core { display: none; }
+    .sys-title { position: static; display: block; margin-bottom: 16px; }
+    .bodies { position: static; display: flex; flex-wrap: wrap; gap: 9px; }
+    .body {
+      position: static;
+      transform: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 13px 6px 11px;
+      border: 1px solid rgba(168,85,247,0.16);
+      border-radius: 999px;
+      background: rgba(168,85,247,0.05);
+    }
+    .label {
+      position: static !important;
+      transform: none;
+      left: auto !important; right: auto !important;
+      font-size: 13px;
+    }
+  }
 </style>
-
-<script>
-  const bars = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      if (e.isIntersecting) {
-        e.target.querySelectorAll<HTMLElement>('.fill').forEach((f) => {
-          f.style.width = (f.dataset.level || '0') + '%';
-        });
-        bars.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.3 });
-  document.querySelectorAll('#skills .group').forEach((g) => bars.observe(g));
-</script>

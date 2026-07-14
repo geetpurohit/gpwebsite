@@ -36,8 +36,8 @@
   }
 
   @media (pointer: fine) {
-    html.has-custom-cursor,
-    html.has-custom-cursor * { cursor: none !important; }
+    :global(html.has-custom-cursor),
+    :global(html.has-custom-cursor *) { cursor: none !important; }
     html.has-custom-cursor #cursor-dot,
     html.has-custom-cursor #cursor-ring { opacity: 1; }
     html.cursor-hidden #cursor-dot,
@@ -59,35 +59,17 @@
     let mx = window.innerWidth / 2, my = window.innerHeight / 2;
     let rx = mx, ry = my;
 
-    const lensPoint = (ax: number, ay: number): [number, number] => {
-      const holes = (window as any).__bhs as Array<{ x: number; y: number; R: number; E: number }> | undefined;
-      if (reduce || !holes || !holes.length) return [ax, ay];
-      let dx = 0, dy = 0;
-      for (const h of holes) {
-        const rx = ax - h.x, ry = ay - h.y;
-        const beta = Math.hypot(rx, ry);
-        const E = h.E, o0 = E * 3, o1 = E * 6;
-        if (beta >= o1) continue;
-        let w = 1;
-        if (beta > o0) { const t = (beta - o0) / (o1 - o0); w = 1 - t * t * (3 - 2 * t); }
-        const soft = Math.min(1, beta / h.R);
-        const delta = 0.5 * (Math.sqrt(beta * beta + 4 * E * E) - beta) * w * soft;
-        const ux = rx / (beta || 1), uy = ry / (beta || 1);
-        dx += ux * delta; dy += uy * delta;
-      }
-      return [ax + dx, ay + dy];
-    };
-
     window.addEventListener('pointermove', (e) => { mx = e.clientX; my = e.clientY; }, { passive: true });
 
     const loop = () => {
-      const [lx, ly] = lensPoint(mx, my);
-      dot.style.transform = `translate(${lx}px, ${ly}px) translate(-50%, -50%)`;
+      // The dot is the precise click indicator: it must track the real pointer
+      // exactly so what you see is what you click. (No lens distortion here.)
+      dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
       if (reduce) {
-        ring.style.transform = `translate(${lx}px, ${ly}px) translate(-50%, -50%)`;
+        ring.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
       } else {
-        rx += (lx - rx) * 0.22;
-        ry += (ly - ry) * 0.22;
+        rx += (mx - rx) * 0.22;
+        ry += (my - ry) * 0.22;
         ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
       }
       requestAnimationFrame(loop);

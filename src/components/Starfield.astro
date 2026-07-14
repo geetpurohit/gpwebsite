@@ -79,7 +79,7 @@
           z,
           r: (0.4 + z * 1.5) * (0.7 + Math.random() * 0.8),
           base: 0.22 + Math.random() * 0.5,
-          tw: 0.3 + Math.random() * 0.7,
+          tw: 0.5 + Math.random() * 1.4,
           phase: Math.random() * TAU,
           hue: Math.random() < 0.16 ? 1 + Math.floor(Math.random() * 4) : 0,
         };
@@ -131,7 +131,7 @@
         const depth = 0.4 + s.z * 1.6;
         const ox = s.x + ppx * depth;
         const oy = s.y + ppy * depth;
-        const twinkle = reduce ? 1 : s.base + Math.sin(now * 0.0013 * s.tw + s.phase) * 0.42 * s.base + 0.18;
+        const twinkle = reduce ? 1 : s.base + Math.sin(now * 0.0016 * s.tw + s.phase) * 0.95 * s.base + 0.1;
         let a = Math.max(0, Math.min(1, twinkle));
         const tint = tints[s.hue];
 

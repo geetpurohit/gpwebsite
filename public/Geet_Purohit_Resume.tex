@@ -1,0 +1,181 @@
+%-------------------------
+% Resume in Latex
+% Author : Geet Purohit
+% License : MIT
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure that generate pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge \scshape Geet Purohit} \\ \vspace{1pt}
+    \small 973-814-0238 $|$ \href{mailto:geetp40@gmail.com}{\underline{geetp40@gmail.com}} $|$
+    \href{https://linkedin.com/in/geetpurohit}{\underline{linkedin.com/in/geetpurohit}} $|$
+    \href{https://github.com/geetpurohit}{\underline{github.com/geetpurohit}}
+\end{center}
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Data Scientist III / Engineer III}{Nov. 2024 -- Present}
+      {Verizon}{}
+      \resumeItemListStart
+        \resumeItem{Architected a full-stack \textbf{credit-risk platform} that synthetically generates customer data to simulate credit-policy changes and their impact on bad-debt writeoff across \textbf{\$1.2B+ in exposure}, with zero production data.}
+        \resumeItem{Built churn-forecasting models and an intervention simulator (SMS, email, fee adjustments) that lifted internal decisioning coverage from \textbf{0\% to 60\%} and cut outsourced engagement volume by \textasciitilde35\%.}
+        \resumeItem{Engineered \textbf{9 Python \& SQL anomaly-detection microservices} on the Verizon EDW, securing CPNI data via IAM and GitLab CI/CD, saving \textbf{50+ hours/month} across 15 teams and thousands of users.}
+        \resumeItem{Led 2 explainable-AI (XAI) frameworks with Streamlit/Qlik front-ends to isolate real-time drivers of Verizon Gross Adds, cutting hypothesis-generation time \textbf{73\%} and presented to \textbf{100+ stakeholders and executives}, directly shaping product roadmap.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Data Scientist I}{Jan. 2023 -- Nov. 2024}
+      {Verizon}{}
+      \resumeItemListStart
+        \resumeItem{Established a centralized data-science pipeline framework/API for Corporate Finance on GitLab, Domino Data Lab, and GCP, making cross-team collaboration \textbf{63\% more efficient}.}
+        \resumeItem{Automated serverless \textbf{time-series forecasting} for 9 value-segment brands (Walmart, Tracfone, Straight Talk, FiOS), pioneering a 12-hour email-report system adopted across 3 organizations.}
+        \resumeItem{Built Tableau/BigQuery dashboards that eliminated \textbf{10+ hours} of weekly manual reporting; K-Means segmentation surfaced 3 at-risk cohorts that shaped new retention campaigns.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Predictive \& Prescriptive Analytics Intern}{Jun. 2022 -- Aug. 2022}
+      {Verizon}{}
+      \resumeItemListStart
+        \resumeItem{Built a real-time framework to automate competitor (AT\&T, T-Mobile) port-in EDA via D-Tale and train DataRobot models forecasting market-share trajectories, in the internship that converted to a full-time offer.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Data Engineering Intern}{Oct. 2021 -- Jun. 2022}
+      {Human Genetics Institute of New Jersey}{}
+      \resumeItemListStart
+        \resumeItem{Trained \textbf{DeepLabCut} deep-learning models for kinematic pose estimation on \textbf{1,000+} wet-lab experiments (Python, TensorFlow, CUDA), and shipped 4 Oxford IMARIS extensions automating 3D lesion reconstruction, making post-microscopy analysis \textbf{5x faster} for spinal-cord injury research.}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+%-----------PROJECTS-----------
+\section{Projects}
+    \resumeSubHeadingListStart
+
+      \resumeProjectHeading
+          {\textbf{D.A.P.S} $|$ \emph{Python, End-to-End DS Pipeline (ETL, EDA, Forecasting, ML)}}{Nov. 2022}
+          \resumeItemListStart
+            \resumeItem{Automated pipeline that establishes an RDBMS connection, detects data drift, visualizes EDA/ETL insights, engineers time-series features, trains a scikit-learn model, and forecasts.}
+          \resumeItemListEnd
+
+      \resumeProjectHeading
+          {\textbf{Are You Blinking?} $|$ \emph{Python, Computer Vision}}{May 2022}
+          \resumeItemListStart
+            \resumeItem{Trained a HOG + linear-SVM Eye-Aspect-Ratio model to detect blinks, encode them as Morse code, and translate to English in real time from a live camera feed.}
+          \resumeItemListEnd
+
+    \resumeSubHeadingListEnd
+
+%-----------TECHNICAL SKILLS-----------
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Languages}{: Python, SQL, R, Scala, Java, JavaScript/TypeScript, \LaTeX} \\
+     \textbf{ML \& Experimentation}{: scikit-learn, XGBoost/LightGBM, PyTorch, TensorFlow, Hugging Face/LLMs, A/B testing, causal inference} \\
+     \textbf{Data, Cloud \& Viz}{: Apache Spark, GCP/BigQuery, Airflow, dbt, Docker, PostgreSQL, MongoDB, Tableau, Qlik, Streamlit, MLflow} \\
+    }}
+ \end{itemize}
+
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Georgia Institute of Technology}{In Progress}
+      {M.S. in Analytics, Computational Data Analytics Track}{}
+    \resumeSubheading
+      {Rutgers University}{Dec. 2022}
+      {B.S. in Computer Science \& B.S. in Astrophysics, Minor in Mathematics, GPA: 3.7/4.0}{}
+  \resumeSubHeadingListEnd
+
+%-------------------------------------------
+\end{document}

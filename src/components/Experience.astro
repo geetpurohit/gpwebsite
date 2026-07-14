@@ -2,45 +2,45 @@
 const jobs = [
   {
     company: 'Verizon',
-    date: 'Nov 2024 — Present',
+    date: 'Nov 2024 to Present',
     role: 'Data Scientist III · Engineer III',
     bullets: [
-      'Architected a credit-risk fullstack app — synthetically generating a customer database to monitor policy changes impacting <strong>$1.2B+ in bad-debt writeoff</strong>.',
+      'Architected a credit-risk fullstack app that synthetically generates a customer database to monitor policy changes impacting <strong>$1.2B+ in bad-debt writeoff</strong>.',
       'Engineered 9 Python &amp; SQL anomaly-detection microservices with Verizon EDW integration, saving <strong>50+ hours/month</strong> across 15 teams.',
       'Led 2 ML XAI frameworks (Streamlit + Qlik), reducing hypothesis-generation time by <strong>73%</strong> for shareholder calls.',
-      'Built churn-forecasting models and intervention simulators (SMS, email, fee adjustments) — increased decisioning coverage from <strong>0% → 60%</strong>.',
+      'Built churn-forecasting models and intervention simulators (SMS, email, fee adjustments) that pushed decisioning coverage from <strong>0% → 60%</strong>.',
       'Presented to 100+ stakeholders, directly influencing product roadmap and reducing future development costs.',
     ],
     impact: '$1.2B impact · 50h/mo saved · 73% faster',
   },
   {
     company: 'Verizon',
-    date: 'Jan 2023 — Nov 2024',
+    date: 'Jan 2023 to Nov 2024',
     role: 'Data Scientist I',
     bullets: [
-      'Established a centralized DS pipeline framework/API for Corporate Finance via GitLab + Domino + GCP — <strong>63% more efficient</strong> collaboration.',
+      'Established a centralized DS pipeline framework/API for Corporate Finance on GitLab, Domino, and GCP, making collaboration <strong>63% more efficient</strong>.',
       'Built a real-time AT&amp;T and T-Mobile port-in EDA pipeline using DataRobot to forecast competitor market-share trajectories.',
       'Automated serverless forecasting for 9 major value brands (Walmart, Tracfone, Straight Talk, FiOS), pioneering a 12h email-report system.',
       'Developed Tableau dashboards on GCP/BigQuery, eliminating <strong>10+ hours</strong> of weekly manual reporting.',
-      'K-Means customer segmentation — identified 3 at-risk cohorts that directly informed new retention campaigns.',
+      'Ran K-Means customer segmentation that surfaced 3 at-risk cohorts, which directly informed new retention campaigns.',
     ],
     impact: '63% efficiency gain · 10h/wk eliminated',
   },
   {
     company: 'Verizon',
-    date: 'Jun 2022 — Aug 2022',
+    date: 'Jun 2022 to Aug 2022',
     role: 'Predictive & Prescriptive Analytics Intern',
     bullets: [
-      'First exposure to Verizon\'s data infrastructure — the internship that turned into 3+ years.',
+      'My first real exposure to Verizon\'s data infrastructure, and the internship that turned into 3+ years.',
     ],
     impact: '',
   },
   {
     company: 'Human Genetics Institute of NJ',
-    date: 'Oct 2021 — Jun 2022',
+    date: 'Oct 2021 to Jun 2022',
     role: 'Data Science Intern',
     bullets: [
-      'Trained DeepLabCut ML models for kinematic pose estimation on wet-lab mouse video — Python, TensorFlow, NVIDIA CUDA.',
+      'Trained DeepLabCut ML models for kinematic pose estimation on wet-lab mouse video, using Python, TensorFlow, and NVIDIA CUDA.',
       'Statistical validation via ANOVA and T-tests, benchmarked against published findings (Jones et al. 2020).',
       'Sponsored 4 Oxford iMARS Python extensions for retinal-cord tissue post-microscopy analysis.',
     ],
@@ -48,21 +48,31 @@ const jobs = [
   },
   {
     company: 'RankSense',
-    date: 'Jan 2021 — Oct 2021',
+    date: 'Jan 2021 to Oct 2021',
     role: 'Data Science Intern',
     bullets: [
-      'Researched SEO optimization across 100+ client domains — A/B testing via Bayesian methods and CausalImpact.',
+      'Researched SEO optimization across 100+ client domains, running A/B tests with Bayesian methods and CausalImpact.',
       'Improved click-through and baseline-conversion rates by ~32%.',
     ],
     impact: '32% CTR improvement',
   },
 ];
+
+// "broken" comes apart letter by letter and tumbles down into a little pile.
+// Only the release stagger is fixed here; where each crumb lands is computed
+// at drop time so it can stack against the gap's floor.
+const brokenLetters = 'broken'.split('').map((ch, i) => ({
+  ch,
+  delay: Math.round(i * 80 + Math.random() * 70), // staggered, left-to-right release
+}));
 ---
 
 <section id="experience" class="section">
   <div class="container">
     <span class="section-label reveal">Experience</span>
-    <h2 class="section-title reveal">Where I've been,<br>what I've <s>broken</s> built</h2>
+    <h2 class="section-title reveal">Where I've been,<br>what I've <span class="fall-slot" id="fallSlot">{brokenLetters.map((l) => (
+      <s class="fall-letter" style={`--d:${l.delay}ms`}>{l.ch}</s>
+    ))}&nbsp;</span>built</h2>
     <p class="section-sub reveal">3+ years turning data into decisions at scale. Every number below is real.</p>
 
     <div class="timeline">
@@ -88,6 +98,49 @@ const jobs = [
 <style>
   #experience .section-title s { color: var(--muted); text-decoration-color: rgba(168,85,247,0.5); }
   .section-sub { margin-bottom: clamp(48px, 6vw, 72px); }
+
+  /* "broken" comes apart letter by letter and tumbles into a pile at the
+     bottom of the page, while "built" slides in to take its place. */
+  .fall-slot {
+    display: inline-block;
+    position: relative;
+    white-space: nowrap;
+    overflow: visible;
+    vertical-align: baseline;
+    transition: width 0.7s cubic-bezier(0.4, 0, 1, 1) 0.3s;
+  }
+  .fall-letter {
+    display: inline-block;
+    will-change: transform;
+  }
+
+  /* Once a letter lets go it keeps the heading's look but drops the strike,
+     then tumbles down to the landing zone at the foot of the page. */
+  .fall-letter.drop {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(32px, 5vw, 60px);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--muted);
+    text-decoration: none;
+    opacity: 0.85;
+    animation: pile 9s forwards;
+    animation-delay: var(--d, 0ms);
+  }
+  /* --sx/--sy = offset from resting spot back up to the heading (set by JS);
+     --rr = final resting tilt. The letter falls from there and bounces to rest. */
+  @keyframes pile {
+    0%   { transform: translate(var(--sx), var(--sy)) rotate(0deg); animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.35); }
+    66%  { transform: translate(0, 0) rotate(var(--rr)); animation-timing-function: ease-out; }
+    78%  { transform: translate(0, -11px) rotate(var(--rr)); animation-timing-function: ease-in; }
+    88%  { transform: translate(0, 0) rotate(var(--rr)); animation-timing-function: ease-out; }
+    95%  { transform: translate(0, -3px) rotate(var(--rr)); }
+    100% { transform: translate(0, 0) rotate(var(--rr)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .debris .fall-letter.drop { animation: none; }
+  }
 
   .timeline { display: flex; flex-direction: column; }
   .exp {
@@ -154,3 +207,68 @@ const jobs = [
     .exp-right { padding-left: 16px; }
   }
 </style>
+
+<script>
+  const slot = document.getElementById('fallSlot');
+  const debris = document.getElementById('debris');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (slot && debris && !reduce) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        io.disconnect();
+        // Let the reader register "broken" before it comes apart.
+        setTimeout(() => {
+          const letters = Array.from(slot.querySelectorAll<HTMLElement>('.fall-letter'));
+          const starts = letters.map((l) => l.getBoundingClientRect());
+          const debrisRect = debris.getBoundingClientRect();
+          // Rest the crumbs just above the footer's separator line.
+          const footerEl = document.querySelector('footer');
+          const lineY = footerEl ? footerEl.getBoundingClientRect().top : debrisRect.bottom;
+
+          const startW = slot.offsetWidth;
+          slot.style.width = startW + 'px'; // lock width so "built" slides, not jumps
+          void slot.offsetWidth;            // force reflow
+
+          // Land the crumbs at random across a band centred on the word, so the
+          // pile is jumbled (not a left-to-right reading of "broken").
+          const minLeft = Math.min(...starts.map((s) => s.left));
+          const maxRight = Math.max(...starts.map((s) => s.left + s.width));
+          const center = (minLeft + maxRight) / 2;
+          const spread = (maxRight - minLeft) * 1.7 + 40;
+
+          letters.forEach((l, i) => {
+            const s = starts[i];
+            // Random landing spot, random stack height, random tilt → a messy heap.
+            const restLeftVp = center + (Math.random() - 0.5) * spread;
+            const lift = Math.random() * s.height * 0.85;
+            const restTopVp = lineY - s.height - lift - 8; // sit on the line, with a small gap
+            const restRot = Math.round((Math.random() - 0.5) * 120) + 'deg';
+
+            // Resting position (absolute, anchored to the bottom zone so it scrolls
+            // with the page)…
+            l.style.position = 'absolute';
+            l.style.margin = '0';
+            l.style.left = restLeftVp - debrisRect.left + 'px';
+            l.style.top = restTopVp - debrisRect.top + 'px';
+            // …and how far back up to the heading it starts from.
+            const sx = s.left - restLeftVp;
+            const sy = s.top - restTopVp;
+            l.style.setProperty('--sx', sx + 'px');
+            l.style.setProperty('--sy', sy + 'px');
+            l.style.setProperty('--rr', restRot);
+            l.style.transform = `translate(${sx}px, ${sy}px)`; // start at the heading
+            debris.appendChild(l);
+          });
+
+          requestAnimationFrame(() => {
+            slot.style.width = '0px';                        // gap closes → "built" slides in
+            letters.forEach((l) => l.classList.add('drop')); // crumbs tumble down and settle
+          });
+        }, 900);
+      });
+    }, { threshold: 0.6 });
+    io.observe(slot);
+  }
+</script>

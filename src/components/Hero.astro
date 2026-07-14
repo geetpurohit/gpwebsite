@@ -13,14 +13,19 @@ const stats = [
     <p class="tag"><span class="ping"></span>Data Scientist at Verizon&nbsp;·&nbsp;Open to opportunities</p>
 
     <h1 class="title">
-      <span class="line">Astrophysicist.</span>
-      <span class="line grad-text">Data Scientist.</span>
-      <span class="line">Storyteller.</span>
+      <span class="static-lines">
+        <span class="line">Astrophysicist.</span>
+        <span class="line grad-text">Data Scientist.</span>
+        <span class="line">Storyteller.</span>
+      </span>
+      <span class="type-line" aria-hidden="true" hidden>
+        <span class="typed grad-text"></span><span class="caret"></span>
+      </span>
     </h1>
 
     <p class="sub">
-      I used to study black holes. Now I find them in datasets —
-      <em>both are equally mysterious and require a concerning amount of coffee.</em>
+      I used to study black holes. Now I find them in datasets instead.
+      <em>Both are equally mysterious, and both need a concerning amount of coffee.</em>
     </p>
 
     <div class="chips">
@@ -95,9 +100,32 @@ const stats = [
     margin-bottom: 24px;
   }
   .title .line { display: block; opacity: 0; animation: fadeUp 0.85s var(--ease) forwards; }
-  .title .line:nth-child(1) { animation-delay: 0.28s; }
-  .title .line:nth-child(2) { animation-delay: 0.40s; }
-  .title .line:nth-child(3) { animation-delay: 0.52s; }
+  .static-lines .line:nth-child(1) { animation-delay: 0.28s; }
+  .static-lines .line:nth-child(2) { animation-delay: 0.40s; }
+  .static-lines .line:nth-child(3) { animation-delay: 0.52s; }
+
+  .type-line {
+    display: block;
+    min-height: 1.05em;
+    opacity: 0;
+    animation: fadeUp 0.85s var(--ease) forwards 0.28s;
+  }
+  .type-line[hidden] { display: none; }
+  .caret {
+    display: inline-block;
+    width: 0.06em;
+    margin-left: 0.04em;
+    background: var(--purple-lt);
+    transform: translateY(0.12em);
+    align-self: stretch;
+    animation: caretBlink 1s steps(1) infinite;
+  }
+  .typed:empty + .caret,
+  .typed + .caret { height: 0.92em; }
+  @keyframes caretBlink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
 
   .sub {
     font-size: clamp(17px, 1.5vw, 21px);
@@ -219,3 +247,37 @@ const stats = [
     .scroll-hint { display: none; }
   }
 </style>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const staticLines = document.querySelector('.static-lines') as HTMLElement | null;
+  const typeLine = document.querySelector('.type-line') as HTMLElement | null;
+  const typedEl = document.querySelector('.type-line .typed') as HTMLElement | null;
+
+  if (!reduce && staticLines && typeLine && typedEl) {
+    staticLines.hidden = true;
+    typeLine.hidden = false;
+
+    const words = ['Astrophysicist.', 'Data Scientist.', 'Storyteller.'];
+    let wi = 0, ci = 0, deleting = false;
+
+    const tick = () => {
+      const word = words[wi];
+      ci += deleting ? -1 : 1;
+      typedEl.textContent = word.slice(0, ci);
+
+      if (!deleting && ci === word.length) {
+        deleting = true;
+        setTimeout(tick, 1500);
+      } else if (deleting && ci === 0) {
+        deleting = false;
+        wi = (wi + 1) % words.length;
+        setTimeout(tick, 450);
+      } else {
+        setTimeout(tick, deleting ? 45 : 85 + Math.random() * 55);
+      }
+    };
+
+    setTimeout(tick, 1100);
+  }
+</script>

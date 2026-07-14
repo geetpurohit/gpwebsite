@@ -1,0 +1,396 @@
+{
+  "meta": {
+    "dataset": "LendingClub accepted loans (2007-2018)",
+    "generated": "trained",
+    "n_train": 300000,
+    "n_test": 100000,
+    "default_rate": 0.2002
+  },
+  "metrics": {
+    "scorecard": {
+      "auc": 0.6788,
+      "ks": 0.2546,
+      "gini": 0.3577,
+      "brier": 0.149
+    },
+    "xgboost": {
+      "auc": 0.6898
+    }
+  },
+  "scaling": {
+    "base_score": 600,
+    "base_odds": 20,
+    "pdo": 20,
+    "factor": 28.8539,
+    "offset": 513.5614
+  },
+  "intercept": -1.38547,
+  "features": [
+    {
+      "key": "fico",
+      "label": "FICO score",
+      "type": "numeric",
+      "input": {
+        "min": 600,
+        "max": 850,
+        "step": 5,
+        "default": 690
+      },
+      "iv": 0.1159,
+      "bins": [
+        {
+          "max": 667.0,
+          "woe": -0.35044,
+          "label": "617.0-667.0"
+        },
+        {
+          "max": 677.0,
+          "woe": -0.24285,
+          "label": "667.0-677.0"
+        },
+        {
+          "max": 692.0,
+          "woe": -0.12012,
+          "label": "677.0-692.0"
+        },
+        {
+          "max": 707.0,
+          "woe": 0.06538,
+          "label": "692.0-707.0"
+        },
+        {
+          "max": 727.0,
+          "woe": 0.32395,
+          "label": "707.0-727.0"
+        },
+        {
+          "max": null,
+          "woe": 0.74144,
+          "label": "727.0-∞"
+        }
+      ],
+      "coef": -1.02453
+    },
+    {
+      "key": "dti",
+      "label": "Debt-to-income (%)",
+      "type": "numeric",
+      "input": {
+        "min": 0,
+        "max": 45,
+        "step": 0.5,
+        "default": 18
+      },
+      "iv": 0.0711,
+      "bins": [
+        {
+          "max": 9.51,
+          "woe": 0.36303,
+          "label": "0.0-9.51"
+        },
+        {
+          "max": 13.79,
+          "woe": 0.24278,
+          "label": "9.51-13.79"
+        },
+        {
+          "max": 17.62,
+          "woe": 0.12634,
+          "label": "13.79-17.62"
+        },
+        {
+          "max": 21.68,
+          "woe": -0.008,
+          "label": "17.62-21.68"
+        },
+        {
+          "max": 26.91,
+          "woe": -0.1705,
+          "label": "21.68-26.91"
+        },
+        {
+          "max": null,
+          "woe": -0.42994,
+          "label": "26.91-∞"
+        }
+      ],
+      "coef": -0.76922
+    },
+    {
+      "key": "annual_inc",
+      "label": "Annual income ($)",
+      "type": "numeric",
+      "input": {
+        "min": 10000,
+        "max": 300000,
+        "step": 1000,
+        "default": 65000
+      },
+      "iv": 0.0276,
+      "bins": [
+        {
+          "max": 40000.0,
+          "woe": -0.20595,
+          "label": "0.0-40000.0"
+        },
+        {
+          "max": 52000.0,
+          "woe": -0.11032,
+          "label": "40000.0-52000.0"
+        },
+        {
+          "max": 65000.0,
+          "woe": -0.07052,
+          "label": "52000.0-65000.0"
+        },
+        {
+          "max": 80000.0,
+          "woe": 0.03286,
+          "label": "65000.0-80000.0"
+        },
+        {
+          "max": 105000.0,
+          "woe": 0.13975,
+          "label": "80000.0-105000.0"
+        },
+        {
+          "max": null,
+          "woe": 0.29778,
+          "label": "105000.0-∞"
+        }
+      ],
+      "coef": -0.92044
+    },
+    {
+      "key": "revol_util",
+      "label": "Revolving utilization (%)",
+      "type": "numeric",
+      "input": {
+        "min": 0,
+        "max": 150,
+        "step": 1,
+        "default": 45
+      },
+      "iv": 0.0244,
+      "bins": [
+        {
+          "max": 25.9,
+          "woe": 0.31247,
+          "label": "0.0-25.9"
+        },
+        {
+          "max": 40.0,
+          "woe": 0.09332,
+          "label": "25.9-40.0"
+        },
+        {
+          "max": 52.2,
+          "woe": -0.00325,
+          "label": "40.0-52.2"
+        },
+        {
+          "max": 64.2,
+          "woe": -0.07849,
+          "label": "52.2-64.2"
+        },
+        {
+          "max": 78.1,
+          "woe": -0.10967,
+          "label": "64.2-78.1"
+        },
+        {
+          "max": null,
+          "woe": -0.17045,
+          "label": "78.1-∞"
+        }
+      ],
+      "coef": 0.27245
+    },
+    {
+      "key": "loan_amnt",
+      "label": "Loan amount ($)",
+      "type": "numeric",
+      "input": {
+        "min": 1000,
+        "max": 40000,
+        "step": 500,
+        "default": 15000
+      },
+      "iv": 0.0336,
+      "bins": [
+        {
+          "max": 6000.0,
+          "woe": 0.29818,
+          "label": "500.0-6000.0"
+        },
+        {
+          "max": 9600.0,
+          "woe": 0.19146,
+          "label": "6000.0-9600.0"
+        },
+        {
+          "max": 12000.0,
+          "woe": 0.01937,
+          "label": "9600.0-12000.0"
+        },
+        {
+          "max": 16750.0,
+          "woe": -0.11071,
+          "label": "12000.0-16750.0"
+        },
+        {
+          "max": 24000.0,
+          "woe": -0.15817,
+          "label": "16750.0-24000.0"
+        },
+        {
+          "max": null,
+          "woe": -0.20321,
+          "label": "24000.0-∞"
+        }
+      ],
+      "coef": -0.73374
+    },
+    {
+      "key": "emp_length",
+      "label": "Employment length (yrs)",
+      "type": "numeric",
+      "input": {
+        "min": 0,
+        "max": 10,
+        "step": 1,
+        "default": 5
+      },
+      "iv": 0.0047,
+      "bins": [
+        {
+          "max": 2.0,
+          "woe": -0.02555,
+          "label": "0.0-2.0"
+        },
+        {
+          "max": 4.0,
+          "woe": 0.0108,
+          "label": "2.0-4.0"
+        },
+        {
+          "max": 6.0,
+          "woe": -0.12464,
+          "label": "4.0-6.0"
+        },
+        {
+          "max": 9.0,
+          "woe": 0.01799,
+          "label": "6.0-9.0"
+        },
+        {
+          "max": null,
+          "woe": 0.07493,
+          "label": "9.0-∞"
+        }
+      ],
+      "coef": -1.00465
+    },
+    {
+      "key": "term",
+      "label": "Term",
+      "type": "categorical",
+      "input": {
+        "default": "36"
+      },
+      "iv": 0.1742,
+      "categories": [
+        {
+          "value": "36",
+          "label": "36",
+          "woe": 0.27016
+        },
+        {
+          "value": "60",
+          "label": "60",
+          "woe": -0.6543
+        }
+      ],
+      "coef": -0.96473
+    },
+    {
+      "key": "home_ownership",
+      "label": "Home ownership",
+      "type": "categorical",
+      "input": {
+        "default": "MORTGAGE"
+      },
+      "iv": 0.0304,
+      "categories": [
+        {
+          "value": "MORTGAGE",
+          "label": "Mortgage",
+          "woe": 0.1777
+        },
+        {
+          "value": "OTHER",
+          "label": "Other",
+          "woe": -0.31227
+        },
+        {
+          "value": "OWN",
+          "label": "Own",
+          "woe": -0.02595
+        },
+        {
+          "value": "RENT",
+          "label": "Rent",
+          "woe": -0.19166
+        }
+      ],
+      "coef": -0.97363
+    },
+    {
+      "key": "purpose",
+      "label": "Loan purpose",
+      "type": "categorical",
+      "input": {
+        "default": "debt_consolidation"
+      },
+      "iv": 0.0164,
+      "categories": [
+        {
+          "value": "credit_card",
+          "label": "Credit Card",
+          "woe": 0.19829
+        },
+        {
+          "value": "debt_consolidation",
+          "label": "Debt Consolidation",
+          "woe": -0.07085
+        },
+        {
+          "value": "home_improvement",
+          "label": "Home Improvement",
+          "woe": 0.12944
+        },
+        {
+          "value": "major_purchase",
+          "label": "Major Purchase",
+          "woe": 0.11085
+        },
+        {
+          "value": "medical",
+          "label": "Medical",
+          "woe": -0.11738
+        },
+        {
+          "value": "other",
+          "label": "Other",
+          "woe": -0.01358
+        },
+        {
+          "value": "small_business",
+          "label": "Small Business",
+          "woe": -0.53324
+        }
+      ],
+      "coef": -0.77643
+    }
+  ]
+}
