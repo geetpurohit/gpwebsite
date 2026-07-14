@@ -2,6 +2,9 @@
 dist/
 .output/
 
+# large local datasets (not committed — download separately, see credit-risk-scorecard/README.md)
+credit-risk-scorecard/data/
+
 # dependencies
 node_modules/
 

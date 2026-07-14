@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✦ geet purohit — portfolio
+# ✦ geet purohit portfolio
 
 **Astrophysicist turned Data Scientist. I used to study black holes. Now I find them in datasets.**
 
@@ -14,13 +14,13 @@
 
 ## What this is
 
-Personal portfolio site — built to show work, not just list it. Dark, fast, animated, and opinionated.
+Personal portfolio site, built to show work, not just list it. Dark, fast, animated, and opinionated.
 
 - Animated starfield canvas background
 - Custom cursor with magnetic hover effects
 - Scroll-driven reveal animations throughout
 - Easter egg (find it yourself)
-- Zero frameworks beyond Astro — vanilla CSS and JS only
+- Zero frameworks beyond Astro, just vanilla CSS and JS
 
 ---
 
@@ -45,7 +45,7 @@ Personal portfolio site — built to show work, not just list it. Dark, fast, an
 | 03 | Gravitational Microlensing Sim | Astrophysics, paying dividends |
 | 04 | Churn Prediction & Intervention Engine | 0% → 60% coverage |
 | 05 | DeepLabCut Pose Estimation | Neuroscience × Deep Learning |
-| 06 | AniParty — Video Sync Extension | Solving the important problems |
+| 06 | AniParty: Video Sync Extension | Solving the important problems |
 
 ---
 
@@ -65,7 +65,7 @@ npm run preview
 
 ## Deploy
 
-Cloudflare Pages — connected to this repo. Every push to `main` triggers a build.
+Cloudflare Pages, connected to this repo. Every push to `main` triggers a build.
 
 - **Build command:** `npm run build`
 - **Output directory:** `dist`
