@@ -24,7 +24,6 @@ const projects = [
   },
   {
     num: '03',
-    featured: true,
     category: 'Work',
     title: 'Credit Risk Intelligence Platform',
     desc: 'Fullstack app that synthetically generates customer databases to monitor credit-policy changes and their downstream impact on bad-debt writeoff. Built end-to-end (data pipeline, ML models, and a Streamlit frontend) so finance teams can simulate policy scenarios without ever touching production data.',
@@ -79,6 +78,8 @@ const projects = [
     metricLabel: '',
   },
 ];
+const featured = projects.filter((p) => p.featured);
+const rest = projects.filter((p) => !p.featured);
 ---
 
 <section id="projects" class="section">
@@ -87,8 +88,8 @@ const projects = [
     <h2 class="section-title reveal">Things I've shipped</h2>
     <p class="section-sub reveal">A mix of work projects (sanitized), academic deep cuts, and personal experiments.</p>
 
-    <div class="grid">
-      {projects.map((p) => {
+    <div class="grid grid-featured">
+      {featured.map((p) => {
         const Tag = p.href ? 'a' : 'article';
         return (
           <Tag
@@ -96,7 +97,35 @@ const projects = [
             {...(p.href ? { href: p.href, ...(p.href.startsWith('/') ? {} : { target: '_blank', rel: 'noopener' }) } : {})}
           >
             <div class="card-head">
-              <span class="card-num">{p.num}{p.featured ? ' · Featured' : ''}</span>
+              <span class="card-num">{p.num} · Live demo</span>
+              <span class:list={['card-cat', `cat-${p.category.toLowerCase()}`]}>{p.category}</span>
+            </div>
+            <span class="card-go" aria-hidden="true">→</span>
+            <h3 class="card-title">{p.title}</h3>
+            <p class="card-desc">{p.desc}</p>
+            <div class="card-tags">
+              {p.tags.map((t) => <span class="card-tag">{t}</span>)}
+            </div>
+            <div class="card-metric">
+              <span class="metric-num">{p.metric}</span>
+              {p.metricLabel && <span class="metric-label">{p.metricLabel}</span>}
+            </div>
+          </Tag>
+        );
+      })}
+    </div>
+
+    <span class="grid-label reveal">More projects</span>
+    <div class="grid grid-rest">
+      {rest.map((p) => {
+        const Tag = p.href ? 'a' : 'article';
+        return (
+          <Tag
+            class:list={['card', 'reveal', 'interactive']}
+            {...(p.href ? { href: p.href, ...(p.href.startsWith('/') ? {} : { target: '_blank', rel: 'noopener' }) } : {})}
+          >
+            <div class="card-head">
+              <span class="card-num">{p.num}</span>
               <span class:list={['card-cat', `cat-${p.category.toLowerCase()}`]}>{p.category}</span>
             </div>
             <span class="card-go" aria-hidden="true">→</span>
@@ -122,8 +151,22 @@ const projects = [
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 18px;
+  }
+  .grid-featured { grid-template-columns: repeat(2, 1fr); }
+  .grid-rest { grid-template-columns: repeat(3, 1fr); }
+
+  .grid-label {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: clamp(34px, 5vw, 52px) 0 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-soft);
   }
   .card {
     position: relative;
@@ -151,11 +194,12 @@ const projects = [
   .card:hover::before { opacity: 1; }
 
   .card.featured {
-    grid-column: span 2;
+    padding: clamp(30px, 3vw, 40px);
     background: linear-gradient(140deg, rgba(168,85,247,0.10), rgba(124,58,237,0.04));
     border-color: rgba(168,85,247,0.28);
   }
   .card.featured .card-title { font-size: clamp(22px, 2.6vw, 28px); }
+  .card.featured .card-desc { font-size: 16px; }
 
   .card-head {
     display: flex;
@@ -253,11 +297,10 @@ const projects = [
   .card.featured .metric-num { font-size: clamp(26px, 3.4vw, 38px); }
 
   @media (max-width: 920px) {
-    .grid { grid-template-columns: repeat(2, 1fr); }
-    .card.featured { grid-column: span 2; }
+    .grid-rest { grid-template-columns: repeat(2, 1fr); }
   }
-  @media (max-width: 600px) {
-    .grid { grid-template-columns: 1fr; }
-    .card.featured { grid-column: span 1; }
+  @media (max-width: 680px) {
+    .grid-featured { grid-template-columns: 1fr; }
+    .grid-rest { grid-template-columns: 1fr; }
   }
 </style>
