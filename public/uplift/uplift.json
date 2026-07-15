@@ -1,0 +1,165 @@
+{
+  "meta": {
+    "dataset": "Hillstrom MineThatData email experiment (64k customers)",
+    "generated": "trained",
+    "n_train": 44800,
+    "n_test": 19200,
+    "treatment": "marketing email sent",
+    "outcome": "website visit",
+    "ate": 0.0634,
+    "propensity": 0.6671,
+    "response_threshold": 0.1269,
+    "avg_uplift": 0.0641
+  },
+  "metrics": {
+    "t_learner": {
+      "qini": 0.1765
+    },
+    "x_learner": {
+      "qini": 0.1843
+    }
+  },
+  "columns": [
+    "recency_z",
+    "history_log_z",
+    "mens",
+    "womens",
+    "newbie",
+    "zip_Urban",
+    "zip_Rural",
+    "channel_Web",
+    "channel_Multichannel"
+  ],
+  "encoding": {
+    "recency": {
+      "mean": 5.763734375,
+      "std": 3.507591612050416
+    },
+    "history": {
+      "mean": 5.006653016550853,
+      "std": 1.0192508676273007
+    }
+  },
+  "features": [
+    {
+      "key": "recency",
+      "label": "Months since last purchase",
+      "type": "numeric",
+      "input": {
+        "min": 1,
+        "max": 12,
+        "step": 1,
+        "default": 6
+      }
+    },
+    {
+      "key": "history",
+      "label": "Spend last year ($)",
+      "type": "numeric",
+      "input": {
+        "min": 0,
+        "max": 3000,
+        "step": 25,
+        "default": 250
+      }
+    },
+    {
+      "key": "mens",
+      "label": "Bought men's merchandise",
+      "type": "binary",
+      "input": {
+        "default": 0
+      }
+    },
+    {
+      "key": "womens",
+      "label": "Bought women's merchandise",
+      "type": "binary",
+      "input": {
+        "default": 0
+      }
+    },
+    {
+      "key": "newbie",
+      "label": "New customer (last 12 months)",
+      "type": "binary",
+      "input": {
+        "default": 0
+      }
+    },
+    {
+      "key": "zip_code",
+      "label": "Neighborhood",
+      "type": "categorical",
+      "input": {
+        "default": "Surburban"
+      },
+      "categories": [
+        {
+          "value": "Surburban",
+          "label": "Suburban"
+        },
+        {
+          "value": "Urban",
+          "label": "Urban"
+        },
+        {
+          "value": "Rural",
+          "label": "Rural"
+        }
+      ]
+    },
+    {
+      "key": "channel",
+      "label": "Past purchase channel",
+      "type": "categorical",
+      "input": {
+        "default": "Phone"
+      },
+      "categories": [
+        {
+          "value": "Phone",
+          "label": "Phone"
+        },
+        {
+          "value": "Web",
+          "label": "Web"
+        },
+        {
+          "value": "Multichannel",
+          "label": "Multichannel"
+        }
+      ]
+    }
+  ],
+  "models": {
+    "treat": {
+      "intercept": -2.299248,
+      "coef": {
+        "recency_z": -0.178135,
+        "history_log_z": 0.110642,
+        "mens": 0.56439,
+        "womens": 0.776806,
+        "newbie": -0.463269,
+        "zip_Urban": -0.050374,
+        "zip_Rural": 0.279096,
+        "channel_Web": 0.224111,
+        "channel_Multichannel": 0.111969
+      }
+    },
+    "control": {
+      "intercept": -2.776221,
+      "coef": {
+        "recency_z": -0.256159,
+        "history_log_z": 0.142,
+        "mens": 0.581196,
+        "womens": 0.570096,
+        "newbie": -0.695423,
+        "zip_Urban": -0.058641,
+        "zip_Rural": 0.474298,
+        "channel_Web": 0.353032,
+        "channel_Multichannel": 0.129639
+      }
+    }
+  }
+}

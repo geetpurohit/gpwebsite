@@ -2,8 +2,13 @@
 dist/
 .output/
 
-# large local datasets (not committed — download separately, see credit-risk-scorecard/README.md)
+# large local datasets (not committed — download separately, see each project's README.md)
 credit-risk-scorecard/data/
+causal-uplift/data/
+
+# compiled résumé preview (build artifact; the served copy is public/Geet_s_Resume.pdf)
+/Geet_Purohit_Resume.pdf
+/public/Geet_Purohit_Resume_preview.pdf
 
 # dependencies
 node_modules/

@@ -17,7 +17,7 @@
 \usepackage{fancyhdr}
 \usepackage[english]{babel}
 \usepackage{tabularx}
-\input{glyphtounicode}
+\ifdefined\pdfgentounicode\input{glyphtounicode}\fi
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -30,7 +30,7 @@
 \addtolength{\evensidemargin}{-0.5in}
 \addtolength{\textwidth}{1in}
 \addtolength{\topmargin}{-.5in}
-\addtolength{\textheight}{1.0in}
+\addtolength{\textheight}{1.3in}
 
 \urlstyle{same}
 
@@ -43,8 +43,8 @@
   \vspace{-4pt}\scshape\raggedright\large
 }{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
 
-% Ensure that generate pdf is machine readable/ATS parsable
-\pdfgentounicode=1
+% Ensure that generate pdf is machine readable/ATS parsable (pdflatex only)
+\ifdefined\pdfgentounicode\pdfgentounicode=1\fi
 
 %-------------------------
 % Custom commands
@@ -110,7 +110,7 @@
         \resumeItem{Architected a full-stack \textbf{credit-risk platform} that synthetically generates customer data to simulate credit-policy changes and their impact on bad-debt writeoff across \textbf{\$1.2B+ in exposure}, with zero production data.}
         \resumeItem{Built churn-forecasting models and an intervention simulator (SMS, email, fee adjustments) that lifted internal decisioning coverage from \textbf{0\% to 60\%} and cut outsourced engagement volume by \textasciitilde35\%.}
         \resumeItem{Engineered \textbf{9 Python \& SQL anomaly-detection microservices} on the Verizon EDW, securing CPNI data via IAM and GitLab CI/CD, saving \textbf{50+ hours/month} across 15 teams and thousands of users.}
-        \resumeItem{Led 2 explainable-AI (XAI) frameworks with Streamlit/Qlik front-ends to isolate real-time drivers of Verizon Gross Adds, cutting hypothesis-generation time \textbf{73\%} and presented to \textbf{100+ stakeholders and executives}, directly shaping product roadmap.}
+        \resumeItem{Led 2 explainable-AI (XAI) frameworks (Streamlit/Qlik) isolating real-time drivers of Verizon Gross Adds, cutting hypothesis-generation time \textbf{73\%} and presenting to \textbf{100+ stakeholders and executives}.}
       \resumeItemListEnd
 
     \resumeSubheading
@@ -133,7 +133,7 @@
       {Data Engineering Intern}{Oct. 2021 -- Jun. 2022}
       {Human Genetics Institute of New Jersey}{}
       \resumeItemListStart
-        \resumeItem{Trained \textbf{DeepLabCut} deep-learning models for kinematic pose estimation on \textbf{1,000+} wet-lab experiments (Python, TensorFlow, CUDA), and shipped 4 Oxford IMARIS extensions automating 3D lesion reconstruction, making post-microscopy analysis \textbf{5x faster} for spinal-cord injury research.}
+        \resumeItem{Trained \textbf{DeepLabCut} models for kinematic pose estimation on \textbf{1,000+} wet-lab experiments (Python, TensorFlow, CUDA) and shipped 4 IMARIS extensions automating 3D lesion reconstruction, making post-microscopy analysis \textbf{5x faster}.}
       \resumeItemListEnd
 
   \resumeSubHeadingListEnd
@@ -143,15 +143,17 @@
     \resumeSubHeadingListStart
 
       \resumeProjectHeading
-          {\textbf{D.A.P.S} $|$ \emph{Python, End-to-End DS Pipeline (ETL, EDA, Forecasting, ML)}}{Nov. 2022}
+          {\textbf{CreditLens} $|$ \emph{Explainable Credit-Risk Scorecard Engine} $\cdot$ \href{https://geetpurohit.com/projects/credit-risk}{\underline{geetpurohit.com}}}{2026}
           \resumeItemListStart
-            \resumeItem{Automated pipeline that establishes an RDBMS connection, detects data drift, visualizes EDA/ETL insights, engineers time-series features, trains a scikit-learn model, and forecasts.}
+            \resumeItem{Built an end-to-end credit-default engine on \textbf{2.26M} LendingClub loans with weight-of-evidence binning and a logistic scorecard, benchmarked against an XGBoost/SHAP challenger and validated with ROC-AUC, KS, Gini, and calibration.}
+            \resumeItem{Deployed it as a \textbf{zero-backend, in-browser app} that scores applicants and explains each decision in real time, with no target leakage.}
           \resumeItemListEnd
 
       \resumeProjectHeading
-          {\textbf{Are You Blinking?} $|$ \emph{Python, Computer Vision}}{May 2022}
+          {\textbf{Persuade} $|$ \emph{Causal Uplift Modeling Engine} $\cdot$ \href{https://geetpurohit.com/projects/uplift}{\underline{geetpurohit.com}}}{2026}
           \resumeItemListStart
-            \resumeItem{Trained a HOG + linear-SVM Eye-Aspect-Ratio model to detect blinks, encode them as Morse code, and translate to English in real time from a live camera feed.}
+            \resumeItem{Built a causal uplift model estimating the \textbf{incremental} effect of a treatment per customer via T-learner and X-learner meta-learners, validated on the \textbf{Qini curve} (accuracy is undefined for counterfactual targeting).}
+            \resumeItem{Deployed it as a \textbf{zero-backend, in-browser app} that scores customers live and sorts them into persuadables, sure things, lost causes, and sleeping dogs, focusing spend where a treatment actually moves behavior.}
           \resumeItemListEnd
 
     \resumeSubHeadingListEnd
@@ -161,8 +163,8 @@
  \begin{itemize}[leftmargin=0.15in, label={}]
     \small{\item{
      \textbf{Languages}{: Python, SQL, R, Scala, Java, JavaScript/TypeScript, \LaTeX} \\
-     \textbf{ML \& Experimentation}{: scikit-learn, XGBoost/LightGBM, PyTorch, TensorFlow, Hugging Face/LLMs, A/B testing, causal inference} \\
-     \textbf{Data, Cloud \& Viz}{: Apache Spark, GCP/BigQuery, Airflow, dbt, Docker, PostgreSQL, MongoDB, Tableau, Qlik, Streamlit, MLflow} \\
+     \textbf{ML \& Experimentation}{: scikit-learn, XGBoost/LightGBM, PyTorch, TensorFlow, LLMs, A/B testing, causal inference} \\
+     \textbf{Data, Cloud \& Viz}{: Apache Spark, GCP/BigQuery, Airflow, dbt, Docker, PostgreSQL, Tableau, Streamlit, MLflow} \\
     }}
  \end{itemize}
 
