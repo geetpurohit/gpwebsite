@@ -1,0 +1,549 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const title = 'Significance: A/B Test Designer & Analyzer | Geet Purohit';
+const description =
+  'An interactive experimentation toolkit: power and sample-size calculation, two-proportion significance testing with confidence intervals, plus live demonstrations of CUPED variance reduction and the peeking problem. Runs entirely in the browser.';
+---
+
+<Base title={title} description={description}>
+  <main class="ex">
+    <div class="ex-container">
+      <a class="back" href="/">← geetpurohit.com</a>
+
+      <!-- ===== Header ===== -->
+      <header class="ex-head reveal">
+        <span class="section-label">Project · Experimentation</span>
+        <h1 class="ex-title">Designing a Trustworthy <span class="grad-text">A/B Test</span></h1>
+        <p class="ex-lead">
+          Running an experiment is easy. Running one whose result you can <em>trust</em> is not.
+          This is a hands-on toolkit for the parts that actually decide whether an A/B test is
+          honest: <strong>powering it correctly</strong> before you start, <strong>testing
+          significance properly</strong> when it ends, and avoiding the two mistakes that quietly
+          ruin most experiments, <strong>peeking</strong> and ignoring <strong>variance
+          reduction</strong>. Everything below computes live in your browser.
+        </p>
+        <div class="tags">
+          <span class="tag">A/B Testing</span>
+          <span class="tag">Power Analysis</span>
+          <span class="tag">Hypothesis Testing</span>
+          <span class="tag">CUPED</span>
+          <span class="tag">Sequential Testing</span>
+          <span class="tag">Python / SciPy</span>
+        </div>
+      </header>
+
+      <!-- ===== Panel 1: Design ===== -->
+      <section class="panel reveal">
+        <div class="panel-inner">
+          <div class="panel-left">
+            <h2 class="block-h">1. Design it</h2>
+            <p class="block-sub">
+              How many users do you need before you press go? Set the effect you care about and
+              the calculator returns the sample size that gives you a fair shot at detecting it.
+            </p>
+            <form id="designForm" class="fields" autocomplete="off">
+              <label class="field">
+                <span class="field-top"><span>Baseline conversion rate</span><output id="out_base"></output></span>
+                <input type="range" id="in_base" min="1" max="50" step="0.5" value="10" />
+              </label>
+              <label class="field">
+                <span class="field-top"><span>Minimum detectable effect (relative)</span><output id="out_mde"></output></span>
+                <input type="range" id="in_mde" min="1" max="30" step="0.5" value="5" />
+              </label>
+              <label class="field">
+                <span class="field-top"><span>Significance level (alpha)</span><output id="out_alpha"></output></span>
+                <input type="range" id="in_alpha" min="1" max="10" step="1" value="5" />
+              </label>
+              <label class="field">
+                <span class="field-top"><span>Power</span><output id="out_power"></output></span>
+                <input type="range" id="in_power" min="70" max="95" step="1" value="80" />
+              </label>
+              <label class="field field-wide">
+                <span class="field-top"><span>Daily traffic (both arms)</span><output id="out_traffic"></output></span>
+                <input type="range" id="in_traffic" min="1000" max="200000" step="1000" value="20000" />
+              </label>
+            </form>
+          </div>
+          <div class="panel-right">
+            <div class="stat-card">
+              <div class="stat-label">Users needed per arm</div>
+              <div id="nPerArm" class="stat-value">-</div>
+              <div class="stat-sub"><span id="nTotal">-</span> total across both arms</div>
+              <div class="stat-divider"></div>
+              <div class="stat-row">
+                <div><div id="days" class="stat-mini">-</div><div class="stat-cap">days to run</div></div>
+                <div><div id="detectRate" class="stat-mini">-</div><div class="stat-cap">target rate to beat</div></div>
+              </div>
+              <p class="stat-foot">
+                Smaller effects cost dramatically more traffic: halving the detectable effect
+                roughly quadruples the sample you need. That tradeoff is the whole game.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Panel 2: Analyze ===== -->
+      <section class="panel reveal">
+        <div class="panel-inner">
+          <div class="panel-left">
+            <h2 class="block-h">2. Analyze it</h2>
+            <p class="block-sub">
+              The experiment is done. Did it actually work, or is it noise? Enter the counts and
+              this runs a two-proportion z-test with a confidence interval, the honest verdict.
+            </p>
+            <form id="analyzeForm" class="fields" autocomplete="off">
+              <label class="field">
+                <span class="field-top"><span>Control users</span></span>
+                <input type="number" id="in_nc" value="20000" min="1" class="num" />
+              </label>
+              <label class="field">
+                <span class="field-top"><span>Control conversions</span></span>
+                <input type="number" id="in_xc" value="2000" min="0" class="num" />
+              </label>
+              <label class="field">
+                <span class="field-top"><span>Treatment users</span></span>
+                <input type="number" id="in_nt" value="20000" min="1" class="num" />
+              </label>
+              <label class="field">
+                <span class="field-top"><span>Treatment conversions</span></span>
+                <input type="number" id="in_xt" value="2180" min="0" class="num" />
+              </label>
+            </form>
+          </div>
+          <div class="panel-right">
+            <div class="verdict-card" id="verdictCard">
+              <div class="verdict-top">
+                <div id="verdict" class="verdict-word">-</div>
+                <div id="pvalue" class="verdict-p">-</div>
+              </div>
+              <div class="rates">
+                <div class="rate-col"><div id="rateC" class="rate-num">-</div><div class="rate-cap">control</div></div>
+                <div class="rate-col"><div id="rateT" class="rate-num">-</div><div class="rate-cap">treatment</div></div>
+                <div class="rate-col"><div id="lift" class="rate-num lift">-</div><div class="rate-cap">relative lift</div></div>
+              </div>
+              <div class="ci-block">
+                <div class="ci-label">95% confidence interval on the lift</div>
+                <div class="ci-track">
+                  <div class="ci-zero"></div>
+                  <div id="ciBar" class="ci-bar"></div>
+                </div>
+                <div id="ciText" class="ci-text">-</div>
+              </div>
+              <p id="verdictFoot" class="verdict-foot"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Results / the two traps ===== -->
+      <section class="results reveal">
+        <h2 class="block-h">The two traps most experiments fall into</h2>
+        <div class="traps">
+          <div class="trap">
+            <h3 class="trap-h">Peeking</h3>
+            <p class="trap-p">
+              Checking for significance repeatedly and stopping the moment you see <em>p &lt; 0.05</em>
+              is the most common way to ship a fake win. Each peek is another chance to get unlucky.
+              I simulated A/A tests (no real difference) and let them peek: the false-positive rate
+              climbs from the intended <strong>5%</strong> to over <strong id="fprMax">-</strong> after
+              twenty looks. Fix it with sequential testing or a pre-committed sample size.
+            </p>
+            <figure class="chart"><div class="svg-wrap"><svg id="svgPeeking" class="svg-chart" viewBox="0 0 620 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Peeking inflates false positives"></svg></div></figure>
+          </div>
+          <div class="trap">
+            <h3 class="trap-h">Ignoring variance reduction</h3>
+            <p class="trap-p">
+              CUPED uses a pre-experiment covariate (a user's prior behavior) to strip out noise you
+              already could have predicted. In simulation it cut the variance of the effect estimate
+              by <strong id="varRed">-</strong>, worth roughly a <strong id="effMult">-</strong>
+              bigger sample for free. Same traffic, tighter answer, faster decisions.
+            </p>
+            <figure class="chart"><div class="svg-wrap"><svg id="svgCuped" class="svg-chart" viewBox="0 0 620 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="CUPED variance reduction"></svg></div></figure>
+          </div>
+        </div>
+        <figure class="chart wide"><div class="svg-wrap"><svg id="svgPower" class="svg-chart" viewBox="0 0 620 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Power vs sample size"></svg></div><figcaption>Why design matters: the sample you need explodes as the effect you want to catch shrinks.</figcaption></figure>
+      </section>
+
+      <!-- ===== Method ===== -->
+      <section class="method reveal">
+        <h2 class="block-h">How it works</h2>
+        <ol class="steps">
+          <li><strong>Power &amp; sample size.</strong> Given a baseline rate, a minimum detectable effect, alpha, and power, the tool solves the two-proportion sample-size formula for the users needed per arm, then divides by your traffic to estimate a runtime.</li>
+          <li><strong>Significance.</strong> Results are judged with a two-proportion z-test: a pooled standard error for the p-value, an unpooled one for the confidence interval on the absolute lift. The interval, not just the p-value, is what tells you whether the effect is worth shipping.</li>
+          <li><strong>Peeking.</strong> Monte Carlo A/A simulations show how repeated looks inflate the false-positive rate far past the nominal 5%, and why a fixed horizon or a sequential test is needed.</li>
+          <li><strong>CUPED.</strong> A simulation with a correlated pre-period covariate demonstrates the variance reduction (about one minus the squared correlation), the cheapest way to make an experiment more sensitive.</li>
+        </ol>
+        <div class="repo">
+          <a class="btn" href="https://github.com/geetpurohit" target="_blank" rel="noopener">View the code on GitHub →</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const $ = (id: string) => document.getElementById(id)!;
+
+    // --- normal distribution helpers ---
+    function erf(x: number): number {
+      const t = 1 / (1 + 0.3275911 * Math.abs(x));
+      const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+      return x >= 0 ? y : -y;
+    }
+    const normCdf = (x: number) => 0.5 * (1 + erf(x / Math.SQRT2));
+    function normInv(p: number): number {
+      // Acklam's inverse normal CDF approximation
+      const a = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
+      const b = [-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02, 6.680131188771972e+01, -1.328068155288572e+01];
+      const c = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+      const d = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00, 3.754408661907416e+00];
+      const pl = 0.02425;
+      let q, r;
+      if (p < pl) { q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+      if (p <= 1 - pl) { q = p - 0.5; r = q * q; return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1); }
+      q = Math.sqrt(-2 * Math.log(1 - p)); return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+
+    // ---- animated SVG charts (teal theme) ----
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    function E(tag: string, attrs: Record<string, any>, parent?: Element): SVGElement {
+      const e = document.createElementNS(SVGNS, tag);
+      for (const k in attrs) e.setAttribute(k, String(attrs[k]));
+      if (parent) parent.appendChild(e);
+      return e as SVGElement;
+    }
+    const GEO = { W: 620, H: 400, l: 56, r: 20, t: 26, b: 46 };
+    const lerp = (v: number, d0: number, d1: number, r0: number, r1: number) => r0 + (d1 === d0 ? 0 : (v - d0) / (d1 - d0)) * (r1 - r0);
+    function frame(svg: SVGElement, xlabel: string, ylabel: string) {
+      const { l, r, t, b, W, H } = GEO;
+      E('line', { x1: l, y1: H - b, x2: W - r, y2: H - b, stroke: '#2a2440', 'stroke-width': 1 }, svg);
+      E('line', { x1: l, y1: t, x2: l, y2: H - b, stroke: '#2a2440', 'stroke-width': 1 }, svg);
+      if (xlabel) { const tx = E('text', { x: (l + W - r) / 2, y: H - 8, 'text-anchor': 'middle', class: 'ax-lbl' }, svg); tx.textContent = xlabel; }
+      if (ylabel) { const ty = E('text', { x: 15, y: (t + H - b) / 2, 'text-anchor': 'middle', transform: `rotate(-90 15 ${(t + H - b) / 2})`, class: 'ax-lbl' }, svg); ty.textContent = ylabel; }
+    }
+    function yGrid(svg: SVGElement, ymin: number, ymax: number, fmt: (v: number) => string, n = 4) {
+      const { l, r, t, b, W, H } = GEO;
+      for (let i = 0; i <= n; i++) {
+        const v = ymin + (ymax - ymin) * i / n, yy = lerp(v, ymin, ymax, H - b, t);
+        E('line', { x1: l, y1: yy, x2: W - r, y2: yy, stroke: '#181327', 'stroke-width': 1 }, svg);
+        const tk = E('text', { x: l - 8, y: yy + 3.5, 'text-anchor': 'end', class: 'ax-tick' }, svg); tk.textContent = fmt(v);
+      }
+    }
+    function bar(svg: SVGElement, x: number, y: number, w: number, h: number, fill: string, delay: number) {
+      const rc = E('rect', { x, y, width: w, height: Math.max(0, h), rx: 2, fill, class: 'bar' }, svg);
+      (rc as unknown as HTMLElement).style.transition = `transform .7s cubic-bezier(.2,.7,.3,1) ${delay}s`;
+    }
+    function legend(svg: SVGElement, items: Array<[string, string]>) {
+      const { l, t } = GEO; let x = l + 4;
+      for (const [label, color] of items) {
+        const g = E('g', {}, svg);
+        E('rect', { x, y: t + 1, width: 14, height: 3, rx: 1.5, fill: color }, g);
+        const tx = E('text', { x: x + 19, y: t + 7, class: 'leg-txt' }, g); tx.textContent = label;
+        x += 19 + label.length * 6.4 + 16;
+      }
+    }
+    const plays: Array<{ el: SVGElement; play: () => void; done: boolean }> = [];
+    const onPlay = (svg: SVGElement, play: () => void) => plays.push({ el: svg, play, done: false });
+    function drawReveal(svg: SVGElement, id: string) {
+      const { l, r, t, b, W, H } = GEO;
+      const cp = E('clipPath', { id }, svg);
+      const rect = E('rect', { x: l, y: t - 6, width: 0, height: H - b - t + 12 }, cp);
+      const g = E('g', { 'clip-path': `url(#${id})` }, svg);
+      const run = () => { const full = W - r - l, dur = 1300, s = performance.now(); const step = (n: number) => { const p = Math.min(1, (n - s) / dur); rect.setAttribute('width', String(full * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+      return { g, run };
+    }
+
+    function renderCharts(c: any) {
+      const { l, r, t, b, W, H } = GEO;
+
+      // POWER — three curves draw on, with the 80% target line
+      (() => {
+        const svg = $('svgPower') as unknown as SVGElement;
+        const ns = c.power.ns as number[];
+        // distinct hue + dash per series so they can't be confused
+        const series: Array<[string, number[], string, string]> = [
+          ['10% lift', c.power.mde10, '#2dd4bf', ''],
+          ['5% lift', c.power.mde5, '#38bdf8', '9 5'],
+          ['2% lift', c.power.mde2, '#a78bfa', '2 5'],
+        ];
+        const xmax = ns[ns.length - 1];
+        yGrid(svg, 0, 1, (v) => (v * 100).toFixed(0) + '%');
+        frame(svg, 'users per arm', 'power');
+        const X = (v: number) => lerp(v, 0, xmax, l, W - r), Y = (v: number) => lerp(v, 0, 1, H - b, t);
+        E('line', { x1: l, y1: Y(0.8), x2: W - r, y2: Y(0.8), stroke: '#34d399', 'stroke-width': 1.2, 'stroke-dasharray': '6 4', class: 'fade' }, svg);
+        const tl = E('text', { x: W - r - 4, y: Y(0.8) - 6, 'text-anchor': 'end', class: 'fade', style: 'fill:#34d399;font-size:12px;font-weight:600' }, svg); tl.textContent = '80% power target';
+        const { g, run } = drawReveal(svg, 'clipPower');
+        series.forEach(([, arr, color, dash]) => E('path', { d: arr.map((v, i) => (i ? 'L' : 'M') + X(ns[i]).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' '), fill: 'none', stroke: color, 'stroke-width': 2.8, ...(dash ? { 'stroke-dasharray': dash } : {}) }, g));
+        // direct end-of-line labels, colored to match each curve (clearer than a legend)
+        series.forEach(([label, arr, color]) => {
+          const yv = Y(arr[arr.length - 1]);
+          const t2 = E('text', { x: X(ns[ns.length - 1]) - 4, y: Math.max(t + 13, yv - 8), 'text-anchor': 'end', class: 'fade', style: `fill:${color};font-size:12.5px;font-weight:600` }, svg);
+          t2.textContent = label;
+        });
+        onPlay(svg, () => { svg.classList.add('play'); run(); });
+      })();
+
+      // CUPED — two overlaid histograms grow
+      (() => {
+        const svg = $('svgCuped') as unknown as SVGElement;
+        const edges = c.cuped.edges as number[], naive = c.cuped.naive as number[], cuped = c.cuped.cuped as number[];
+        const ymax = Math.max(...naive, ...cuped) * 1.08, xmin = edges[0], xmax = edges[edges.length - 1];
+        yGrid(svg, 0, ymax, (v) => v >= 1000 ? (v / 1000).toFixed(0) + 'k' : String(Math.round(v)));
+        frame(svg, 'estimated effect (true value = 0)', 'experiments');
+        const X = (v: number) => lerp(v, xmin, xmax, l, W - r), Y = (v: number) => lerp(v, 0, ymax, H - b, t);
+        naive.forEach((cnt, i) => bar(svg, X(edges[i]) + 0.5, Y(cnt), Math.max(1, X(edges[i + 1]) - X(edges[i]) - 1), (H - b) - Y(cnt), 'rgba(107,102,136,0.55)', i * 0.012));
+        cuped.forEach((cnt, i) => bar(svg, X(edges[i]) + 0.5, Y(cnt), Math.max(1, X(edges[i + 1]) - X(edges[i]) - 1), (H - b) - Y(cnt), 'rgba(34,211,238,0.85)', i * 0.012));
+        E('line', { x1: X(0), y1: t, x2: X(0), y2: H - b, stroke: '#fb7185', 'stroke-width': 1.2, 'stroke-dasharray': '5 4' }, svg);
+        legend(svg, [['standard', '#6b6688'], ['CUPED', '#22d3ee']]);
+        onPlay(svg, () => svg.classList.add('play'));
+      })();
+
+      // PEEKING — line draws on, markers fade, 5% target
+      (() => {
+        const svg = $('svgPeeking') as unknown as SVGElement;
+        const peeks = c.peeking.peeks as number[], fpr = (c.peeking.fpr as number[]).map((f) => f * 100);
+        const xmax = peeks[peeks.length - 1], ymax = Math.max(...fpr, 5) * 1.16;
+        yGrid(svg, 0, ymax, (v) => v.toFixed(0) + '%');
+        frame(svg, 'times you check for significance', 'false-positive rate');
+        const X = (v: number) => lerp(v, 1, xmax, l, W - r), Y = (v: number) => lerp(v, 0, ymax, H - b, t);
+        E('line', { x1: l, y1: Y(5), x2: W - r, y2: Y(5), stroke: '#34d399', 'stroke-width': 1.2, 'stroke-dasharray': '6 4', class: 'fade' }, svg);
+        const { g, run } = drawReveal(svg, 'clipPeek');
+        E('path', { d: fpr.map((v, i) => (i ? 'L' : 'M') + X(peeks[i]).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' '), fill: 'none', stroke: '#e879f9', 'stroke-width': 2.4 }, g);
+        fpr.forEach((v, i) => E('circle', { cx: X(peeks[i]), cy: Y(v), r: 4, fill: '#e879f9', class: 'fade' }, svg));
+        onPlay(svg, () => { svg.classList.add('play'); run(); });
+      })();
+
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          if (!en.isIntersecting) return;
+          const rec = plays.find((o) => o.el === en.target && !o.done);
+          if (rec) { rec.done = true; rec.play(); }
+          io.unobserve(en.target);
+        });
+      }, { threshold: 0.3 });
+      plays.forEach((o) => io.observe(o.el));
+    }
+
+    async function main() {
+      // populate simulated headline numbers (optional)
+      try {
+        const data = await (await fetch('/experiment/experiment.json', { cache: 'no-cache' })).json();
+        $('varRed').textContent = Math.round(data.cuped.variance_reduction * 100) + '%';
+        $('effMult').textContent = data.cuped.effective_sample_multiplier.toFixed(1) + 'x';
+        const fpr = data.peeking.false_positive_rate;
+        $('fprMax').textContent = Math.round(fpr[fpr.length - 1] * 100) + '%';
+        if (data.charts) renderCharts(data.charts);
+      } catch { /* charts/numbers optional before simulate.py is run */ }
+
+      // ---- Panel 1: design ----
+      const dz = ['base', 'mde', 'alpha', 'power', 'traffic'];
+      dz.forEach((k) => $('in_' + k).addEventListener('input', design));
+      function design() {
+        const p = parseFloat(($('in_base') as HTMLInputElement).value) / 100;
+        const mde = parseFloat(($('in_mde') as HTMLInputElement).value) / 100;
+        const alpha = parseFloat(($('in_alpha') as HTMLInputElement).value) / 100;
+        const power = parseFloat(($('in_power') as HTMLInputElement).value) / 100;
+        const traffic = parseFloat(($('in_traffic') as HTMLInputElement).value);
+        $('out_base').textContent = (p * 100).toFixed(1) + '%';
+        $('out_mde').textContent = '+' + (mde * 100).toFixed(1) + '%';
+        $('out_alpha').textContent = alpha.toFixed(2);
+        $('out_power').textContent = (power * 100).toFixed(0) + '%';
+        $('out_traffic').textContent = traffic.toLocaleString() + '/day';
+
+        const p2 = p * (1 + mde);
+        const za = normInv(1 - alpha / 2);
+        const zb = normInv(power);
+        const n = Math.pow(za * Math.sqrt(2 * p * (1 - p)) + zb * Math.sqrt(p * (1 - p) + p2 * (1 - p2)), 2) / Math.pow(p2 - p, 2);
+        const nArm = Math.ceil(n);
+        $('nPerArm').textContent = nArm.toLocaleString();
+        $('nTotal').textContent = (nArm * 2).toLocaleString();
+        $('days').textContent = Math.max(1, Math.ceil((nArm * 2) / traffic)).toLocaleString();
+        $('detectRate').textContent = (p2 * 100).toFixed(2) + '%';
+      }
+
+      // ---- Panel 2: analyze ----
+      const az = ['nc', 'xc', 'nt', 'xt'];
+      az.forEach((k) => $('in_' + k).addEventListener('input', analyze));
+      function analyze() {
+        const nc = Math.max(1, parseFloat(($('in_nc') as HTMLInputElement).value) || 0);
+        const xc = Math.min(nc, Math.max(0, parseFloat(($('in_xc') as HTMLInputElement).value) || 0));
+        const nt = Math.max(1, parseFloat(($('in_nt') as HTMLInputElement).value) || 0);
+        const xt = Math.min(nt, Math.max(0, parseFloat(($('in_xt') as HTMLInputElement).value) || 0));
+        const pc = xc / nc, pt = xt / nt;
+        const diff = pt - pc;
+        const pooled = (xc + xt) / (nc + nt);
+        const sePool = Math.sqrt(pooled * (1 - pooled) * (1 / nc + 1 / nt));
+        const z = sePool > 0 ? diff / sePool : 0;
+        const pval = 2 * (1 - normCdf(Math.abs(z)));
+        const seUn = Math.sqrt(pc * (1 - pc) / nc + pt * (1 - pt) / nt);
+        const lo = diff - 1.96 * seUn, hi = diff + 1.96 * seUn;
+        const relLift = pc > 0 ? diff / pc : 0;
+
+        $('rateC').textContent = (pc * 100).toFixed(2) + '%';
+        $('rateT').textContent = (pt * 100).toFixed(2) + '%';
+        const liftEl = $('lift');
+        liftEl.textContent = (relLift >= 0 ? '+' : '') + (relLift * 100).toFixed(1) + '%';
+        liftEl.className = 'rate-num lift ' + (relLift > 0 ? 'pos' : relLift < 0 ? 'neg' : '');
+
+        $('pvalue').textContent = 'p = ' + (pval < 0.001 ? '<0.001' : pval.toFixed(3));
+        const sig = pval < 0.05;
+        const card = $('verdictCard');
+        const vEl = $('verdict');
+        if (sig && diff > 0) { vEl.textContent = 'Significant win'; card.dataset.v = 'win'; }
+        else if (sig && diff < 0) { vEl.textContent = 'Significant drop'; card.dataset.v = 'loss'; }
+        else { vEl.textContent = 'Not significant'; card.dataset.v = 'flat'; }
+
+        // CI bar, mapped onto a symmetric absolute-lift scale
+        const span = Math.max(Math.abs(lo), Math.abs(hi), 0.005) * 1.2;
+        const toPct = (v: number) => (0.5 + v / (2 * span)) * 100;
+        const bar = $('ciBar') as HTMLElement;
+        bar.style.left = toPct(lo) + '%';
+        bar.style.width = Math.max(1, toPct(hi) - toPct(lo)) + '%';
+        bar.dataset.crosses = lo <= 0 && hi >= 0 ? 'yes' : 'no';
+        $('ciText').textContent = `${(lo * 100).toFixed(2)} pp to ${(hi * 100).toFixed(2)} pp (absolute)`;
+
+        $('verdictFoot').textContent = sig
+          ? (diff > 0
+              ? 'The interval sits clear of zero, so the lift is unlikely to be chance. Ship it.'
+              : 'The interval sits below zero, a real regression. Do not ship.')
+          : 'The interval straddles zero, so you cannot rule out no effect. Collect more data or call it flat.';
+      }
+
+      design();
+      analyze();
+    }
+
+    main();
+  </script>
+
+  <style>
+    .ex {
+      position: relative; z-index: 2; padding: clamp(28px, 6vw, 64px) var(--pad-x) 120px;
+      /* Significance theme: teal / cyan "lab instrument" */
+      --violet: #0891b2; --purple: #06b6d4; --purple-lt: #22d3ee; --lilac: #67e8f9; --magenta: #2dd4bf;
+      --accent-rgb: 34,211,238;
+      --grad-text: linear-gradient(120deg, #22d3ee 0%, #06b6d4 40%, #14b8a6 75%, #67e8f9 100%);
+      --grad-line: linear-gradient(90deg, transparent, #06b6d4, transparent);
+      --font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Roboto Mono', monospace;
+    }
+    .ex-container { width: 100%; max-width: 1080px; margin-inline: auto; }
+    /* graph-paper motif behind the hero */
+    .ex-head { position: relative; }
+    .ex-head::before {
+      content: ''; position: absolute; inset: -40px -30px -10px; z-index: -1; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(34,211,238,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34,211,238,0.07) 1px, transparent 1px);
+      background-size: 30px 30px;
+      -webkit-mask-image: radial-gradient(120% 100% at 20% 0%, #000 20%, transparent 75%);
+      mask-image: radial-gradient(120% 100% at 20% 0%, #000 20%, transparent 75%);
+    }
+    .back { display: inline-block; font-family: var(--font-display); font-size: 13px; color: var(--muted); margin-bottom: clamp(32px, 6vw, 56px); transition: color .25s; }
+    .back:hover { color: var(--lilac); }
+
+    .ex-title { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 6vw, 68px); letter-spacing: -0.03em; line-height: 1.02; margin-bottom: 22px; }
+    .ex-lead { font-size: clamp(16.5px, 1.3vw, 19px); color: var(--text-dim); font-weight: 300; line-height: 1.8; max-width: 810px; }
+    .ex-lead strong { color: var(--text); font-weight: 500; }
+    .ex-lead em { color: var(--lilac); font-style: normal; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+    .tag { font-family: var(--font-display); font-size: 12px; padding: 5px 13px; border-radius: 7px; background: rgba(var(--accent-rgb),0.05); border: 1px solid var(--border); color: var(--text-dim); }
+
+    .block-h { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -0.02em; margin-bottom: 8px; }
+    .block-sub { color: var(--text-dim); font-weight: 300; margin-bottom: 24px; max-width: 460px; line-height: 1.7; }
+
+    .panel { margin-top: clamp(40px, 6vw, 68px); }
+    .panel-inner {
+      display: grid; grid-template-columns: 1fr 1.05fr; gap: clamp(24px, 4vw, 52px);
+      padding: clamp(22px, 3vw, 34px); border: 1px solid var(--border); border-radius: 20px;
+      background: linear-gradient(165deg, rgba(255,255,255,0.022), rgba(var(--accent-rgb),0.02));
+    }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; align-content: start; }
+    .field { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
+    .field-wide { grid-column: span 2; }
+    .field-top { display: flex; justify-content: space-between; align-items: baseline; color: var(--text-dim); }
+    .field-top output { font-family: var(--font-display); font-weight: 600; color: var(--lilac); font-size: 13px; }
+    input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 3px; background: linear-gradient(90deg, var(--violet), var(--purple)); outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 3px solid var(--purple); cursor: pointer; box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.2); }
+    input[type=range]::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 3px solid var(--purple); cursor: pointer; }
+    .num { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text); border-radius: 9px; padding: 9px 11px; font-family: var(--font-body); font-size: 14px; width: 100%; }
+    .num:focus { border-color: rgba(var(--accent-rgb),0.5); outline: none; }
+
+    .panel-right { display: flex; flex-direction: column; }
+    .stat-card, .verdict-card { border: 1px solid var(--border); border-radius: 16px; padding: 24px; background: rgba(255,255,255,0.02); height: 100%; }
+    .stat-label { font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .stat-value { font-family: var(--font-mono); font-weight: 700; font-size: clamp(34px, 5.4vw, 52px); letter-spacing: -0.03em; line-height: 1.1; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-sub { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+    .stat-sub span { color: var(--lilac); font-weight: 600; }
+    .stat-divider { height: 1px; background: var(--border); margin: 18px 0; }
+    .stat-row { display: flex; gap: 30px; }
+    .stat-mini { font-family: var(--font-mono); font-weight: 700; font-size: 23px; color: var(--text); }
+    .stat-cap { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .stat-foot { font-size: 11.5px; color: var(--muted); margin-top: 18px; line-height: 1.6; }
+
+    .verdict-card[data-v="win"] { border-color: rgba(52,211,153,0.5); background: rgba(52,211,153,0.06); }
+    .verdict-card[data-v="loss"] { border-color: rgba(244,63,94,0.5); background: rgba(244,63,94,0.06); }
+    .verdict-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
+    .verdict-word { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 3vw, 28px); letter-spacing: -0.02em; }
+    .verdict-card[data-v="win"] .verdict-word { color: #34d399; }
+    .verdict-card[data-v="loss"] .verdict-word { color: #fb7185; }
+    .verdict-p { font-family: var(--font-mono); font-size: 15px; color: var(--lilac); font-weight: 600; }
+    .rates { display: flex; gap: 12px; }
+    .rate-col { flex: 1; }
+    .rate-num { font-family: var(--font-mono); font-weight: 700; font-size: clamp(19px, 2.8vw, 24px); letter-spacing: -0.02em; color: var(--text); }
+    .rate-num.lift.pos { color: #34d399; } .rate-num.lift.neg { color: #fb7185; }
+    .rate-cap { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .ci-block { margin-top: 22px; }
+    .ci-label { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .ci-track { position: relative; height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; }
+    .ci-zero { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: rgba(255,255,255,0.35); z-index: 2; }
+    .ci-bar { position: absolute; top: 0; height: 100%; border-radius: 5px; background: linear-gradient(90deg, #a855f7, #34d399); transition: left .25s, width .25s; }
+    .ci-bar[data-crosses="yes"] { background: linear-gradient(90deg, #6b6688, #948cad); }
+    .ci-text { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-dim); margin-top: 10px; }
+    .verdict-foot { font-size: 12px; color: var(--muted); margin-top: 16px; line-height: 1.6; }
+
+    .results { margin-top: clamp(56px, 8vw, 92px); }
+    .traps { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin: 24px 0; }
+    .trap { border: 1px solid var(--border); border-radius: 16px; padding: 22px; background: rgba(255,255,255,0.02); }
+    .trap-h { font-family: var(--font-display); font-weight: 600; font-size: 18px; margin-bottom: 10px; color: var(--lilac); }
+    .trap-p { font-size: 14px; color: var(--text-dim); font-weight: 300; line-height: 1.7; margin-bottom: 16px; }
+    .trap-p strong { color: var(--text); font-weight: 600; }
+    .trap-p em { color: var(--lilac); font-style: normal; }
+    .chart { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.02); }
+    .chart img { width: 100%; height: auto; display: block; }
+    .svg-wrap { padding: 10px 10px 4px; }
+    .svg-chart { width: 100%; height: auto; display: block; }
+    :global(.svg-chart text) { font-family: var(--font-body); }
+    :global(.svg-chart .ax-lbl) { fill: #a9b6c9; font-size: 12.5px; }
+    :global(.svg-chart .ax-tick) { fill: #93a4b8; font-size: 11px; font-family: var(--font-mono); }
+    :global(.svg-chart .leg-txt), :global(.svg-chart .val-txt) { fill: #d3e6ee; font-size: 12px; font-family: var(--font-display); }
+    :global(.svg-chart .bar) { transform: scaleY(0); transform-box: fill-box; transform-origin: bottom; }
+    :global(.svg-chart.play .bar) { transform: scaleY(1); }
+    :global(.svg-chart .fade) { opacity: 0; transition: opacity .6s ease .5s; }
+    :global(.svg-chart.play .fade) { opacity: 1; }
+    @media (prefers-reduced-motion: reduce) {
+      :global(.svg-chart .bar) { transform: none; }
+      :global(.svg-chart .fade) { opacity: 1; transition: none; }
+    }
+    .chart.wide { margin-top: 4px; }
+    .chart figcaption { font-size: 12.5px; color: var(--muted); padding: 10px 14px; border-top: 1px solid var(--border); line-height: 1.5; }
+    .charts-note { margin-top: 18px; font-size: 13.5px; color: var(--muted); }
+    .charts-note code { font-family: ui-monospace, monospace; color: var(--lilac); }
+
+    .method { margin-top: clamp(56px, 8vw, 92px); }
+    .steps { margin: 18px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 12px; color: var(--text-dim); font-weight: 300; line-height: 1.65; }
+    .steps strong { color: var(--text); font-weight: 600; }
+    .repo { margin-top: 32px; }
+    .btn { display: inline-block; font-family: var(--font-display); font-weight: 600; font-size: 14px; padding: 12px 22px; border-radius: 10px; color: var(--text); border: 1px solid rgba(var(--accent-rgb),0.4); background: rgba(var(--accent-rgb),0.08); transition: all .25s; }
+    .btn:hover { background: rgba(var(--accent-rgb),0.16); border-color: var(--purple); }
+
+    @media (max-width: 820px) {
+      .panel-inner { grid-template-columns: 1fr; }
+      .traps { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .fields { grid-template-columns: 1fr; }
+      .field-wide { grid-column: span 1; }
+    }
+  </style>
+</Base>

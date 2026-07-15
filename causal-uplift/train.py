@@ -172,6 +172,29 @@ def main():
     up_all = m1.predict_proba(X)[:, 1] - m0.predict_proba(X)[:, 1]
     thr = float(np.median(np.r_[m1.predict_proba(X)[:, 1], m0.predict_proba(X)[:, 1]]))
 
+    # ---- chart data for the in-browser animated SVG charts ----
+    def _ds(a, n=48):
+        a = np.asarray(a, float)
+        if len(a) <= n:
+            return [round(float(x), 3) for x in a]
+        idx = np.linspace(0, len(a) - 1, n).astype(int)
+        return [round(float(a[i]), 3) for i in idx]
+
+    _dec = pd.qcut(up_t_te, 10, labels=False, duplicates="drop")
+    _df_dec = pd.DataFrame({"dec": _dec, "y": yte, "t": tte})
+    _lift = (_df_dec.groupby("dec")
+             .apply(lambda g: (g[g.t == 1].y.mean() - g[g.t == 0].y.mean()) * 100)
+             .reindex(range(10)).fillna(0))
+    _counts, _edges = np.histogram(up_all * 100, bins=28)
+    charts = {
+        "qini": {"fr": _ds(fr), "t": _ds(q_t), "x": _ds(q_x), "rand": _ds(rand_t)},
+        "deciles": {"lift": [round(float(v), 2) for v in _lift.values], "ate": round(ate * 100, 2)},
+        "distribution": {"counts": [int(c) for c in _counts],
+                         "edges": [round(float(e), 2) for e in _edges]},
+        "ate": {"control": round(float(df[df.t == 0].y.mean() * 100), 2),
+                "treated": round(float(df[df.t == 1].y.mean() * 100), 2)},
+    }
+
     # ---- charts ----
     try:
         import matplotlib
@@ -266,6 +289,7 @@ def main():
         "encoding": enc,
         "features": features,
         "models": {"treat": model_dict(m1), "control": model_dict(m0)},
+        "charts": charts,
     }
     (OUT / "uplift.json").write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"\nWrote {OUT / 'uplift.json'}")

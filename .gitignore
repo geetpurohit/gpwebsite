@@ -6,6 +6,11 @@ dist/
 credit-risk-scorecard/data/
 causal-uplift/data/
 
+# chart PNGs are a build byproduct; the site renders animated SVG from the JSON instead
+public/credit-risk/*.png
+public/uplift/*.png
+public/experiment/*.png
+
 # compiled résumé preview (build artifact; the served copy is public/Geet_s_Resume.pdf)
 /Geet_Purohit_Resume.pdf
 /public/Geet_Purohit_Resume_preview.pdf
