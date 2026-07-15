@@ -89,15 +89,12 @@ const description =
         </div>
 
         <div class="charts">
-          <figure class="chart"><img src="/credit-risk/roc.png" alt="ROC curve" loading="lazy" /><figcaption>ROC: scorecard vs. challenger</figcaption></figure>
-          <figure class="chart"><img src="/credit-risk/calibration.png" alt="Calibration curve" loading="lazy" /><figcaption>Calibration: predicted vs. actual default rate</figcaption></figure>
-          <figure class="chart"><img src="/credit-risk/ks.png" alt="KS separation" loading="lazy" /><figcaption>KS separation of goods vs. bads</figcaption></figure>
-          <figure class="chart"><img src="/credit-risk/iv.png" alt="Information value by feature" loading="lazy" /><figcaption>Predictive power (IV) by feature</figcaption></figure>
-          <figure class="chart wide"><img src="/credit-risk/shap.png" alt="SHAP summary" loading="lazy" /><figcaption>SHAP summary: XGBoost challenger</figcaption></figure>
+          <figure class="chart"><div class="svg-wrap"><svg id="svgRoc" class="svg-chart" viewBox="0 0 620 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="ROC curve"></svg></div><figcaption>ROC: scorecard vs. challenger</figcaption></figure>
+          <figure class="chart"><div class="svg-wrap"><svg id="svgCalib" class="svg-chart" viewBox="0 0 620 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Calibration curve"></svg></div><figcaption>Calibration: predicted vs. actual default rate</figcaption></figure>
+          <figure class="chart"><div class="svg-wrap"><svg id="svgKs" class="svg-chart" viewBox="0 0 620 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="KS separation"></svg></div><figcaption>KS separation of goods vs. bads</figcaption></figure>
+          <figure class="chart"><div class="svg-wrap"><svg id="svgIv" class="svg-chart" viewBox="0 0 620 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Information value by feature"></svg></div><figcaption>Predictive power (IV) by feature</figcaption></figure>
+          <figure class="chart wide"><div class="svg-wrap"><svg id="svgShap" class="svg-chart" viewBox="0 0 1240 340" preserveAspectRatio="xMidYMid meet" role="img" aria-label="SHAP importance"></svg></div><figcaption>SHAP importance: mean impact of each feature in the XGBoost challenger</figcaption></figure>
         </div>
-        <p id="chartsNote" class="charts-note" hidden>
-          Charts appear after you run <code>train.py</code> (it writes them into <code>public/credit-risk/</code>).
-        </p>
       </section>
 
       <!-- ===== Method ===== -->
@@ -129,6 +126,146 @@ const description =
     const $ = (id: string) => document.getElementById(id)!;
     const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
+    // ---- animated SVG charts (violet theme) ----
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    function E(tag: string, attrs: Record<string, any>, parent?: Element): SVGElement {
+      const e = document.createElementNS(SVGNS, tag);
+      for (const k in attrs) e.setAttribute(k, String(attrs[k]));
+      if (parent) parent.appendChild(e);
+      return e as SVGElement;
+    }
+    const GEO = { W: 620, H: 400, l: 54, r: 20, t: 26, b: 46 };
+    const lerp = (v: number, d0: number, d1: number, r0: number, r1: number) => r0 + (d1 === d0 ? 0 : (v - d0) / (d1 - d0)) * (r1 - r0);
+    function frame(svg: SVGElement, xlabel: string, ylabel: string, H = GEO.H) {
+      const { l, r, t, b, W } = GEO;
+      E('line', { x1: l, y1: H - b, x2: W - r, y2: H - b, stroke: '#2a2440', 'stroke-width': 1 }, svg);
+      E('line', { x1: l, y1: t, x2: l, y2: H - b, stroke: '#2a2440', 'stroke-width': 1 }, svg);
+      if (xlabel) { const tx = E('text', { x: (l + W - r) / 2, y: H - 8, 'text-anchor': 'middle', class: 'ax-lbl' }, svg); tx.textContent = xlabel; }
+      if (ylabel) { const ty = E('text', { x: 15, y: (t + H - b) / 2, 'text-anchor': 'middle', transform: `rotate(-90 15 ${(t + H - b) / 2})`, class: 'ax-lbl' }, svg); ty.textContent = ylabel; }
+    }
+    function yGrid(svg: SVGElement, ymin: number, ymax: number, fmt: (v: number) => string, n = 4, H = GEO.H) {
+      const { l, r, t, b, W } = GEO;
+      for (let i = 0; i <= n; i++) {
+        const v = ymin + (ymax - ymin) * i / n, yy = lerp(v, ymin, ymax, H - b, t);
+        E('line', { x1: l, y1: yy, x2: W - r, y2: yy, stroke: '#181327', 'stroke-width': 1 }, svg);
+        const tk = E('text', { x: l - 8, y: yy + 3.5, 'text-anchor': 'end', class: 'ax-tick' }, svg); tk.textContent = fmt(v);
+      }
+    }
+    function legend(svg: SVGElement, items: Array<[string, string]>) {
+      const { l, t } = GEO; let x = l + 4;
+      for (const [label, color] of items) {
+        const g = E('g', {}, svg);
+        E('rect', { x, y: t + 1, width: 14, height: 3, rx: 1.5, fill: color }, g);
+        const tx = E('text', { x: x + 19, y: t + 7, class: 'leg-txt' }, g); tx.textContent = label;
+        x += 19 + label.length * 6.4 + 16;
+      }
+    }
+    const plays: Array<{ el: SVGElement; play: () => void; done: boolean }> = [];
+    const onPlay = (svg: SVGElement, play: () => void) => plays.push({ el: svg, play, done: false });
+    function drawReveal(svg: SVGElement, id: string, H = GEO.H) {
+      const { l, r, t, b, W } = GEO;
+      const cp = E('clipPath', { id }, svg);
+      const rect = E('rect', { x: l, y: t - 6, width: 0, height: H - b - t + 12 }, cp);
+      const g = E('g', { 'clip-path': `url(#${id})` }, svg);
+      const run = () => { const full = W - r - l, dur = 1300, s = performance.now(); const step = (n: number) => { const p = Math.min(1, (n - s) / dur); rect.setAttribute('width', String(full * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+      return { g, run };
+    }
+    function line(g: SVGElement, xs: number[], ys: number[], X: (v: number) => number, Y: (v: number) => number, color: string, w: number, dash?: string) {
+      const d = xs.map((x, i) => (i ? 'L' : 'M') + X(x).toFixed(1) + ' ' + Y(ys[i]).toFixed(1)).join(' ');
+      E('path', { d, fill: 'none', stroke: color, 'stroke-width': w, ...(dash ? { 'stroke-dasharray': dash } : {}) }, g);
+    }
+    // horizontal bar chart (bars grow from the left; wide left gutter for labels)
+    function hbars(svg: SVGElement, labels: string[], values: number[], color: string, fmt: (v: number) => string, W = GEO.W, H = GEO.H) {
+      const { r, t, b } = GEO;
+      const L = 196;             // gutter wide enough for the longest feature names
+      const xr = W - r - 50;     // room for the value label at the end of each bar
+      const vmax = Math.max(...values) * 1.02 || 1;
+      const n = labels.length, band = (H - b - t) / n;
+      const X = (v: number) => lerp(v, 0, vmax, L, xr);
+      E('line', { x1: L, y1: H - b, x2: W - r, y2: H - b, stroke: '#2a2440', 'stroke-width': 1 }, svg);
+      E('line', { x1: L, y1: t, x2: L, y2: H - b, stroke: '#2a2440', 'stroke-width': 1 }, svg);
+      labels.forEach((lab, i) => {
+        const cy = t + band * (i + 0.5), bh = Math.min(22, band * 0.56);
+        const rc = E('rect', { x: L + 1, y: cy - bh / 2, width: Math.max(1, X(values[i]) - L), height: bh, rx: 2, fill: color, class: 'hbar' }, svg);
+        (rc as unknown as HTMLElement).style.transition = `transform .8s cubic-bezier(.2,.7,.3,1) ${i * 0.06}s`;
+        const tl = E('text', { x: L - 10, y: cy + 3.5, 'text-anchor': 'end', class: 'hbar-lbl' }, svg); tl.textContent = lab;
+        const vt = E('text', { x: X(values[i]) + 7, y: cy + 3.5, class: 'val-txt fade' }, svg); vt.textContent = fmt(values[i]);
+      });
+    }
+
+    function renderCharts(c: any) {
+      const { l, r, t, b, W, H } = GEO;
+
+      // ROC — scorecard + challenger lines draw on, over the diagonal
+      (() => {
+        const svg = $('svgRoc') as unknown as SVGElement;
+        yGrid(svg, 0, 1, (v) => v.toFixed(1));
+        frame(svg, 'false positive rate', 'true positive rate');
+        const X = (v: number) => lerp(v, 0, 1, l, W - r), Y = (v: number) => lerp(v, 0, 1, H - b, t);
+        E('line', { x1: X(0), y1: Y(0), x2: X(1), y2: Y(1), stroke: '#4b4368', 'stroke-width': 1.2, 'stroke-dasharray': '3 4' }, svg);
+        const { g, run } = drawReveal(svg, 'clipRoc');
+        if (c.roc.xgb_fpr) line(g, c.roc.xgb_fpr, c.roc.xgb_tpr, X, Y, '#e879f9', 1.8, '7 5');
+        line(g, c.roc.fpr, c.roc.tpr, X, Y, '#c084fc', 2.6);
+        legend(svg, [['scorecard', '#c084fc'], ['XGBoost', '#e879f9']]);
+        onPlay(svg, run);
+      })();
+
+      // Calibration — reliability line draws on, over the diagonal
+      (() => {
+        const svg = $('svgCalib') as unknown as SVGElement;
+        yGrid(svg, 0, 1, (v) => v.toFixed(1));
+        frame(svg, 'predicted default probability', 'observed default rate');
+        const X = (v: number) => lerp(v, 0, 1, l, W - r), Y = (v: number) => lerp(v, 0, 1, H - b, t);
+        E('line', { x1: X(0), y1: Y(0), x2: X(1), y2: Y(1), stroke: '#4b4368', 'stroke-width': 1.2, 'stroke-dasharray': '3 4' }, svg);
+        const { g, run } = drawReveal(svg, 'clipCalib');
+        line(g, c.calibration.mean_pred, c.calibration.frac_pos, X, Y, '#a855f7', 2.4);
+        c.calibration.mean_pred.forEach((mp: number, i: number) => E('circle', { cx: X(mp), cy: Y(c.calibration.frac_pos[i]), r: 3.5, fill: '#c084fc', class: 'fade' }, svg));
+        onPlay(svg, () => { svg.classList.add('play'); run(); });
+      })();
+
+      // KS — cumulative good/bad curves draw on, with the gap shaded
+      (() => {
+        const svg = $('svgKs') as unknown as SVGElement;
+        const thr = c.ks.thr as number[], good = c.ks.good as number[], bad = c.ks.bad as number[];
+        yGrid(svg, 0, 1, (v) => v.toFixed(1));
+        frame(svg, 'score threshold (P default)', 'cumulative share');
+        const X = (v: number) => lerp(v, 0, 1, l, W - r), Y = (v: number) => lerp(v, 0, 1, H - b, t);
+        const area = 'M' + thr.map((x, i) => X(x).toFixed(1) + ' ' + Y(good[i]).toFixed(1)).join(' L ') +
+          ' L' + thr.map((x, i) => X(thr[thr.length - 1 - i]).toFixed(1) + ' ' + Y(bad[bad.length - 1 - i]).toFixed(1)).join(' L ') + ' Z';
+        E('path', { d: area, fill: 'rgba(168,85,247,0.12)', stroke: 'none', class: 'fade' }, svg);
+        const { g, run } = drawReveal(svg, 'clipKs');
+        line(g, thr, good, X, Y, '#34d399', 2.2);
+        line(g, thr, bad, X, Y, '#f43f5e', 2.2);
+        legend(svg, [['goods', '#34d399'], ['bads', '#f43f5e']]);
+        onPlay(svg, () => { svg.classList.add('play'); run(); });
+      })();
+
+      // IV — horizontal bars grow from the left
+      (() => {
+        const svg = $('svgIv') as unknown as SVGElement;
+        hbars(svg, c.iv.labels, c.iv.values, '#8b5cf6', (v) => v.toFixed(3));
+        onPlay(svg, () => svg.classList.add('play'));
+      })();
+
+      // SHAP importance — wide banner, drawn at a wide viewBox so text stays crisp
+      (() => {
+        const svg = $('svgShap') as unknown as SVGElement;
+        if (!c.shap) { (svg.closest('.chart') as HTMLElement).style.display = 'none'; return; }
+        hbars(svg, c.shap.labels, c.shap.values, '#e879f9', (v) => v.toFixed(3), 1240, 340);
+        onPlay(svg, () => svg.classList.add('play'));
+      })();
+
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          if (!en.isIntersecting) return;
+          const rec = plays.find((o) => o.el === en.target && !o.done);
+          if (rec) { rec.done = true; rec.play(); }
+          io.unobserve(en.target);
+        });
+      }, { threshold: 0.3 });
+      plays.forEach((o) => io.observe(o.el));
+    }
+
     async function main() {
       let data: any;
       try {
@@ -140,10 +277,9 @@ const description =
 
       const feats: Feature[] = data.features;
 
-      // Placeholder / chart-missing notices
+      // Placeholder notice
       if (typeof data.meta?.generated === 'string' && data.meta.generated.startsWith('placeholder')) {
-        const b = $('placeholderBanner'); b.hidden = false;
-        const cn = $('chartsNote'); cn.hidden = false;
+        $('placeholderBanner').hidden = false;
       }
 
       // Metric tiles
@@ -153,10 +289,7 @@ const description =
       $('mGini').textContent = data.metrics?.scorecard?.gini?.toFixed(3) ?? '-';
       $('mXgb').textContent = data.metrics?.xgboost?.auc?.toFixed(3) ?? '-';
 
-      // Hide charts that fail to load (before training)
-      document.querySelectorAll<HTMLImageElement>('.chart img').forEach((img) => {
-        img.addEventListener('error', () => { (img.closest('.chart') as HTMLElement).style.display = 'none'; });
-      });
+      if (data.charts) renderCharts(data.charts);
 
       // Build inputs
       const form = $('crForm');
@@ -350,6 +483,23 @@ const description =
     .chart { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.02); }
     .chart.wide { grid-column: 1 / -1; }
     .chart img { width: 100%; height: auto; }
+    .svg-wrap { padding: 10px 10px 4px; }
+    .svg-chart { width: 100%; height: auto; display: block; }
+    :global(.svg-chart text) { font-family: var(--font-body); }
+    :global(.svg-chart .ax-lbl) { fill: #b7aed2; font-size: 12.5px; }
+    :global(.svg-chart .ax-tick) { fill: #a49bbe; font-size: 11px; }
+    :global(.svg-chart .hbar-lbl) { fill: #d3cce6; font-size: 11px; }
+    :global(.svg-chart .leg-txt), :global(.svg-chart .val-txt) { fill: #ded7ef; font-size: 12px; font-family: var(--font-display); }
+    :global(.svg-chart .bar) { transform: scaleY(0); transform-box: fill-box; transform-origin: bottom; }
+    :global(.svg-chart.play .bar) { transform: scaleY(1); }
+    :global(.svg-chart .hbar) { transform: scaleX(0); transform-box: fill-box; transform-origin: left; }
+    :global(.svg-chart.play .hbar) { transform: scaleX(1); }
+    :global(.svg-chart .fade) { opacity: 0; transition: opacity .6s ease .5s; }
+    :global(.svg-chart.play .fade) { opacity: 1; }
+    @media (prefers-reduced-motion: reduce) {
+      :global(.svg-chart .bar), :global(.svg-chart .hbar) { transform: none; }
+      :global(.svg-chart .fade) { opacity: 1; transition: none; }
+    }
     .chart figcaption { font-size: 12.5px; color: var(--muted); padding: 10px 14px; border-top: 1px solid var(--border); }
     .charts-note { margin-top: 18px; font-size: 13.5px; color: var(--muted); }
     .charts-note code { font-family: ui-monospace, monospace; color: var(--lilac); }

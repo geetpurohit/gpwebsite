@@ -30,7 +30,7 @@
 \addtolength{\evensidemargin}{-0.5in}
 \addtolength{\textwidth}{1in}
 \addtolength{\topmargin}{-.5in}
-\addtolength{\textheight}{1.3in}
+\addtolength{\textheight}{1.45in}
 
 \urlstyle{same}
 
@@ -107,9 +107,8 @@
       {Data Scientist III / Engineer III}{Nov. 2024 -- Present}
       {Verizon}{}
       \resumeItemListStart
+        \resumeItem{Built churn models and an intervention simulator estimating the \textbf{incremental impact} of retention treatments (SMS, email, pricing/fee adjustments) on customer behavior, lifting internal decisioning coverage from \textbf{0\% to 60\%} and cutting outsourced engagement volume by \textasciitilde35\%.}
         \resumeItem{Architected a full-stack \textbf{credit-risk platform} that synthetically generates customer data to simulate credit-policy changes and their impact on bad-debt writeoff across \textbf{\$1.2B+ in exposure}, with zero production data.}
-        \resumeItem{Built churn-forecasting models and an intervention simulator (SMS, email, fee adjustments) that lifted internal decisioning coverage from \textbf{0\% to 60\%} and cut outsourced engagement volume by \textasciitilde35\%.}
-        \resumeItem{Engineered \textbf{9 Python \& SQL anomaly-detection microservices} on the Verizon EDW, securing CPNI data via IAM and GitLab CI/CD, saving \textbf{50+ hours/month} across 15 teams and thousands of users.}
         \resumeItem{Led 2 explainable-AI (XAI) frameworks (Streamlit/Qlik) isolating real-time drivers of Verizon Gross Adds, cutting hypothesis-generation time \textbf{73\%} and presenting to \textbf{100+ stakeholders and executives}.}
       \resumeItemListEnd
 
@@ -117,16 +116,9 @@
       {Data Scientist I}{Jan. 2023 -- Nov. 2024}
       {Verizon}{}
       \resumeItemListStart
+        \resumeItem{Ran \textbf{K-Means segmentation} that surfaced 3 at-risk customer cohorts and shaped new retention campaigns, and built Tableau/BigQuery dashboards that eliminated \textbf{10+ hours} of weekly manual reporting.}
+        \resumeItem{Automated serverless \textbf{time-series forecasting} for 9 value-segment consumer brands (Walmart, Tracfone, Straight Talk, FiOS), pioneering a 12-hour email-report system adopted across 3 organizations.}
         \resumeItem{Established a centralized data-science pipeline framework/API for Corporate Finance on GitLab, Domino Data Lab, and GCP, making cross-team collaboration \textbf{63\% more efficient}.}
-        \resumeItem{Automated serverless \textbf{time-series forecasting} for 9 value-segment brands (Walmart, Tracfone, Straight Talk, FiOS), pioneering a 12-hour email-report system adopted across 3 organizations.}
-        \resumeItem{Built Tableau/BigQuery dashboards that eliminated \textbf{10+ hours} of weekly manual reporting; K-Means segmentation surfaced 3 at-risk cohorts that shaped new retention campaigns.}
-      \resumeItemListEnd
-
-    \resumeSubheading
-      {Predictive \& Prescriptive Analytics Intern}{Jun. 2022 -- Aug. 2022}
-      {Verizon}{}
-      \resumeItemListStart
-        \resumeItem{Built a real-time framework to automate competitor (AT\&T, T-Mobile) port-in EDA via D-Tale and train DataRobot models forecasting market-share trajectories, in the internship that converted to a full-time offer.}
       \resumeItemListEnd
 
     \resumeSubheading
@@ -143,17 +135,23 @@
     \resumeSubHeadingListStart
 
       \resumeProjectHeading
-          {\textbf{CreditLens} $|$ \emph{Explainable Credit-Risk Scorecard Engine} $\cdot$ \href{https://geetpurohit.com/projects/credit-risk}{\underline{geetpurohit.com}}}{2026}
+          {\textbf{Persuade} $|$ \emph{Causal Inference, Heterogeneous Treatment Effects} $\cdot$ \href{https://geetpurohit.com/projects/uplift}{\underline{geetpurohit.com}}}{2026}
           \resumeItemListStart
-            \resumeItem{Built an end-to-end credit-default engine on \textbf{2.26M} LendingClub loans with weight-of-evidence binning and a logistic scorecard, benchmarked against an XGBoost/SHAP challenger and validated with ROC-AUC, KS, Gini, and calibration.}
-            \resumeItem{Deployed it as a \textbf{zero-backend, in-browser app} that scores applicants and explains each decision in real time, with no target leakage.}
+            \resumeItem{Built a causal uplift model estimating \textbf{heterogeneous treatment effects} per customer with T-learner and X-learner meta-learners, quantifying the incremental lift of a treatment and validating it on the \textbf{Qini curve}, where accuracy is undefined for counterfactual targeting.}
+            \resumeItem{Deployed it as a \textbf{zero-backend, in-browser app} that scores customers live and separates persuadables from sure things, lost causes, and sleeping dogs, directing treatment spend at the users a campaign actually moves.}
           \resumeItemListEnd
 
       \resumeProjectHeading
-          {\textbf{Persuade} $|$ \emph{Causal Uplift Modeling Engine} $\cdot$ \href{https://geetpurohit.com/projects/uplift}{\underline{geetpurohit.com}}}{2026}
+          {\textbf{Significance} $|$ \emph{A/B Test Design \& Analysis Toolkit} $\cdot$ \href{https://geetpurohit.com/projects/experiment}{\underline{geetpurohit.com}}}{2026}
           \resumeItemListStart
-            \resumeItem{Built a causal uplift model estimating the \textbf{incremental} effect of a treatment per customer via T-learner and X-learner meta-learners, validated on the \textbf{Qini curve} (accuracy is undefined for counterfactual targeting).}
-            \resumeItem{Deployed it as a \textbf{zero-backend, in-browser app} that scores customers live and sorts them into persuadables, sure things, lost causes, and sleeping dogs, focusing spend where a treatment actually moves behavior.}
+            \resumeItem{Built an interactive experimentation toolkit that \textbf{powers and sizes} an A/B test, then analyzes results with a two-proportion z-test and confidence interval, computed live in the browser.}
+            \resumeItem{Demonstrated via Monte Carlo the two failure modes that invalidate most tests: \textbf{peeking} (false positives inflating past \textbf{25\%}) and skipping \textbf{CUPED} variance reduction (\textbf{\textasciitilde50\%} tighter estimates).}
+          \resumeItemListEnd
+
+      \resumeProjectHeading
+          {\textbf{CreditLens} $|$ \emph{Explainable Credit-Risk Scorecard Engine} $\cdot$ \href{https://geetpurohit.com/projects/credit-risk}{\underline{geetpurohit.com}}}{2026}
+          \resumeItemListStart
+            \resumeItem{Built an end-to-end credit-default engine on \textbf{2.26M} LendingClub loans (weight-of-evidence binning, logistic scorecard, XGBoost/SHAP challenger; validated on ROC-AUC, KS, Gini, and calibration), deployed as a \textbf{zero-backend, in-browser app} with no target leakage.}
           \resumeItemListEnd
 
     \resumeSubHeadingListEnd
@@ -162,9 +160,10 @@
 \section{Technical Skills}
  \begin{itemize}[leftmargin=0.15in, label={}]
     \small{\item{
-     \textbf{Languages}{: Python, SQL, R, Scala, Java, JavaScript/TypeScript, \LaTeX} \\
-     \textbf{ML \& Experimentation}{: scikit-learn, XGBoost/LightGBM, PyTorch, TensorFlow, LLMs, A/B testing, causal inference} \\
-     \textbf{Data, Cloud \& Viz}{: Apache Spark, GCP/BigQuery, Airflow, dbt, Docker, PostgreSQL, Tableau, Streamlit, MLflow} \\
+     \textbf{Experimentation \& Causal Inference}{: A/B test design, quasi-experimental methods, uplift modeling, meta-learners (T/X-learner), heterogeneous treatment effects} \\
+     \textbf{Languages}{: Python, SQL, R, Scala, Java, JavaScript/TypeScript} \\
+     \textbf{ML}{: scikit-learn, XGBoost/LightGBM, PyTorch, TensorFlow, LLMs, MLflow} \\
+     \textbf{Data, Cloud \& Viz}{: Apache Spark, GCP/BigQuery, Airflow, dbt, Docker, PostgreSQL, Tableau, Streamlit} \\
     }}
  \end{itemize}
 

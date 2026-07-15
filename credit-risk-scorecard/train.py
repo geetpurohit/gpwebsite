@@ -197,6 +197,28 @@ def main():
     for f in features:
         f["coef"] = round(coef[f["key"]], 5)
 
+    # ---- chart data (downsampled) for the in-browser animated SVG charts ----
+    def _ds(a, n=60):
+        a = np.asarray(a, float)
+        if len(a) <= n:
+            return [round(float(x), 4) for x in a]
+        idx = np.linspace(0, len(a) - 1, n).astype(int)
+        return [round(float(a[i]), 4) for i in idx]
+
+    _fpos, _mpred = calibration_curve(yte, p_te, n_bins=10)
+    _kthr = np.linspace(0, 1, 100)
+    _cbad = np.array([(p_te[yte == 1] <= tt).mean() for tt in _kthr])
+    _cgood = np.array([(p_te[yte == 0] <= tt).mean() for tt in _kthr])
+    _iv_sorted = sorted([(f["label"], f["iv"]) for f in features], key=lambda kv: kv[1])
+    label_of = {f["key"]: f["label"] for f in features}
+    charts = {
+        "roc": {"fpr": _ds(fpr), "tpr": _ds(tpr)},
+        "calibration": {"mean_pred": [round(float(x), 4) for x in _mpred],
+                        "frac_pos": [round(float(x), 4) for x in _fpos]},
+        "ks": {"thr": _ds(_kthr), "good": _ds(_cgood), "bad": _ds(_cbad)},
+        "iv": {"labels": [k for k, _ in _iv_sorted], "values": [round(float(v), 4) for _, v in _iv_sorted]},
+    }
+
     # points scaling (PDO)
     pdo, base_score, base_odds = 20, 600, 20
     factor = pdo / math.log(2)
@@ -217,6 +239,9 @@ def main():
         xgb_p = clf.predict_proba(Xrte)[:, 1]
         xgb_auc = float(roc_auc_score(yte, xgb_p))
         print(f"XGBoost    AUC={xgb_auc:.3f}")
+        _xf, _xt, _ = roc_curve(yte, xgb_p)
+        charts["roc"]["xgb_fpr"] = _ds(_xf)
+        charts["roc"]["xgb_tpr"] = _ds(_xt)
 
         try:
             import shap
@@ -226,6 +251,12 @@ def main():
             samp = Xr.sample(min(4000, len(Xr)), random_state=1)
             expl = shap.TreeExplainer(clf)
             sv = expl.shap_values(samp)
+            _svm = sv[-1] if isinstance(sv, list) else sv
+            _imp = np.abs(_svm).mean(axis=0)
+            _names = NUM_KEYS + CAT_KEYS
+            _sorder = np.argsort(_imp)
+            charts["shap"] = {"labels": [label_of.get(_names[i], _names[i]) for i in _sorder],
+                              "values": [round(float(_imp[i]), 4) for i in _sorder]}
             plt.figure(facecolor="#020104")
             shap.summary_plot(sv, samp, feature_names=NUM_KEYS + CAT_KEYS, show=False, plot_size=(7, 4.5))
             plt.gcf().set_facecolor("#020104")
@@ -303,6 +334,7 @@ def main():
                     "factor": round(factor, 4), "offset": round(offset, 4)},
         "intercept": round(float(lr.intercept_[0]), 5),
         "features": features,
+        "charts": charts,
     }
     (OUT / "scorecard.json").write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"\nWrote {OUT / 'scorecard.json'}")
