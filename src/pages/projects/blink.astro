@@ -1,0 +1,478 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const title = 'AreYouBlinking: Talk in Morse With Your Eyes | Geet Purohit';
+const description =
+  'A live, in-browser toy that reads your webcam, detects blinks, and decodes them into Morse code and text. Short blink = dot, long blink = dash. Runs entirely on your device, nothing is uploaded.';
+---
+
+<Base title={title} description={description}>
+  <main class="bl">
+    <div class="bl-container">
+      <a class="back" href="/">← geetpurohit.com</a>
+
+      <!-- ===== Header ===== -->
+      <header class="bl-head reveal">
+        <span class="section-label">Project · Just for fun</span>
+        <h1 class="bl-title">Talk in <span class="grad-text">Morse</span>, With Your Eyes</h1>
+        <p class="bl-lead">
+          The serious demos on this site are about money and statistics. This one is not.
+          <strong>AreYouBlinking</strong> watches your webcam, measures how open your eyes are,
+          and turns blinks into Morse code: a <strong>short blink is a dot</strong>, a
+          <strong>long blink is a dash</strong>. Hold your eyes open for a beat to lock in a
+          letter. Originally a joke about hostages blinking secret messages, now a real thing you
+          can try. It all runs on your device in the browser, the <strong>video never leaves your
+          computer</strong>.
+        </p>
+        <div class="tags">
+          <span class="tag">Computer Vision</span>
+          <span class="tag">MediaPipe FaceLandmarker</span>
+          <span class="tag">Eye Aspect Ratio</span>
+          <span class="tag">State Machine</span>
+          <span class="tag">Vanilla JS</span>
+          <span class="tag">WebAssembly</span>
+        </div>
+      </header>
+
+      <!-- ===== The live stage ===== -->
+      <section class="stage-section reveal">
+        <div class="stage-layout">
+          <div class="stage-wrap">
+            <div class="stage">
+              <video id="video" autoplay playsinline muted></video>
+              <canvas id="overlay"></canvas>
+            </div>
+            <p id="status" class="status">Booting…</p>
+          </div>
+
+          <aside class="sidebar">
+            <div class="controls">
+              <button id="calibrate" class="bl-btn bl-btn-primary">Calibrate</button>
+              <button id="toggleDots" class="bl-btn bl-btn-secondary">Hide dots</button>
+              <button id="clear" class="bl-btn bl-btn-secondary">Clear</button>
+            </div>
+
+            <div class="panel">
+              <div class="readout">
+                <span class="rd-label">EAR</span>
+                <span id="ear" class="rd-value">–</span>
+              </div>
+              <div class="readout">
+                <span class="rd-label">Threshold</span>
+                <span id="threshold" class="rd-value">not calibrated</span>
+              </div>
+              <div class="readout">
+                <span class="rd-label">Eyes</span>
+                <span id="eyestate" class="rd-value">–</span>
+              </div>
+              <div class="readout">
+                <span class="rd-label">Hint</span>
+                <span id="hint" class="rd-value">–</span>
+              </div>
+              <div class="readout">
+                <span class="rd-label">Buffer</span>
+                <span id="morse" class="rd-value morse"></span>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="decoded">
+          <span class="decoded-label">Decoded message</span>
+          <span id="decoded" class="decoded-text"></span>
+        </div>
+      </section>
+
+      <!-- ===== How to use ===== -->
+      <section class="how reveal">
+        <h2 class="block-h">How to talk with your eyes</h2>
+        <ol class="steps">
+          <li><strong>Allow the camera</strong> when your browser asks. Nothing is recorded or uploaded, the frames are processed on your device and thrown away.</li>
+          <li><strong>Hit Calibrate</strong> and keep both eyes open for two seconds so it learns your resting eyes and sets a blink threshold for your face and lighting.</li>
+          <li><strong>Blink to send.</strong> A quick blink is a dot, a deliberate long blink is a dash. The Buffer shows the pattern building up.</li>
+          <li><strong>Pause to lock a letter.</strong> Stop blinking for about a second and the pattern is decoded to a letter. A longer pause adds a space between words.</li>
+        </ol>
+        <p class="cheat-intro">A few easy ones to start with:</p>
+        <div class="cheat">
+          <div class="cheat-item"><span class="cheat-ch">E</span><span class="cheat-code">·</span></div>
+          <div class="cheat-item"><span class="cheat-ch">T</span><span class="cheat-code">—</span></div>
+          <div class="cheat-item"><span class="cheat-ch">S</span><span class="cheat-code">· · ·</span></div>
+          <div class="cheat-item"><span class="cheat-ch">O</span><span class="cheat-code">— — —</span></div>
+          <div class="cheat-item"><span class="cheat-ch">A</span><span class="cheat-code">· —</span></div>
+          <div class="cheat-item"><span class="cheat-ch">N</span><span class="cheat-code">— ·</span></div>
+        </div>
+      </section>
+
+      <!-- ===== How it works ===== -->
+      <section class="how reveal">
+        <h2 class="block-h">How it works under the hood</h2>
+        <p class="how-p">
+          Every frame, Google's <strong>MediaPipe FaceLandmarker</strong> (a neural net compiled
+          to WebAssembly, running on your GPU) returns 478 points mapped onto your face. Six of
+          them outline each eye. From those I compute the <strong>Eye Aspect Ratio</strong>, the
+          height of the eye divided by its width, which collapses toward zero the instant you
+          close your eyes.
+        </p>
+        <p class="how-p">
+          That raw number is noisy, so a small <strong>state machine</strong> turns it into clean
+          events: eyes flip from open to closed when the ratio crosses a calibrated threshold, and
+          a separate open threshold prevents a single blink from registering twice. The time your
+          eyes stay shut decides dot versus dash, and the time they stay open decides where one
+          letter ends and the next begins. A Morse lookup table does the rest.
+        </p>
+        <p class="how-p">
+          I'd never written a line of JavaScript before this. The whole thing is a single vanilla
+          JS file, no framework, and the source is on
+          <a class="how-link" href="https://github.com/geetpurohit/AreYouBlinking" target="_blank" rel="noopener">GitHub</a>.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" is:inline>
+    import { FaceLandmarker, FilesetResolver } from
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
+
+    const video   = document.getElementById("video");
+    const overlay = document.getElementById("overlay");
+    const ctx     = overlay.getContext("2d");
+    const statusEl    = document.getElementById("status");
+    const earEl       = document.getElementById("ear");
+    const thresholdEl = document.getElementById("threshold");
+    const eyeStateEl  = document.getElementById("eyestate");
+    const hintEl      = document.getElementById("hint");
+    const morseEl     = document.getElementById("morse");
+    const decodedEl   = document.getElementById("decoded");
+    const calibrateBtn = document.getElementById("calibrate");
+    const toggleDotsBtn = document.getElementById("toggleDots");
+    const clearBtn     = document.getElementById("clear");
+
+    let showDots = true;
+
+    function setStatus(msg) { statusEl.textContent = msg; }
+
+    let faceLandmarker = null;
+
+    const RIGHT_EYE = [33, 160, 158, 133, 153, 144];
+    const LEFT_EYE  = [362, 385, 387, 263, 373, 380];
+
+    function dist(a, b) {
+      const dx = (a.x - b.x) * video.videoWidth;
+      const dy = (a.y - b.y) * video.videoHeight;
+      return Math.hypot(dx, dy);
+    }
+
+    function eyeEAR(lm, idx) {
+      const [p1, p2, p3, p4, p5, p6] = idx.map((i) => lm[i]);
+      return (dist(p2, p6) + dist(p3, p5)) / (2 * dist(p1, p4));
+    }
+
+    function computeEAR(landmarks) {
+      return (eyeEAR(landmarks, RIGHT_EYE) + eyeEAR(landmarks, LEFT_EYE)) / 2;
+    }
+
+    let threshold = null;
+    let calibrating = false;
+    let calibSamples = [];
+
+    function closeAt() { return threshold; }
+    function openAt()  { return threshold * 1.15; }
+
+    function startCalibration() {
+      if (!faceLandmarker) return;
+      calibrating = true;
+      calibSamples = [];
+      setStatus("Calibrating… keep both eyes open and look at the camera.");
+      setTimeout(() => {
+        calibrating = false;
+        if (calibSamples.length === 0) { setStatus("Calibration failed — no face seen."); return; }
+        const openBaseline = calibSamples.reduce((a, b) => a + b, 0) / calibSamples.length;
+        threshold = openBaseline * 0.75;
+        thresholdEl.textContent = threshold.toFixed(3) + "  (open≈" + openBaseline.toFixed(3) + ")";
+        setStatus("Calibrated — blink to send.");
+      }, 2000);
+    }
+
+    let eyeState = "open";
+    let closeStartTime = 0;
+    const MIN_BLINK_MS = 60;
+
+    function updateBlinkFSM(ear, now) {
+      if (threshold === null) return;
+
+      if (eyeState === "open" && ear < closeAt()) {
+        eyeState = "closed";
+        closeStartTime = now;
+      } else if (eyeState === "closed" && ear > openAt()) {
+        eyeState = "open";
+        const durationMs = now - closeStartTime;
+        if (durationMs >= MIN_BLINK_MS) onBlink(durationMs, now);
+        lastBlinkEndTime = now;
+      }
+
+      eyeStateEl.textContent = eyeState;
+    }
+
+    const DASH_MS      = 250;
+    const LETTER_GAP_MS = 1200;
+    const WORD_GAP_MS   = 2600;
+
+    let currentMorse = "";
+    let decodedText  = "";
+    let lastBlinkEndTime = 0;
+    let letterCommitted = false;
+    let wordCommitted   = false;
+
+    function onBlink(durationMs, now) {
+      currentMorse += durationMs < DASH_MS ? "." : "-";
+      morseEl.textContent = currentMorse;
+      letterCommitted = false;
+      wordCommitted = false;
+    }
+
+    function updateGaps(now) {
+      if (threshold === null) return;
+      if (eyeState !== "open") return;
+      const openFor = now - lastBlinkEndTime;
+
+      if (currentMorse.length > 0 && openFor <= LETTER_GAP_MS) {
+        const remaining = ((LETTER_GAP_MS - openFor) / 1000).toFixed(1);
+        hintEl.textContent = "hold " + remaining + "s to lock letter (" + currentMorse + ")";
+      } else if (currentMorse.length > 0) {
+        hintEl.textContent = "keep blinking this letter";
+      } else {
+        hintEl.textContent = "ready — blink to start a letter";
+      }
+
+      if (!letterCommitted && currentMorse.length > 0 && openFor > LETTER_GAP_MS) {
+        const ch = MORSE[currentMorse] ?? "?";
+        decodedText += ch;
+        decodedEl.textContent = decodedText;
+        hintEl.textContent = "locked: " + ch;
+        currentMorse = "";
+        morseEl.textContent = "";
+        letterCommitted = true;
+      }
+
+      if (!wordCommitted && letterCommitted && openFor > WORD_GAP_MS
+          && decodedText.length > 0 && !decodedText.endsWith(" ")) {
+        decodedText += " ";
+        decodedEl.textContent = decodedText;
+        wordCommitted = true;
+      }
+    }
+
+    const MORSE = {
+      ".-": "A",   "-...": "B", "-.-.": "C", "-..": "D",  ".": "E",
+      "..-.": "F", "--.": "G",  "....": "H", "..": "I",   ".---": "J",
+      "-.-": "K",  ".-..": "L", "--": "M",   "-.": "N",   "---": "O",
+      ".--.": "P", "--.-": "Q", ".-.": "R",  "...": "S",  "-": "T",
+      "..-": "U",  "...-": "V", ".--": "W",  "-..-": "X", "-.--": "Y",
+      "--..": "Z",
+      "-----": "0", ".----": "1", "..---": "2", "...--": "3", "....-": "4",
+      ".....": "5", "-....": "6", "--...": "7", "---..": "8", "----.": "9",
+    };
+
+    async function startCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setStatus("This browser can't access the camera.");
+        return;
+      }
+      try {
+        setStatus("Requesting camera…");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        video.srcObject = stream;
+      } catch (err) {
+        setStatus("Camera blocked. Allow camera access and reload to try it.");
+      }
+    }
+
+    async function createFaceLandmarker() {
+      setStatus("Loading face model…");
+      const filesetResolver = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm"
+      );
+      faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+        baseOptions: {
+          modelAssetPath:
+            "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+          delegate: "GPU",
+        },
+        runningMode: "VIDEO",
+        numFaces: 1,
+      });
+      setStatus("Model loaded — hit Calibrate to begin.");
+    }
+
+    function drawLandmarks(landmarks) {
+      ctx.fillStyle = "#fbbf24";
+      for (const point of landmarks) {
+        ctx.beginPath();
+        ctx.arc(point.x * overlay.width, point.y * overlay.height, 1.5, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
+
+    let lastVideoTime = -1;
+
+    function renderLoop() {
+      if (faceLandmarker && video.currentTime !== lastVideoTime) {
+        lastVideoTime = video.currentTime;
+        const now = performance.now();
+        const result = faceLandmarker.detectForVideo(video, now);
+
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+        if (result.faceLandmarks.length > 0) {
+          const landmarks = result.faceLandmarks[0];
+          if (showDots) drawLandmarks(landmarks);
+
+          const ear = computeEAR(landmarks);
+          earEl.textContent = ear.toFixed(3);
+
+          if (calibrating) calibSamples.push(ear);
+          updateBlinkFSM(ear, now);
+          updateGaps(now);
+        }
+      }
+      requestAnimationFrame(renderLoop);
+    }
+
+    function sizeCanvasToVideo() {
+      overlay.width  = video.videoWidth;
+      overlay.height = video.videoHeight;
+    }
+
+    calibrateBtn.addEventListener("click", startCalibration);
+    toggleDotsBtn.addEventListener("click", () => {
+      showDots = !showDots;
+      toggleDotsBtn.textContent = showDots ? "Hide dots" : "Show dots";
+    });
+    clearBtn.addEventListener("click", () => {
+      currentMorse = ""; decodedText = "";
+      morseEl.textContent = ""; decodedEl.textContent = "";
+    });
+
+    startCamera();
+    createFaceLandmarker();
+    video.addEventListener("loadeddata", () => {
+      sizeCanvasToVideo();
+      renderLoop();
+    });
+  </script>
+
+  <style>
+    .bl {
+      position: relative; z-index: 2; padding: clamp(28px, 6vw, 64px) var(--pad-x) 120px;
+      /* AreYouBlinking theme: amber / telegraph */
+      --violet: #d97706; --purple: #f59e0b; --purple-lt: #fbbf24; --lilac: #fcd34d; --magenta: #f59e0b;
+      --accent-rgb: 251,191,36;
+      --grad-text: linear-gradient(120deg, #fcd34d 0%, #f59e0b 45%, #f97316 78%, #fbbf24 100%);
+    }
+    .bl-container { max-width: 1080px; margin: 0 auto; }
+
+    .back { display: inline-block; font-family: var(--font-display); font-size: 13px; color: var(--muted); margin-bottom: clamp(32px, 6vw, 56px); transition: color .25s; }
+    .back:hover { color: var(--lilac); }
+
+    /* Header */
+    .bl-head { position: relative; }
+    .bl-head::before {
+      content: ''; position: absolute; inset: -40px -30px -10px; z-index: -1; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(251,191,36,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(251,191,36,0.06) 1px, transparent 1px);
+      background-size: 30px 30px;
+      -webkit-mask-image: radial-gradient(120% 100% at 20% 0%, #000 20%, transparent 75%);
+      mask-image: radial-gradient(120% 100% at 20% 0%, #000 20%, transparent 75%);
+    }
+    .bl-title { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 6vw, 68px); letter-spacing: -0.03em; line-height: 1.02; margin-bottom: 22px; }
+    .bl-lead { font-size: clamp(16.5px, 1.3vw, 19px); color: var(--text-dim); font-weight: 300; line-height: 1.8; max-width: 820px; }
+    .bl-lead strong { color: var(--text); font-weight: 500; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+    .tag { font-family: var(--font-display); font-size: 12px; padding: 5px 13px; border-radius: 7px; background: rgba(var(--accent-rgb),0.05); border: 1px solid var(--border); color: var(--text-dim); }
+
+    /* Live stage */
+    .stage-section { margin-top: clamp(40px, 6vw, 64px); }
+    .stage-layout { display: grid; grid-template-columns: 1.7fr 1fr; gap: 22px; align-items: start; }
+    .stage-wrap { display: grid; gap: 14px; justify-items: center; }
+
+    .stage {
+      position: relative; width: 100%; aspect-ratio: 4 / 3;
+      background: #000; border-radius: 18px; overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.55), 0 0 0 1px rgba(var(--accent-rgb),0.06) inset;
+    }
+    #video, #overlay {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; transform: scaleX(-1);
+    }
+    .status {
+      margin: 0; justify-self: center; font-family: var(--font-mono, ui-monospace, monospace);
+      font-size: 12.5px; color: var(--text-dim);
+      padding: 6px 14px; background: rgba(var(--accent-rgb),0.05);
+      border: 1px solid var(--border); border-radius: 999px; text-align: center;
+    }
+
+    .sidebar { display: grid; gap: 14px; align-content: start; }
+    .controls { display: flex; flex-wrap: wrap; gap: 9px; }
+    .bl-btn {
+      flex: 1; min-width: 92px; border: 1px solid transparent; border-radius: 11px;
+      padding: 11px 14px; font-family: var(--font-display); font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: transform .08s ease, background .15s ease, opacity .15s ease, border-color .15s ease;
+    }
+    .bl-btn:active { transform: scale(0.97); }
+    .bl-btn-primary { background: var(--purple); color: #1a1204; }
+    .bl-btn-primary:hover { opacity: 0.9; }
+    .bl-btn-secondary { background: rgba(255,255,255,0.04); color: var(--text); border-color: var(--border); }
+    .bl-btn-secondary:hover { background: rgba(var(--accent-rgb),0.08); border-color: rgba(var(--accent-rgb),0.3); }
+
+    .panel {
+      display: grid; gap: 2px; padding: 6px 18px;
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px;
+    }
+    .readout { display: flex; align-items: baseline; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .panel > :last-child { border-bottom: none; }
+    .rd-label { min-width: 84px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-family: var(--font-display); }
+    .rd-value { font-family: var(--font-mono, ui-monospace, monospace); font-size: 15px; font-variant-numeric: tabular-nums; color: var(--text); }
+    .rd-value.morse { color: var(--purple-lt); letter-spacing: 0.25em; word-break: break-all; }
+
+    .decoded {
+      display: grid; gap: 8px; padding: 22px; margin-top: 18px;
+      background: linear-gradient(180deg, rgba(var(--accent-rgb),0.09), rgba(var(--accent-rgb),0.02));
+      border: 1px solid rgba(var(--accent-rgb),0.25); border-radius: 16px; min-height: 92px;
+    }
+    .decoded-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-family: var(--font-display); }
+    .decoded-text {
+      font-family: var(--font-mono, ui-monospace, monospace); font-size: clamp(22px, 4vw, 34px);
+      font-weight: 600; letter-spacing: 0.15em; min-height: 40px; word-break: break-all;
+      background: var(--grad-text); -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; color: transparent;
+    }
+
+    /* Explainer sections */
+    .how { margin-top: clamp(44px, 6vw, 68px); max-width: 820px; }
+    .block-h { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -0.02em; margin-bottom: 18px; }
+    .steps { margin: 0; padding-left: 22px; display: grid; gap: 14px; }
+    .steps li { font-size: 16px; color: var(--text-dim); font-weight: 300; line-height: 1.7; }
+    .steps strong { color: var(--text); font-weight: 500; }
+    .how-p { font-size: 16px; color: var(--text-dim); font-weight: 300; line-height: 1.8; margin: 0 0 16px; }
+    .how-p strong { color: var(--text); font-weight: 500; }
+    .how-link { color: var(--purple-lt); text-decoration: none; border-bottom: 1px solid rgba(var(--accent-rgb),0.35); }
+    .how-link:hover { border-bottom-color: var(--purple-lt); }
+
+    .cheat-intro { font-size: 14px; color: var(--muted); margin: 22px 0 12px; }
+    .cheat { display: flex; flex-wrap: wrap; gap: 10px; }
+    .cheat-item {
+      display: flex; align-items: baseline; gap: 10px; padding: 10px 16px;
+      background: rgba(var(--accent-rgb),0.05); border: 1px solid var(--border); border-radius: 10px;
+    }
+    .cheat-ch { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--purple-lt); }
+    .cheat-code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 16px; letter-spacing: 0.15em; color: var(--text-dim); }
+
+    @media (max-width: 820px) {
+      .stage-layout { grid-template-columns: 1fr; }
+      .sidebar { order: 2; }
+    }
+  </style>
+</Base>
