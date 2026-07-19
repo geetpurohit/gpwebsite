@@ -88,6 +88,16 @@ const projects = [
     metric: 'Solving the important problems',
     metricLabel: '',
   },
+  {
+    num: '10',
+    category: 'Personal',
+    title: 'AreYouBlinking: Talk in Morse With Your Eyes (Live Demo)',
+    desc: 'The unserious one. It reads your webcam, detects blinks, and decodes them into Morse code and text right on screen: short blink is a dot, long blink is a dash. Face tracking runs on-device with MediaPipe (nothing is uploaded); the eye-aspect-ratio math and blink state machine are hand-written vanilla JS, my first time ever writing the language.',
+    tags: ['Computer Vision', 'MediaPipe', 'Morse', 'Vanilla JS', 'WebAssembly'],
+    metric: 'Try it live',
+    metricLabel: 'blink a message at your webcam',
+    href: '/projects/blink',
+  },
 ];
 const featured = projects.filter((p) => p.featured);
 const rest = projects.filter((p) => !p.featured);
