@@ -1,0 +1,791 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const title = 'Gravitational Microlensing: Watch a Star Bend Starlight | Geet Purohit';
+const description =
+  'A live, in-browser gravitational lens. Drag a foreground star across a background star and watch its light bend into an Einstein ring while the Paczynski light curve traces in real time. Load three real OGLE microlensing events I fit with Markov Chain Monte Carlo.';
+---
+
+<Base title={title} description={description}>
+  <main class="ml">
+    <div class="ml-container">
+      <a class="back" href="/#projects">← geetpurohit.com</a>
+
+      <!-- ===== Header ===== -->
+      <header class="ml-head reveal">
+        <span class="section-label">Astrophysics · Gravitational microlensing</span>
+        <h1 class="ml-title">Watch a Star <span class="grad-text">Bend Starlight</span></h1>
+        <p class="ml-lead">
+          When a foreground star drifts almost exactly in front of a distant one, its gravity acts
+          like a lens: the background star's light bends around it, splits into arcs, and for a
+          moment flares into a ring of light. From Earth we cannot resolve the ring, we only see the
+          star briefly <strong>brighten and fade</strong>. That single bump, the
+          <strong>Paczynski light curve</strong>, is enough to weigh an invisible object halfway
+          across the galaxy. Below is a live lens you can drag. Everything renders on your GPU in
+          real time, and you can load <strong>three real events</strong> I fit for my thesis.
+        </p>
+        <div class="tags">
+          <span class="tag">General Relativity</span>
+          <span class="tag">WebGL Shader</span>
+          <span class="tag">Paczynski Model</span>
+          <span class="tag">MCMC</span>
+          <span class="tag">OGLE Survey</span>
+          <span class="tag">Real Data</span>
+        </div>
+      </header>
+
+      <!-- ===== The live lens ===== -->
+      <section class="stage-section reveal">
+        <div class="stage">
+          <canvas id="lens-gl"></canvas>
+          <div class="stage-badge">
+            <span class="pulse"></span> Gravitational lens · live
+          </div>
+          <div class="stage-hud">
+            <button id="playBtn" class="hud-btn hud-primary" aria-label="Play or pause">
+              <span id="playIcon">Pause</span>
+            </button>
+            <button id="ringBtn" class="hud-btn">Einstein ring: on</button>
+            <span class="hud-hint">Drag anywhere to move the lens</span>
+          </div>
+          <p id="gl-fallback" class="gl-fallback" hidden>
+            Your browser could not start WebGL, so the lens view is hidden. The light curve below
+            still works.
+          </p>
+        </div>
+
+        <!-- Simulator body: light curve + controls -->
+        <div class="sim-grid">
+          <div class="curve-card">
+            <div class="curve-head">
+              <h2 class="card-h">Light curve</h2>
+              <span id="curve-caption" class="curve-caption">Sandbox · drag the lens or press play</span>
+            </div>
+            <canvas id="lightcurve"></canvas>
+            <p class="curve-axis-note">Brighter is up. The dot marks where the lens is right now.</p>
+          </div>
+
+          <aside class="control-card">
+            <div class="readouts">
+              <div class="ro">
+                <span class="ro-label">Separation</span>
+                <span id="ro-sep" class="ro-value">–</span>
+              </div>
+              <div class="ro">
+                <span class="ro-label">Magnification</span>
+                <span id="ro-mag" class="ro-value hot">–</span>
+              </div>
+              <div class="ro">
+                <span class="ro-label">Brightening</span>
+                <span id="ro-bright" class="ro-value">–</span>
+              </div>
+              <div class="ro">
+                <span class="ro-label">Time to peak</span>
+                <span id="ro-time" class="ro-value">–</span>
+              </div>
+            </div>
+
+            <div class="sliders">
+              <label class="sl">
+                <span class="sl-top"><span>Impact parameter u₀</span><span id="v-umin" class="sl-val">0.30</span></span>
+                <input id="s-umin" type="range" min="0.02" max="1.20" step="0.01" value="0.30" />
+                <span class="sl-help">How close the lens passes. Smaller means a brighter flare.</span>
+              </label>
+              <label class="sl">
+                <span class="sl-top"><span>Timescale t<sub>E</sub></span><span id="v-te" class="sl-val">25 d</span></span>
+                <input id="s-te" type="range" min="4" max="80" step="1" value="25" />
+                <span class="sl-help">How long the crossing takes. Sets the width of the bump.</span>
+              </label>
+              <label class="sl">
+                <span class="sl-top"><span>Einstein radius</span><span id="v-thetae" class="sl-val">0.14</span></span>
+                <input id="s-thetae" type="range" min="0.06" max="0.22" step="0.005" value="0.14" />
+                <span class="sl-help">The lens mass, drawn as the size of the ring.</span>
+              </label>
+              <label class="sl">
+                <span class="sl-top"><span>Source size</span><span id="v-src" class="sl-val">0.020</span></span>
+                <input id="s-src" type="range" min="0.006" max="0.045" step="0.001" value="0.020" />
+                <span class="sl-help">Bigger background stars smear the ring into a smooth blur.</span>
+              </label>
+            </div>
+
+            <button id="resetBtn" class="reset-btn">Reset to sandbox</button>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ===== Real events ===== -->
+      <section class="events reveal">
+        <h2 class="block-h">Three real events I fit</h2>
+        <p class="how-p">
+          These are genuine microlensing events from the <strong>OGLE</strong> survey (Optical
+          Gravitational Lensing Experiment), watching millions of stars toward the galactic bulge.
+          For each one I fit the Paczynski model to the raw photometry and used
+          <strong>Markov Chain Monte Carlo</strong> to pin down the parameters and their
+          uncertainty. Load one and the simulator snaps to my best-fit values, with the real
+          observations dropped on top of the model curve.
+        </p>
+        <div class="event-grid">
+          <button class="event-card" data-event="0148">
+            <span class="ev-name">OGLE-2019-BLG-0148</span>
+            <div class="ev-params">
+              <span><em>t<sub>E</sub></em> 58.2 d</span>
+              <span><em>u₀</em> 0.279</span>
+              <span><em>A<sub>max</sub></em> 3.69×</span>
+            </div>
+            <span class="ev-desc">A long, gentle crossing. Textbook-clean bump over hundreds of nights.</span>
+            <span class="ev-load">Load in simulator →</span>
+          </button>
+          <button class="event-card" data-event="0164">
+            <span class="ev-name">OGLE-2019-BLG-0164</span>
+            <div class="ev-params">
+              <span><em>t<sub>E</sub></em> 6.2 d</span>
+              <span><em>u₀</em> 0.118</span>
+              <span><em>A<sub>max</sub></em> 8.51×</span>
+            </div>
+            <span class="ev-desc">Fast and faint. The messiest data set, where MCMC earns its keep.</span>
+            <span class="ev-load">Load in simulator →</span>
+          </button>
+          <button class="event-card" data-event="1307">
+            <span class="ev-name">OGLE-2019-BLG-1307</span>
+            <div class="ev-params">
+              <span><em>t<sub>E</sub></em> 23.1 d</span>
+              <span><em>u₀</em> 0.047</span>
+              <span><em>A<sub>max</sub></em> 21.4×</span>
+            </div>
+            <span class="ev-desc">A near-perfect alignment. The source brightens more than twentyfold.</span>
+            <span class="ev-load">Load in simulator →</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== How it works ===== -->
+      <section class="how reveal">
+        <h2 class="block-h">The physics on screen</h2>
+        <p class="how-p">
+          The view above is not a video, it is a fragment shader solving the lens equation for every
+          pixel, every frame. A point mass deflects a light ray by an amount that grows as the ray
+          passes closer to it, so the shader traces each pixel back to where that light truly came
+          from on the sky behind the lens. Line the lens up with the background star and its light
+          wraps all the way around into an <strong>Einstein ring</strong>; nudge it aside and the
+          ring breaks into two warped images.
+        </p>
+        <div class="eq-card">
+          <div class="eq-row">
+            <span class="eq-lhs">A(u)</span>
+            <span class="eq-eq">=</span>
+            <span class="eq-frac">
+              <span class="eq-num">u² + 2</span>
+              <span class="eq-bar"></span>
+              <span class="eq-den">u √(u² + 4)</span>
+            </span>
+          </div>
+          <div class="eq-row">
+            <span class="eq-lhs">u(t)</span>
+            <span class="eq-eq">=</span>
+            <span class="eq-inline">√( u₀² + ((t − t₀) / t<sub>E</sub>)² )</span>
+          </div>
+          <p class="eq-note">
+            The magnification A depends only on u, the lens-source separation in units of the
+            Einstein radius. As the lens crosses, u dips to its minimum u₀ and back, and A traces
+            the symmetric bump you see in the light curve.
+          </p>
+        </div>
+        <p class="how-p">
+          Fitting real data means the reverse: given a noisy light curve, find the parameters that
+          produced it. I sampled the posterior with MCMC, which walks thousands of trial fits
+          through parameter space and settles into the region the data prefer, giving both the
+          best-fit values and honest error bars. The full notebook, the write-up, and the corner
+          plots live on
+          <a class="how-link" href="https://github.com/geetpurohit/Gravitational-Microlensing" target="_blank" rel="noopener">GitHub</a>.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" is:inline>
+    // ===== Real fitted events (downsampled OGLE photometry, days-from-peak vs I magnitude) =====
+    const EVENTS = {"1307":{"Tmax":2458738.369,"tau":23.127,"umin":0.047,"I0":16.943,"fbl":0.885,"pts":[[-68.68,16.813],[-67.71,16.807],[-64.71,16.777],[-63.57,16.787],[-61.83,16.815],[-60.76,16.787],[-60.58,16.815],[-56.59,16.805],[-54.83,16.799],[-53.82,16.754],[-49.8,16.759],[-48.66,16.769],[-47.57,16.78],[-46.57,16.795],[-45.58,16.765],[-43.82,16.725],[-42.64,16.751],[-39.59,16.712],[-37.63,16.697],[-35.7,16.688],[-26.62,16.587],[-24.63,16.558],[-20.72,16.462],[-18.71,16.386],[-13.71,16.192],[-11.69,16.053],[-9.68,15.874],[-7.7,15.669],[-0.71,13.804],[1.28,14.081],[4.28,15.106],[15.26,16.243],[44.19,16.739]]},"0148":{"Tmax":2458651.232,"tau":58.205,"umin":0.279,"I0":13.403,"fbl":1,"pts":[[-129.36,13.35],[-121.36,13.348],[-115.37,13.338],[-111.35,13.34],[-104.37,13.324],[-102.37,13.322],[-100.33,13.315],[-96.45,13.295],[-95.37,13.306],[-94.33,13.297],[-92.38,13.291],[-91.32,13.273],[-89.39,13.288],[-87.47,13.276],[-86.46,13.274],[-85.37,13.271],[-83.45,13.262],[-76.38,13.226],[-75.42,13.214],[-74.37,13.215],[-72.47,13.201],[-71.46,13.197],[-70.46,13.197],[-69.49,13.216],[-68.44,13.183],[-67.42,13.176],[-65.51,13.163],[-64.54,13.159],[-63.52,13.143],[-62.49,13.141],[-61.46,13.134],[-60.43,13.135],[-59.44,13.115],[-57.55,13.064],[-56.49,13.088],[-55.49,13.069],[-51.5,13],[-50.56,13.02],[-50.3,13.023],[-48.57,13.007],[-48.3,13.022],[-47.37,13.005],[-46.36,12.991],[-45.36,12.969],[-44.39,12.984],[-43.47,12.93],[-42.54,12.89],[-38.46,12.847],[-37.53,12.826],[-36.58,12.795],[-36.37,12.829],[-35.38,12.82],[-34.44,12.808],[-33.5,12.764],[-32.58,12.721],[-32.32,12.711],[-31.34,12.711],[-30.41,12.699],[-29.37,12.667],[-24.54,12.526],[-24.3,12.562],[-15.56,12.322],[-15.3,12.274],[-14.49,12.302],[-13.63,12.233],[-13.38,12.306],[-12.4,12.221],[-11.37,12.237],[-10.51,12.183],[-9.6,12.128],[-8.35,12.103],[-7.47,12.176],[-6.66,12.039],[-6.41,12.051],[-4.5,11.978],[-3.59,11.988],[-2.6,11.978],[-2.4,11.991],[3.65,12.116],[5.48,12.065],[6.39,12.078],[6.59,12.116],[9.33,12.117],[9.6,12.133],[11.43,12.164],[13.49,12.287],[15.33,12.272],[16.31,12.307],[16.56,12.354],[17.46,12.367],[18.29,12.355],[18.55,12.457],[19.39,12.462],[22.34,12.5],[22.59,12.477],[23.51,12.535],[24.45,12.599],[25.24,12.543],[25.45,12.582],[25.6,12.561],[30.28,12.681],[30.51,12.685],[31.36,12.696],[31.57,12.71],[32.42,12.743],[33.25,12.761],[33.47,12.78],[34.38,12.806],[37.44,12.842],[38.44,12.852],[39.28,12.846],[39.52,12.876],[40.32,12.904],[40.54,12.894],[41.48,12.913],[42.42,12.932],[43.32,12.958],[43.53,12.963],[44.43,12.971],[46.43,12.997],[47.38,13.012],[48.25,13.019],[48.47,13.014],[49.39,13.031],[50.29,13.041],[50.53,13.033],[51.4,13.049],[52.36,13.049],[57.35,13.137],[59.29,13.121],[60.36,13.126],[61.3,13.138],[62.29,13.149],[62.49,13.136],[64.26,13.153],[64.44,13.172],[65.36,13.178],[66.33,13.171],[67.32,13.186],[68.25,13.18],[68.44,13.192],[70.44,13.2],[71.45,13.21],[72.4,13.222],[73.3,13.219],[74.3,13.225],[75.29,13.234],[76.37,13.249],[77.3,13.245],[78.29,13.248],[79.29,13.249],[85.36,13.265],[87.3,13.279],[88.31,13.287],[89.38,13.287],[91.25,13.294],[94.38,13.303],[95.39,13.302],[97.25,13.306],[99.31,13.316],[101.26,13.331],[102.31,13.326],[103.3,13.323],[104.34,13.333],[106.37,13.32],[112.29,13.335],[113.35,13.332],[117.27,13.345],[123.35,13.345],[132.27,13.363]]},"0164":{"Tmax":2458543.099,"tau":6.236,"umin":0.118,"I0":18.814,"fbl":1,"pts":[[-23.22,18.817],[-19.24,18.77],[-18.22,18.791],[-14.22,18.847],[-6.23,18.501],[-3.26,18.022],[-2.22,17.697],[1.73,17.475],[3.77,18.136],[4.78,18.319],[5.79,18.45],[6.79,18.59],[7.81,18.623],[9.74,18.712],[10.75,18.742],[11.73,18.731],[12.7,18.781],[12.8,18.78],[13.78,18.766],[14.75,18.754],[15.71,18.799],[15.8,18.808],[16.76,18.829],[17.72,18.822],[18.68,18.818],[18.78,18.792],[19.74,18.786],[20.69,18.747],[20.8,18.855],[21.75,18.778],[22.71,18.764],[22.81,18.781],[23.78,18.794]]}};
+
+    // ===== Physics =====
+    function magnification(u) {
+      const u2 = u * u;
+      return (u2 + 2) / (u * Math.sqrt(u2 + 4));
+    }
+    function toMag(A, I0, fbl) {
+      return I0 - 2.5 * Math.log10(fbl * (A - 1) + 1);
+    }
+
+    // ===== State =====
+    const S = {
+      umin: 0.30, thetaE: 0.14, tE: 25, srcSize: 0.020,
+      I0: 18.0, fbl: 1.0,
+      t: 0, dir: 1, playing: true, dragging: false,
+      lens: { x: 0, y: 0.042 },
+      showRing: true, event: null,
+      tMin: -100, tMax: 100,
+    };
+    function setRange() { S.tMin = -4 * S.tE; S.tMax = 4 * S.tE; }
+    setRange(); S.t = S.tMin;
+
+    // ===== WebGL lens =====
+    const cv = document.getElementById('lens-gl');
+    const fallback = document.getElementById('gl-fallback');
+    let gl = null, prog = null, uloc = {}, glOk = false;
+
+    const VERT = `
+      attribute vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }`;
+
+    const FRAG = `
+      precision highp float;
+      uniform vec2  u_res;
+      uniform float u_time;
+      uniform vec2  u_lens;
+      uniform float u_thetaE;
+      uniform float u_srcSize;
+      uniform float u_ring;
+
+      float hash21(vec2 p){
+        p = fract(p * vec2(123.34, 345.45));
+        p += dot(p, p + 34.345);
+        return fract(p.x * p.y);
+      }
+      vec3 stars(vec2 p){
+        vec3 c = vec3(0.0);
+        for(int i = 0; i < 3; i++){
+          float sc = 6.0 + float(i) * 7.0;
+          vec2 gp = p * sc;
+          vec2 cell = floor(gp);
+          vec2 f = fract(gp);
+          for(int y = -1; y <= 1; y++){
+            for(int x = -1; x <= 1; x++){
+              vec2 o = vec2(float(x), float(y));
+              vec2 id = cell + o;
+              float h = hash21(id + float(i) * 41.0);
+              if(h > 0.90){
+                vec2 sp = o + vec2(hash21(id + 1.7), hash21(id + 5.3)) - f;
+                float d = length(sp);
+                float tw = 0.65 + 0.35 * sin(u_time * 2.2 + h * 60.0);
+                float b = smoothstep(0.06, 0.0, d) * tw;
+                vec3 tint = mix(vec3(0.72,0.82,1.0), vec3(1.0,0.88,0.72), hash21(id + 9.1));
+                c += b * tint * (0.45 + 0.6 * h);
+              }
+            }
+          }
+        }
+        return c;
+      }
+      void main(){
+        vec2 uv = (gl_FragCoord.xy - 0.5 * u_res) / u_res.y;
+        vec2 d = uv - u_lens;
+        float r2 = dot(d, d) + 1e-5;
+        vec2 beta = uv - u_thetaE * u_thetaE * d / r2;
+
+        // lensed background starfield
+        vec3 col = stars(beta);
+
+        // the background source star, lensed
+        float ds = length(beta) / u_srcSize;
+        float src = exp(-ds * ds);
+        col += src * vec3(1.0, 0.86, 0.55) * 2.4;
+        col += smoothstep(u_srcSize * 6.0, 0.0, length(beta)) * vec3(0.9, 0.7, 0.4) * 0.25;
+
+        // faint marker for the foreground lens
+        float dl = length(uv - u_lens);
+        col += exp(-pow(dl / 0.012, 2.0)) * vec3(0.55, 0.65, 1.0) * 0.7;
+
+        // Einstein ring (critical curve)
+        if(u_ring > 0.001){
+          float rr = length(uv - u_lens);
+          float ring = smoothstep(0.007, 0.0, abs(rr - u_thetaE));
+          col += ring * vec3(0.62, 0.45, 1.0) * u_ring * 0.9;
+        }
+
+        // vignette
+        float vig = smoothstep(1.25, 0.25, length(uv * vec2(u_res.x / u_res.y, 1.0)));
+        col *= 0.82 + 0.18 * vig;
+
+        col = pow(col, vec3(0.92));
+        gl_FragColor = vec4(col, 1.0);
+      }`;
+
+    function compile(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.warn('shader', gl.getShaderInfoLog(s)); return null;
+      }
+      return s;
+    }
+
+    function initGL() {
+      gl = cv.getContext('webgl') || cv.getContext('experimental-webgl');
+      if (!gl) return false;
+      const vs = compile(gl.VERTEX_SHADER, VERT);
+      const fs = compile(gl.FRAGMENT_SHADER, FRAG);
+      if (!vs || !fs) return false;
+      prog = gl.createProgram();
+      gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return false;
+      gl.useProgram(prog);
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(prog, 'a');
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      uloc = {
+        res: gl.getUniformLocation(prog, 'u_res'),
+        time: gl.getUniformLocation(prog, 'u_time'),
+        lens: gl.getUniformLocation(prog, 'u_lens'),
+        thetaE: gl.getUniformLocation(prog, 'u_thetaE'),
+        srcSize: gl.getUniformLocation(prog, 'u_srcSize'),
+        ring: gl.getUniformLocation(prog, 'u_ring'),
+      };
+      return true;
+    }
+
+    function sizeGL() {
+      if (!glOk) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.round(cv.clientWidth * dpr);
+      const h = Math.round(cv.clientHeight * dpr);
+      if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+      gl.viewport(0, 0, cv.width, cv.height);
+    }
+
+    function renderGL(time) {
+      if (!glOk) return;
+      sizeGL();
+      gl.uniform2f(uloc.res, cv.width, cv.height);
+      gl.uniform1f(uloc.time, time);
+      gl.uniform2f(uloc.lens, S.lens.x, S.lens.y);
+      gl.uniform1f(uloc.thetaE, S.thetaE);
+      gl.uniform1f(uloc.srcSize, S.srcSize);
+      gl.uniform1f(uloc.ring, S.showRing ? 1.0 : 0.0);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    // ===== Light curve (2D canvas) =====
+    const lc = document.getElementById('lightcurve');
+    const lx = lc.getContext('2d');
+    let lcW = 0, lcH = 0;
+
+    function sizeLC() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = lc.clientWidth, h = lc.clientHeight;
+      lc.width = Math.round(w * dpr); lc.height = Math.round(h * dpr);
+      lx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      lcW = w; lcH = h;
+    }
+
+    function magAt(t) {
+      const x = t / S.tE;
+      const u = Math.hypot(x, S.umin);
+      return toMag(magnification(u), S.I0, S.fbl);
+    }
+
+    function yBounds() {
+      let top = magAt(0), bot = S.I0;
+      if (S.event) {
+        for (const [, m] of EVENTS[S.event].pts) { if (m < top) top = m; if (m > bot) bot = m; }
+      }
+      const pad = Math.max(0.15, (bot - top) * 0.12);
+      return { top: top - pad, bot: bot + pad };
+    }
+
+    function drawCurve() {
+      const W = lcW, H = lcH;
+      lx.clearRect(0, 0, W, H);
+      const mL = 46, mR = 14, mT = 14, mB = 30;
+      const pw = W - mL - mR, ph = H - mT - mB;
+      const { top, bot } = yBounds();
+      const X = (t) => mL + ((t - S.tMin) / (S.tMax - S.tMin)) * pw;
+      const Y = (m) => mT + ((m - top) / (bot - top)) * ph;
+
+      // grid
+      lx.strokeStyle = 'rgba(168,130,255,0.10)';
+      lx.lineWidth = 1;
+      lx.font = '11px "Space Grotesk", system-ui, sans-serif';
+      lx.fillStyle = 'rgba(148,140,173,0.85)';
+      lx.textAlign = 'center';
+      const tStep = niceStep((S.tMax - S.tMin) / 6);
+      for (let t = Math.ceil(S.tMin / tStep) * tStep; t <= S.tMax; t += tStep) {
+        const px = X(t);
+        lx.beginPath(); lx.moveTo(px, mT); lx.lineTo(px, mT + ph); lx.stroke();
+        lx.fillText(Math.round(t), px, H - 10);
+      }
+      lx.textAlign = 'right';
+      const mStep = niceStep((bot - top) / 4);
+      for (let m = Math.ceil(top / mStep) * mStep; m <= bot; m += mStep) {
+        const py = Y(m);
+        lx.beginPath(); lx.moveTo(mL, py); lx.lineTo(mL + pw, py); lx.stroke();
+        lx.fillText(m.toFixed(1), mL - 8, py + 4);
+      }
+      lx.textAlign = 'center';
+      lx.fillStyle = 'rgba(148,140,173,0.65)';
+      lx.fillText('days from peak', mL + pw / 2, H + 0);
+
+      // model curve + fill
+      const N = 220;
+      lx.beginPath();
+      for (let i = 0; i <= N; i++) {
+        const t = S.tMin + (i / N) * (S.tMax - S.tMin);
+        const px = X(t), py = Y(magAt(t));
+        i === 0 ? lx.moveTo(px, py) : lx.lineTo(px, py);
+      }
+      const grad = lx.createLinearGradient(0, mT, 0, mT + ph);
+      grad.addColorStop(0, 'rgba(192,132,252,0.28)');
+      grad.addColorStop(1, 'rgba(192,132,252,0.0)');
+      lx.save();
+      lx.lineTo(X(S.tMax), mT + ph); lx.lineTo(X(S.tMin), mT + ph); lx.closePath();
+      lx.fillStyle = grad; lx.fill();
+      lx.restore();
+
+      lx.beginPath();
+      for (let i = 0; i <= N; i++) {
+        const t = S.tMin + (i / N) * (S.tMax - S.tMin);
+        const px = X(t), py = Y(magAt(t));
+        i === 0 ? lx.moveTo(px, py) : lx.lineTo(px, py);
+      }
+      lx.strokeStyle = '#c084fc';
+      lx.lineWidth = 2;
+      lx.shadowColor = 'rgba(192,132,252,0.55)'; lx.shadowBlur = 8;
+      lx.stroke();
+      lx.shadowBlur = 0;
+
+      // real data
+      if (S.event) {
+        lx.fillStyle = 'rgba(125,211,252,0.9)';
+        for (const [t, m] of EVENTS[S.event].pts) {
+          if (t < S.tMin || t > S.tMax) continue;
+          lx.beginPath(); lx.arc(X(t), Y(m), 2.1, 0, 6.2832); lx.fill();
+        }
+      }
+
+      // marker at current lens position
+      const uNow = Math.hypot(S.lens.x, S.lens.y) / S.thetaE;
+      const mNow = toMag(magnification(uNow), S.I0, S.fbl);
+      const tNow = (S.lens.x / S.thetaE) * S.tE;
+      const mx = X(Math.max(S.tMin, Math.min(S.tMax, tNow))), my = Y(mNow);
+      lx.beginPath(); lx.moveTo(mx, mT); lx.lineTo(mx, mT + ph);
+      lx.strokeStyle = 'rgba(255,210,127,0.35)'; lx.lineWidth = 1; lx.stroke();
+      lx.beginPath(); lx.arc(mx, my, 5, 0, 6.2832);
+      lx.fillStyle = '#ffd27f';
+      lx.shadowColor = 'rgba(255,210,127,0.8)'; lx.shadowBlur = 12; lx.fill();
+      lx.shadowBlur = 0;
+    }
+
+    function niceStep(raw) {
+      const p = Math.pow(10, Math.floor(Math.log10(raw)));
+      const n = raw / p;
+      const s = n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10;
+      return s * p;
+    }
+
+    // ===== Readouts =====
+    const roSep = document.getElementById('ro-sep');
+    const roMag = document.getElementById('ro-mag');
+    const roBright = document.getElementById('ro-bright');
+    const roTime = document.getElementById('ro-time');
+    function updateHUD() {
+      const u = Math.hypot(S.lens.x, S.lens.y) / S.thetaE;
+      const A = magnification(u);
+      const dMag = 2.5 * Math.log10(S.fbl * (A - 1) + 1);
+      const t = (S.lens.x / S.thetaE) * S.tE;
+      roSep.textContent = u.toFixed(2) + ' θE';
+      roMag.textContent = A.toFixed(2) + '×';
+      roBright.textContent = '+' + dMag.toFixed(2) + ' mag';
+      roTime.textContent = (t >= 0 ? '+' : '') + t.toFixed(0) + ' d';
+    }
+
+    // ===== Main loop =====
+    let last = performance.now();
+    let clock = 0; // render clock: only advances while animating, so a paused frame is still
+    function speed() { return (S.tMax - S.tMin) / 9; } // full sweep ~9s
+    function frame(now) {
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (S.playing || S.dragging) clock += dt;
+      if (S.dragging) {
+        S.t = (S.lens.x / S.thetaE) * S.tE;
+      } else {
+        if (S.playing) {
+          S.t += S.dir * speed() * dt;
+          if (S.t >= S.tMax) { S.t = S.tMax; S.dir = -1; }
+          if (S.t <= S.tMin) { S.t = S.tMin; S.dir = 1; }
+        }
+        S.lens = { x: S.thetaE * (S.t / S.tE), y: S.thetaE * S.umin };
+      }
+      renderGL(clock);
+      drawCurve();
+      updateHUD();
+      requestAnimationFrame(frame);
+    }
+
+    // ===== Controls =====
+    const playBtn = document.getElementById('playBtn');
+    const playIcon = document.getElementById('playIcon');
+    const ringBtn = document.getElementById('ringBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const sUmin = document.getElementById('s-umin');
+    const sTe = document.getElementById('s-te');
+    const sThetae = document.getElementById('s-thetae');
+    const sSrc = document.getElementById('s-src');
+    const vUmin = document.getElementById('v-umin');
+    const vTe = document.getElementById('v-te');
+    const vThetae = document.getElementById('v-thetae');
+    const vSrc = document.getElementById('v-src');
+    const caption = document.getElementById('curve-caption');
+
+    function setPlaying(p) {
+      S.playing = p;
+      playIcon.textContent = p ? 'Pause' : 'Play';
+    }
+    playBtn.addEventListener('click', () => setPlaying(!S.playing));
+    ringBtn.addEventListener('click', () => {
+      S.showRing = !S.showRing;
+      ringBtn.textContent = 'Einstein ring: ' + (S.showRing ? 'on' : 'off');
+    });
+
+    function syncSliders() {
+      sUmin.value = S.umin; sTe.value = S.tE; sThetae.value = S.thetaE; sSrc.value = S.srcSize;
+      vUmin.textContent = S.umin.toFixed(2);
+      vTe.textContent = Math.round(S.tE) + ' d';
+      vThetae.textContent = S.thetaE.toFixed(2);
+      vSrc.textContent = S.srcSize.toFixed(3);
+    }
+
+    function clearEvent() {
+      if (!S.event) return;
+      S.event = null;
+      caption.textContent = 'Sandbox · drag the lens or press play';
+    }
+
+    sUmin.addEventListener('input', () => { S.umin = +sUmin.value; vUmin.textContent = S.umin.toFixed(2); clearEvent(); });
+    sTe.addEventListener('input', () => { S.tE = +sTe.value; vTe.textContent = Math.round(S.tE) + ' d'; setRange(); clearEvent(); });
+    sThetae.addEventListener('input', () => { S.thetaE = +sThetae.value; vThetae.textContent = S.thetaE.toFixed(2); });
+    sSrc.addEventListener('input', () => { S.srcSize = +sSrc.value; vSrc.textContent = S.srcSize.toFixed(3); });
+
+    function loadEvent(id) {
+      const e = EVENTS[id];
+      S.event = id; S.umin = e.umin; S.tE = e.tau; S.I0 = e.I0; S.fbl = e.fbl;
+      setRange(); S.t = S.tMin; S.dir = 1; setPlaying(true); S.dragging = false;
+      syncSliders();
+      const amax = magnification(e.umin);
+      caption.textContent = 'OGLE-2019-BLG-' + id + ' · fitted model + real data';
+      document.querySelectorAll('.event-card').forEach((c) =>
+        c.classList.toggle('active', c.dataset.event === id));
+      document.getElementById('lens-gl').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    document.querySelectorAll('.event-card').forEach((c) =>
+      c.addEventListener('click', () => loadEvent(c.dataset.event)));
+
+    resetBtn.addEventListener('click', () => {
+      S.umin = 0.30; S.tE = 25; S.thetaE = 0.14; S.srcSize = 0.020; S.I0 = 18.0; S.fbl = 1.0;
+      setRange(); S.t = S.tMin; S.dir = 1; setPlaying(true); clearEvent();
+      document.querySelectorAll('.event-card').forEach((c) => c.classList.remove('active'));
+      syncSliders();
+    });
+
+    // Drag the lens
+    function planeFromEvent(e) {
+      const r = cv.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      const aspect = r.width / r.height;
+      return { x: (px - 0.5) * aspect, y: (0.5 - py) };
+    }
+    cv.addEventListener('pointerdown', (e) => {
+      S.dragging = true; setPlaying(false);
+      S.lens = planeFromEvent(e);
+      cv.setPointerCapture(e.pointerId);
+      cv.classList.add('grabbing');
+    });
+    cv.addEventListener('pointermove', (e) => { if (S.dragging) S.lens = planeFromEvent(e); });
+    const endDrag = () => { S.dragging = false; cv.classList.remove('grabbing'); };
+    cv.addEventListener('pointerup', endDrag);
+    cv.addEventListener('pointercancel', endDrag);
+
+    // Pause the animation cost when the tab is hidden
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { S._wasPlaying = S.playing; setPlaying(false); }
+      else if (S._wasPlaying) { setPlaying(true); }
+    });
+
+    // ===== Boot =====
+    glOk = initGL();
+    if (!glOk) { cv.style.display = 'none'; fallback.hidden = false; }
+    sizeLC();
+    syncSliders();
+    window.addEventListener('resize', () => { sizeLC(); });
+    requestAnimationFrame(frame);
+  </script>
+
+  <style>
+    .ml {
+      position: relative; z-index: 2; padding: clamp(28px, 6vw, 64px) var(--pad-x) 120px;
+      /* Cosmic theme: deep indigo / violet with a warm source-star accent */
+      --grad-text: linear-gradient(120deg, #a5b4fc 0%, #818cf8 28%, #c084fc 62%, #f0abfc 100%);
+      --accent-rgb: 168,130,255;
+      --warm: #ffd27f;
+      --cyan: #7dd3fc;
+    }
+    .ml-container { max-width: 1080px; margin: 0 auto; }
+
+    .back { display: inline-block; font-family: var(--font-display); font-size: 13px; color: var(--muted); margin-bottom: clamp(32px, 6vw, 56px); transition: color .25s; }
+    .back:hover { color: var(--lilac); }
+
+    /* Header */
+    .ml-head { position: relative; }
+    .ml-head::before {
+      content: ''; position: absolute; inset: -60px -40px -20px; z-index: -1; pointer-events: none;
+      background:
+        radial-gradient(60% 80% at 78% 12%, rgba(129,140,248,0.16), transparent 60%),
+        radial-gradient(50% 70% at 12% 0%, rgba(192,132,252,0.12), transparent 62%);
+      -webkit-mask-image: radial-gradient(120% 100% at 50% 0%, #000 40%, transparent 85%);
+      mask-image: radial-gradient(120% 100% at 50% 0%, #000 40%, transparent 85%);
+    }
+    .ml-title { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 6.4vw, 72px); letter-spacing: -0.03em; line-height: 1.02; margin-bottom: 22px; }
+    .ml-lead { font-size: clamp(16.5px, 1.3vw, 19px); color: var(--text-dim); font-weight: 300; line-height: 1.8; max-width: 840px; }
+    .ml-lead strong { color: var(--text); font-weight: 500; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+    .tag { font-family: var(--font-display); font-size: 12px; padding: 5px 13px; border-radius: 7px; background: rgba(var(--accent-rgb),0.06); border: 1px solid var(--border); color: var(--text-dim); }
+
+    /* ===== Stage ===== */
+    .stage-section { margin-top: clamp(40px, 6vw, 64px); }
+    .stage {
+      position: relative; width: 100%;
+      aspect-ratio: 16 / 9; min-height: 320px;
+      border-radius: 20px; overflow: hidden;
+      background: radial-gradient(circle at 50% 45%, #0a0716, #030109 75%);
+      border: 1px solid var(--border);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.6), 0 0 0 1px rgba(var(--accent-rgb),0.06) inset;
+    }
+    #lens-gl { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+    #lens-gl.grabbing { cursor: grabbing; }
+
+    .stage-badge {
+      position: absolute; top: 14px; left: 14px; z-index: 3;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-display); font-size: 11.5px; letter-spacing: 0.04em;
+      color: var(--text-dim); padding: 6px 12px; border-radius: 999px;
+      background: rgba(6,4,14,0.55); border: 1px solid var(--border); backdrop-filter: blur(8px);
+    }
+    .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--warm); box-shadow: 0 0 10px var(--warm); animation: pulse 1.8s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .stage-hud {
+      position: absolute; left: 14px; right: 14px; bottom: 14px; z-index: 3;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 10px 12px; border-radius: 14px;
+      background: rgba(6,4,14,0.55); border: 1px solid var(--border); backdrop-filter: blur(10px);
+    }
+    .hud-btn {
+      border: 1px solid var(--border); border-radius: 9px; padding: 8px 14px;
+      font-family: var(--font-display); font-size: 13px; font-weight: 600; cursor: pointer;
+      background: rgba(255,255,255,0.04); color: var(--text);
+      transition: background .15s, border-color .15s, transform .08s;
+    }
+    .hud-btn:hover { background: rgba(var(--accent-rgb),0.10); border-color: rgba(var(--accent-rgb),0.35); }
+    .hud-btn:active { transform: scale(0.97); }
+    .hud-primary { background: var(--purple); border-color: transparent; color: #140a24; }
+    .hud-primary:hover { opacity: 0.92; background: var(--purple); }
+    .hud-hint { margin-left: auto; font-size: 12.5px; color: var(--muted); }
+
+    .gl-fallback { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: var(--text-dim); font-size: 15px; }
+    .gl-fallback[hidden] { display: none; }
+
+    /* ===== Simulator grid ===== */
+    .sim-grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 20px; margin-top: 20px; align-items: start; }
+    .curve-card, .control-card {
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 18px;
+      padding: 18px 20px;
+    }
+    .curve-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .card-h { font-family: var(--font-display); font-weight: 700; font-size: 18px; letter-spacing: -0.01em; }
+    .curve-caption { font-family: var(--font-display); font-size: 12px; color: var(--cyan); text-align: right; }
+    #lightcurve { width: 100%; height: 320px; display: block; }
+    .curve-axis-note { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+
+    /* Readouts */
+    .readouts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .ro { padding: 12px 14px; border-radius: 12px; background: rgba(var(--accent-rgb),0.05); border: 1px solid var(--border); }
+    .ro-label { display: block; font-family: var(--font-display); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 5px; }
+    .ro-value { font-family: var(--font-mono, ui-monospace, monospace); font-size: 19px; font-variant-numeric: tabular-nums; color: var(--text); }
+    .ro-value.hot { color: var(--warm); }
+
+    /* Sliders */
+    .sliders { display: grid; gap: 18px; }
+    .sl { display: grid; gap: 7px; }
+    .sl-top { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-display); font-size: 13.5px; color: var(--text-dim); }
+    .sl-val { font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; color: var(--lilac); }
+    .sl-help { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+    .sl input[type=range] {
+      -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 999px;
+      background: linear-gradient(90deg, rgba(var(--accent-rgb),0.5), rgba(var(--accent-rgb),0.15));
+      outline: none; cursor: pointer;
+    }
+    .sl input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--lilac); border: 2px solid #1a1230; box-shadow: 0 0 10px rgba(var(--accent-rgb),0.7);
+    }
+    .sl input[type=range]::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%; border: 2px solid #1a1230;
+      background: var(--lilac); box-shadow: 0 0 10px rgba(var(--accent-rgb),0.7);
+    }
+    .reset-btn {
+      margin-top: 20px; width: 100%; padding: 11px; border-radius: 11px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-dim);
+      font-family: var(--font-display); font-size: 13.5px; font-weight: 600; cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .reset-btn:hover { background: rgba(var(--accent-rgb),0.08); color: var(--text); }
+
+    /* ===== Events ===== */
+    .events { margin-top: clamp(48px, 7vw, 76px); }
+    .block-h { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -0.02em; margin-bottom: 18px; }
+    .event-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+    .event-card {
+      display: grid; gap: 10px; text-align: left; cursor: pointer;
+      padding: 20px; border-radius: 16px;
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border); color: var(--text);
+      transition: transform .18s var(--ease), border-color .18s, background .18s;
+    }
+    .event-card:hover { transform: translateY(-3px); border-color: rgba(var(--accent-rgb),0.4); background: rgba(var(--accent-rgb),0.05); }
+    .event-card.active { border-color: var(--warm); box-shadow: 0 0 0 1px rgba(255,210,127,0.4), 0 12px 40px rgba(0,0,0,0.4); }
+    .ev-name { font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
+    .ev-params { display: flex; flex-wrap: wrap; gap: 12px; font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; color: var(--lilac); }
+    .ev-params em { color: var(--muted); font-style: normal; }
+    .ev-desc { font-size: 13.5px; color: var(--text-dim); font-weight: 300; line-height: 1.6; }
+    .ev-load { font-family: var(--font-display); font-size: 12.5px; font-weight: 600; color: var(--cyan); margin-top: 2px; }
+
+    /* ===== How it works ===== */
+    .how { margin-top: clamp(48px, 7vw, 76px); max-width: 840px; }
+    .how-p { font-size: 16px; color: var(--text-dim); font-weight: 300; line-height: 1.8; margin: 0 0 18px; }
+    .how-p strong { color: var(--text); font-weight: 500; }
+    .how-link { color: var(--lilac); text-decoration: none; border-bottom: 1px solid rgba(var(--accent-rgb),0.4); }
+    .how-link:hover { border-bottom-color: var(--lilac); }
+
+    .eq-card {
+      margin: 8px 0 26px; padding: 26px 28px; border-radius: 16px;
+      background: linear-gradient(180deg, rgba(var(--accent-rgb),0.07), rgba(var(--accent-rgb),0.02));
+      border: 1px solid var(--border);
+    }
+    .eq-row { display: flex; align-items: center; gap: 16px; font-family: var(--font-mono, ui-monospace, monospace); font-size: 20px; color: var(--text); margin-bottom: 14px; }
+    .eq-lhs { color: var(--lilac); min-width: 46px; }
+    .eq-eq { color: var(--muted); }
+    .eq-frac { display: inline-grid; justify-items: center; gap: 3px; }
+    .eq-num, .eq-den { padding: 0 8px; }
+    .eq-bar { width: 100%; height: 1px; background: rgba(var(--accent-rgb),0.5); }
+    .eq-inline { color: var(--text); }
+    .eq-note { margin: 10px 0 0; font-size: 14px; color: var(--muted); font-family: var(--font-body); line-height: 1.7; }
+
+    @media (max-width: 860px) {
+      .sim-grid { grid-template-columns: 1fr; }
+      .event-grid { grid-template-columns: 1fr; }
+      .stage { aspect-ratio: 4 / 3; }
+      #lightcurve { height: 260px; }
+      .hud-hint { display: none; }
+    }
+  </style>
+</Base>

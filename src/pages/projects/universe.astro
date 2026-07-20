@@ -1,0 +1,764 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const title = 'Mapping the Known Universe: A 3D Journey | Geet Purohit';
+const description =
+  'A fullscreen, navigable 3D map of the scanned universe built from real open survey data: 2 million stars from the AT-HYG (Gaia/Tycho) catalogue and 620,000+ galaxies from the 2MASS and SDSS surveys. Fly from the solar system out to the cosmic web on one continuous scale, rendered live in your browser.';
+---
+
+<Base title={title} description={description}>
+  <div class="uni-root">
+    <canvas id="uni"></canvas>
+    <div class="u-labels" id="labels"></div>
+
+    <!-- top-left -->
+    <div class="ui-tl">
+      <a class="back" href="/#projects">← geetpurohit.com</a>
+      <div class="title-row">
+        <span class="pulse"></span>
+        <span class="ui-title">Mapping the Known Universe</span>
+      </div>
+    </div>
+
+    <!-- top-right: scale readout -->
+    <div class="ui-tr" id="scaleHud">
+      <div class="scale-layer" id="layerName">Local stellar neighborhood</div>
+      <div class="scale-span" id="spanText">30 light years across</div>
+      <div class="scale-dot" id="dotText">Each point is a star</div>
+      <div class="scale-source" id="sourceText">AT-HYG (Gaia) catalogue · 1,999,778 real stars</div>
+    </div>
+
+    <!-- loading -->
+    <div class="uni-loading" id="loading">
+      <div class="spinner"></div>
+      <span id="loadPct">Loading the universe…</span>
+    </div>
+
+    <!-- bottom controls -->
+    <div class="ui-bottom">
+      <div class="jump-group">
+        <button class="hud-btn" data-log="-3.6">Solar system</button>
+        <button class="hud-btn active" data-log="1.2">Neighborhood</button>
+        <button class="hud-btn" data-log="4.6">Milky Way</button>
+        <button class="hud-btn" data-log="7.6">Supercluster</button>
+        <button class="hud-btn" data-log="8.9">Cosmic web</button>
+      </div>
+      <input id="zoom" class="zoom-slider" type="range" min="0" max="1" step="0.0005" value="0.420" aria-label="Zoom scale" />
+      <button class="hud-btn ai-btn" id="aiBtn" aria-label="Toggle AI reconstruction">✦ AI fill: off</button>
+      <button class="hud-btn info-btn" id="infoBtn" aria-label="About this map">i</button>
+    </div>
+    <div class="ui-hint">Scroll to travel through scale · drag to orbit</div>
+
+    <!-- info overlay -->
+    <div class="info-panel" id="infoPanel" hidden>
+      <button class="info-close" id="infoClose" aria-label="Close">×</button>
+      <h2>How this map is built</h2>
+      <p>Every star and galaxy sits at its <strong>real measured position</strong>, in one continuous
+        space. There are no separate "levels", you are flying through a single 3D model on a
+        logarithmic scale, so structures nest the way they truly do: the neighborhood inside the
+        galaxy, the galaxy inside the cosmic web.</p>
+      <p><strong>The stars</strong> come from the AT-HYG catalogue (Hipparcos, Tycho and Gaia),
+        nearly 2 million of them with measured distances, colored by their real temperature: hot
+        blue-white giants, our yellow Sun, cool red Antares. They form a bubble a few thousand light
+        years across, the limit of where stellar distances can actually be measured, including the
+        real stars above and below the galactic plane.</p>
+      <p><strong>The galaxies</strong> come from two redshift surveys, 620,033 of them placed by
+        their measured redshift through Hubble's law: the all-sky 2MASS survey for the local sphere,
+        and the deep SDSS survey for the great wedge that reaches out past 500 million light years.
+        The cosmic web, its filaments, walls and voids, is not drawn; it falls out of the data.</p>
+      <p>Between the galaxy and the deep web sits the <strong>Local Group and Local Supercluster</strong>:
+        real nearby galaxies at their measured distances, Andromeda, the Magellanic Clouds, Centaurus A,
+        the Whirlpool, and the Virgo Cluster that anchors our supercluster. The bright galaxies here are
+        real, from the 2MASS Redshift Survey, weighted by their measured luminosity so cluster cores glow.</p>
+      <p><strong>The glowing web at the supercluster scale is a reconstruction.</strong> A real survey is
+        a sparse scatter of galaxies, not the continuous filaments you see in simulation images, so the
+        soft web behind the real galaxies is modeled: the bright nodes sit at the true positions of Virgo,
+        Coma, the Great Attractor and the other real clusters, and the filaments and voids between them
+        come from a Voronoi-foam model of the cosmic web, boosted to follow the real 2MASS density. The
+        structure is a plausible reconstruction, not an observation; the real galaxies ride on top of it.</p>
+      <p><strong>Some things are honest models, not surveys.</strong> The planets sit at their real
+        orbital distances, and the asteroid belt, Kuiper belt, heliopause and Oort cloud are drawn at
+        their real distances too, but as representative clouds, we have no catalogue of individual
+        Oort cloud objects. The two <strong>Voyager probes</strong> sit at their real 2026 positions,
+        the only human-made objects out there, already past the heliopause and climbing out of the
+        ecliptic plane. And the far Milky Way is a schematic spiral, because we sit inside our
+        galaxy and cannot measure most of its stars; the real stars fill the bubble around the Sun,
+        then blend into the model beyond.</p>
+      <p><strong>The halo is real again.</strong> Surrounding the disc, the roughly 150 globular
+        clusters (Harris catalogue) and the dwarf satellite galaxies (Sagittarius, Fornax, Sculptor,
+        Draco, Leo I and dozens more, from the McConnachie catalogue) sit at their real measured
+        distances, filling the space from the disc edge out to the Local Group that would otherwise
+        look empty.</p>
+      <p><strong style="color:#ff7ac6">The "AI fill" toggle</strong> is different from everything else:
+        it is <strong>not real data</strong>. A 3D diffusion model I trained on simulated cosmic-web
+        fields dreams up plausible galaxies to fill the sky the surveys never saw, behind the Milky Way
+        and outside the SDSS wedge, so you can imagine what the whole cosmic web might look like. It is
+        statistically web-like but invented; the crimson points are inferred, never observed.</p>
+      <p class="info-src">Data: AT-HYG / HYG (astronexus, public domain) · 2MRS (Huchra et al. 2012) ·
+        SDSS · globular clusters (Harris 1996, 2010 ed.) · Local Group dwarfs (McConnachie 2012).
+        Rendered with Three.js. <a href="https://github.com/geetpurohit" target="_blank" rel="noopener">Code on GitHub</a>.</p>
+    </div>
+
+    <p id="uni-fallback" class="uni-fallback" hidden>
+      Your browser could not start WebGL, so the 3D map cannot render.
+      <a href="/">Return home</a>.
+    </p>
+  </div>
+
+  <script>
+    import * as THREE from 'three';
+
+    const canvas = document.getElementById('uni');
+    const root = document.querySelector('.uni-root');
+    const labelBox = document.getElementById('labels');
+    const loading = document.getElementById('loading');
+    const loadPct = document.getElementById('loadPct');
+    const fallback = document.getElementById('uni-fallback');
+    const layerNameEl = document.getElementById('layerName');
+    const spanTextEl = document.getElementById('spanText');
+    const dotTextEl = document.getElementById('dotText');
+    const sourceTextEl = document.getElementById('sourceText');
+    const zoom = document.getElementById('zoom');
+
+    let GAL_SOURCE = '2MASS + SDSS surveys · 620,033 real galaxies';
+    let SUPERCLUSTER_SOURCE = 'Laniakea · 2MASS Redshift Survey';
+    let WEBFILL_COUNT = 0, webfillOn = false, SUPERCLUSTER_COUNT = 0, SUPWEB_COUNT = 0;
+
+    const AU = 4.8481e-6;          // parsecs per AU
+    const PC_TO_LY = 3.2616;
+    const LOG_MIN = -4.6, LOG_MAX = 9.2;
+    const logToSlider = (l) => (l - LOG_MIN) / (LOG_MAX - LOG_MIN);
+    const sliderToLog = (v) => LOG_MIN + v * (LOG_MAX - LOG_MIN);
+
+    let renderer;
+    try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false }); }
+    catch (e) { renderer = null; }
+    if (!renderer) { fallback.hidden = false; loading.style.display = 'none'; }
+    else run(renderer);
+
+    function run(renderer) {
+      renderer.setClearColor(0x01010a, 1);
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, 1, 0.001, 1e12);
+
+      // ---------- shared point shader (size scales with camera distance) ----------
+      const vert = `
+        attribute vec3 aColor;
+        attribute float aSize;
+        uniform float uSize;
+        uniform float uPixelRatio;
+        uniform float uFadeR;
+        varying vec3 vColor;
+        varying float vFade;
+        varying float vDim;
+        void main() {
+          vColor = aColor;
+          // soft outer taper (from origin) so the star bubble dissolves instead of ending in a circle
+          vFade = uFadeR > 0.5 ? (1.0 - smoothstep(uFadeR * 0.5, uFadeR, length(position))) : 1.0;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          float sz = aSize * uSize * uPixelRatio / max(-mv.z, 1e-9);
+          // flux-conserving points: an unresolved source cannot shrink below ~1 pixel, so
+          // below that hold the footprint and dim by the lost area (brightness ~ 1/dist^2).
+          // this removes sub-pixel twinkle and gives real distance-based brightness.
+          float minPx = 1.5 * uPixelRatio;
+          vDim = 1.0;
+          if (sz < minPx) { float t = sz / minPx; vDim = t * t; sz = minPx; }
+          gl_PointSize = clamp(sz, 0.0, 52.0);
+          gl_Position = projectionMatrix * mv;
+        }`;
+      const frag = `
+        precision mediump float;
+        uniform float uOpacity;
+        uniform float uSat;
+        varying vec3 vColor;
+        varying float vFade;
+        varying float vDim;
+        void main() {
+          float d = length(gl_PointCoord - 0.5);
+          float a = smoothstep(0.5, 0.05, d) * vFade * vDim;
+          if (a <= 0.001) discard;
+          // keep the physical hue: saturate around luminance, brighten the core without going white
+          vec3 c = vColor;
+          float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+          c = clamp(mix(vec3(l), c, uSat), 0.0, 1.0);
+          float core = smoothstep(0.30, 0.0, d) * 0.6;
+          c += core * mix(vec3(1.0), c, 0.6);
+          gl_FragColor = vec4(c, a * uOpacity);
+        }`;
+      function makeMat() {
+        return new THREE.ShaderMaterial({
+          uniforms: { uOpacity: { value: 1 }, uSize: { value: 1 }, uPixelRatio: { value: renderer.getPixelRatio() }, uFadeR: { value: 0 }, uSat: { value: 1.35 } },
+          vertexShader: vert, fragmentShader: frag,
+          transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+        });
+      }
+
+      const groups = {};
+      // big datasets: Float32 positions + Uint8 (rgb,size) interleaved
+      function pointsPacked(posBuf, colBuf) {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(posBuf), 3));
+        const inter = new THREE.InterleavedBuffer(new Uint8Array(colBuf), 4);
+        geo.setAttribute('aColor', new THREE.InterleavedBufferAttribute(inter, 3, 0, true));
+        geo.setAttribute('aSize', new THREE.InterleavedBufferAttribute(inter, 1, 3, true));
+        const pts = new THREE.Points(geo, makeMat());
+        pts.frustumCulled = false;
+        return pts;
+      }
+      // small datasets: plain Float32 attributes
+      function pointsFloat(pos, col, size) {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+        geo.setAttribute('aColor', new THREE.BufferAttribute(new Float32Array(col), 3));
+        geo.setAttribute('aSize', new THREE.BufferAttribute(new Float32Array(size), 1));
+        const pts = new THREE.Points(geo, makeMat());
+        pts.frustumCulled = false;
+        return pts;
+      }
+
+      // ---------- labels ----------
+      const labelDefs = [];
+      const addLabel = (name, x, y, z, band, cls) => {
+        const el = document.createElement('div');
+        el.className = 'u-label ' + (cls || '');
+        el.textContent = name;
+        labelBox.appendChild(el);
+        labelDefs.push({ el, pos: new THREE.Vector3(x, y, z), band });
+      };
+
+      // ---------- solar system (real orbital distances, Sun at origin) ----------
+      function buildSolarSystem() {
+        const planets = [
+          // real observed colors
+          ['Mercury', 0.39, 0.62, 0.59, 0.55], ['Venus', 0.72, 0.96, 0.90, 0.72],
+          ['Earth', 1.00, 0.30, 0.55, 0.95], ['Mars', 1.52, 0.86, 0.42, 0.26],
+          ['Jupiter', 5.20, 0.86, 0.74, 0.58], ['Saturn', 9.58, 0.92, 0.82, 0.58],
+          ['Uranus', 19.2, 0.66, 0.90, 0.92], ['Neptune', 30.05, 0.26, 0.45, 0.86],
+        ];
+        const pos = [], col = [], size = [];
+        const push = (x, y, z, r, g, b, s) => { pos.push(x, y, z); col.push(r, g, b); size.push(s); };
+        const grp = new THREE.Group();
+        // Sun
+        push(0, 0, 0, 1.0, 0.85, 0.45, 9);
+        addLabel('The Sun', 0, 0, 0, 'solar', 'sun');
+        // planets + orbit rings
+        for (const [name, a, r, g, b] of planets) {
+          const ang = Math.random() * Math.PI * 2, R = a * AU;
+          const x = R * Math.cos(ang), z = R * Math.sin(ang);
+          push(x, 0, z, r, g, b, 4.2);
+          addLabel(name, x, 0, z, 'solar');
+          const seg = 200, arr = new Float32Array((seg + 1) * 3);
+          for (let i = 0; i <= seg; i++) {
+            const t = (i / seg) * Math.PI * 2;
+            arr[i * 3] = R * Math.cos(t); arr[i * 3 + 1] = 0; arr[i * 3 + 2] = R * Math.sin(t);
+          }
+          const lg = new THREE.BufferGeometry();
+          lg.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+          const lm = new THREE.LineBasicMaterial({ color: 0x8a7fff, transparent: true, opacity: 0.25, depthTest: false, depthWrite: false });
+          grp.add(new THREE.LineLoop(lg, lm));
+        }
+        // Asteroid belt (between Mars and Jupiter, ~2.1-3.3 AU)
+        for (let i = 0; i < 2600; i++) {
+          const a = (2.1 + Math.random() * 1.2) * AU, ang = Math.random() * Math.PI * 2;
+          push(a * Math.cos(ang), gauss() * a * 0.05, a * Math.sin(ang), 0.68, 0.62, 0.54, 1.3 + Math.random() * 0.7);
+        }
+        addLabel('Asteroid belt', 2.7 * AU, 0, 0, 'solar', 'faint');
+        // Kuiper belt (~30-50 AU)
+        for (let i = 0; i < 4000; i++) {
+          const a = (30 + Math.random() * 20) * AU, ang = Math.random() * Math.PI * 2;
+          push(a * Math.cos(ang), gauss() * a * 0.09, a * Math.sin(ang), 0.6, 0.75, 0.9, 1.3 + Math.random() * 0.8);
+        }
+        addLabel('Kuiper belt', 42 * AU, 0, 0, 'solar', 'faint');
+        // Comets / scattered disc (eccentric orbits)
+        for (let i = 0; i < 70; i++) {
+          const q = (0.6 + Math.random() * 4) * AU, Q = (45 + Math.random() * 450) * AU;
+          const aa = (q + Q) / 2, e = (Q - q) / (Q + q), nu = Math.random() * Math.PI * 2;
+          const rr = aa * (1 - e * e) / (1 + e * Math.cos(nu)), inc = (Math.random() - 0.5) * 1.3;
+          push(rr * Math.cos(nu), rr * Math.sin(nu) * Math.sin(inc), rr * Math.sin(nu) * Math.cos(inc), 0.7, 0.92, 1.0, 1.6 + Math.random());
+        }
+        // Heliosphere / heliopause shell (~120 AU)
+        for (let i = 0; i < 2400; i++) {
+          const rr = (112 + Math.random() * 16) * AU, u = Math.random() * Math.PI * 2, v = Math.acos(2 * Math.random() - 1);
+          push(rr * Math.sin(v) * Math.cos(u), rr * Math.cos(v), rr * Math.sin(v) * Math.sin(u), 0.3, 0.5, 0.85, 0.85 + Math.random() * 0.5);
+        }
+        addLabel('Heliopause', 120 * AU, 0, 0, 'solar', 'faint');
+        // Voyager 1 & 2 — real ~2026 positions (AU, ecliptic lon/lat deg); the farthest human-made objects
+        for (const [name, dAU, lon, lat] of [['Voyager 1', 166, 255, 35], ['Voyager 2', 139, 290, -48]]) {
+          const lo = lon * Math.PI / 180, la = lat * Math.PI / 180, D = dAU * AU;
+          const x = D * Math.cos(la) * Math.cos(lo), y = D * Math.sin(la), z = D * Math.cos(la) * Math.sin(lo);
+          push(x, y, z, 1.0, 0.86, 0.6, 4.6);
+          addLabel(name, x, y, z, 'solar');
+          const tg = new THREE.BufferGeometry();
+          tg.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, x, y, z]), 3));
+          grp.add(new THREE.Line(tg, new THREE.LineBasicMaterial({ color: 0x9fd8ff, transparent: true, opacity: 0.3, depthTest: false, depthWrite: false })));
+        }
+        // Oort cloud (~2,000 - 100,000 AU spherical shell, log-distributed)
+        for (let i = 0; i < 12000; i++) {
+          const rr = Math.pow(10, 3.3 + Math.random() * 1.7) * AU, u = Math.random() * Math.PI * 2, v = Math.acos(2 * Math.random() - 1);
+          push(rr * Math.sin(v) * Math.cos(u), rr * Math.cos(v), rr * Math.sin(v) * Math.sin(u), 0.75, 0.78, 0.86, 0.6 + Math.random() * 0.5);
+        }
+        addLabel('Oort cloud', 45000 * AU, 0, 0, 'solar', 'faint');
+
+        const pts = pointsFloat(pos, col, size);
+        grp.add(pts);
+        grp.userData.pts = pts;
+        grp.userData.lines = grp.children.filter((c) => c.isLine); // orbit rings + Voyager trajectories
+        return grp;
+      }
+
+      // ---------- Local Group + nearby galaxies (real distances) ----------
+      function buildLocalGroup() {
+        // [name, distance Mpc, RA deg, Dec deg, showLabel]
+        const G = [
+          ['Andromeda (M31)', 0.78, 10.68, 41.27, 1], ['Triangulum (M33)', 0.85, 23.46, 30.66, 1],
+          ['Large Magellanic Cloud', 0.050, 80.0, -69.76, 1], ['Small Magellanic Cloud', 0.062, 13.19, -72.83, 0],
+          ['NGC 6822', 0.50, 296.24, -14.80, 0], ['IC 10', 0.66, 5.10, 59.29, 0], ['NGC 300', 2.0, 13.72, -37.68, 0],
+          ['Sculptor Galaxy', 3.5, 11.89, -25.29, 1], ['Centaurus A', 3.8, 201.36, -43.02, 1],
+          ['M81', 3.6, 148.89, 69.07, 1], ['M82 (Cigar)', 3.5, 148.97, 69.68, 0], ['M83', 4.9, 204.25, -29.87, 0],
+          ['M94', 4.7, 192.72, 41.12, 0], ['M101 (Pinwheel)', 6.4, 210.80, 54.35, 1], ['M51 (Whirlpool)', 8.6, 202.47, 47.20, 1],
+          ['M104 (Sombrero)', 9.6, 190.00, -11.62, 1], ['M87 (Virgo Cluster)', 16.4, 187.71, 12.39, 1],
+          ['M49', 16.5, 187.44, 8.00, 0], ['M86', 16.0, 186.55, 12.95, 0], ['M60', 16.5, 190.92, 11.55, 0],
+          ['Antennae', 20.0, 180.47, -18.87, 0],
+        ];
+        const MPC = 1e6, pos = [], col = [], size = [];
+        for (const [name, d, ra, dec, lab] of G) {
+          const rr = ra * Math.PI / 180, dd = dec * Math.PI / 180, D = d * MPC;
+          const x = D * Math.cos(dd) * Math.cos(rr), y = D * Math.cos(dd) * Math.sin(rr), z = D * Math.sin(dd);
+          pos.push(x, y, z); col.push(0.82, 0.86, 1.0); size.push(3.8);
+          if (lab) addLabel(name, x, y, z, 'localgroup', 'faint');
+        }
+        return pointsFloat(pos, col, size);
+      }
+
+      // ---------- named clusters & voids of the Local Supercluster / Laniakea ----------
+      function addSuperclusterLabels() {
+        const MPC = 1e6;
+        // [name, RA deg, Dec deg, distance Mpc, class]
+        const C = [
+          ['Virgo Cluster', 187.7, 12.4, 16.5, ''], ['Fornax Cluster', 54.6, -35.4, 19, ''],
+          ['Eridanus Cluster', 55.0, -21.0, 23, 'faint'], ['Ursa Major Cloud', 180.5, 55.0, 18, 'faint'],
+          ['Centaurus Cluster', 192.2, -41.3, 45, ''], ['Hydra Cluster', 159.2, -27.5, 50, 'faint'],
+          ['Antlia Cluster', 157.5, -35.3, 40, 'faint'],
+          ['Great Attractor (Norma)', 243.6, -60.8, 68, ''], ['Perseus Cluster', 49.95, 41.5, 74, ''],
+          ['Coma Cluster', 194.9, 27.9, 100, ''], ['Leo Cluster', 176.1, 19.8, 92, 'faint'],
+          ['Hercules Cluster', 241.3, 17.7, 160, 'faint'], ['Shapley Supercluster', 202.0, -31.0, 200, ''],
+          ['Local Void', 288.0, 15.0, 30, 'faint'],
+        ];
+        for (const [name, ra, dec, d, cls] of C) {
+          const rr = ra * Math.PI / 180, dd = dec * Math.PI / 180, D = d * MPC;
+          addLabel(name, D * Math.cos(dd) * Math.cos(rr), D * Math.cos(dd) * Math.sin(rr), D * Math.sin(dd), 'supercluster', cls);
+        }
+      }
+
+      // ---------- Milky Way model (real galactocentric scale, Sun at origin) ----------
+      function gauss() { return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; }
+      function buildMilkyWay() {
+        const R = 15000;      // disk radius, pc
+        const CX = -8000;     // galactic center (Sun at origin, 8000 pc out)
+        const pos = [], col = [], size = [];
+        const push = (x, y, z, r, g, b, s) => { pos.push(x, y, z); col.push(r, g, b); size.push(s); };
+        // keep-probability near the Sun -> 0, so the real star bubble fills the hole (no "pimple")
+        const keepNearSun = (x, y, z) => Math.min(1, Math.max(0, (Math.sqrt(x * x + y * y + z * z) - 500) / 2200));
+
+        // 1) spiral disk: 2 major arms + diffuse inter-arm field, flocculent + dust
+        const Narm = 95000;
+        for (let i = 0; i < Narm; i++) {
+          const rr = Math.pow(Math.random(), 0.7) * R;
+          const diffuse = Math.random() < 0.45;
+          let th;
+          if (diffuse) th = Math.random() * Math.PI * 2;
+          else {
+            const arm = Math.floor(Math.random() * 2);
+            th = arm * Math.PI + Math.log(rr / 500 + 1) * 2.3 + (0.16 + 0.16 * (rr / R)) * gauss() * Math.PI;
+          }
+          if (Math.random() < Math.max(0, (rr - R * 0.82) / (R * 0.18))) continue; // soft outer edge
+          const x = CX + rr * Math.cos(th) + R * 0.01 * gauss();
+          const z = rr * Math.sin(th) + R * 0.01 * gauss();
+          const y = gauss() * (150 + 110 * (rr / R)); // thin-disk scale height grows outward
+          if (Math.random() > keepNearSun(x, y, z)) continue;
+          const tr = rr / R, roll = Math.random();
+          let r, g, b, s;
+          if (!diffuse && roll < 0.06) { r = 1.0; g = 0.55; b = 0.72; s = 0.6 + Math.random() * 0.7; }      // HII pink
+          else if (!diffuse && roll < 0.12) { r = 0.6; g = 0.78; b = 1.0; s = 0.6 + Math.random() * 0.7; }  // blue OB
+          else {
+            const w = diffuse ? 0 : 0.14;
+            r = 0.7 + w + 0.2 * (1 - tr); g = 0.68 + 0.1 * (1 - tr); b = 0.66 + 0.3 * tr;
+            s = 0.32 + Math.random() * 0.4;
+          }
+          if (Math.random() < 0.16) { r *= 0.45; g *= 0.45; b *= 0.45; } // dust dimming
+          push(x, y, z, r, g, b, s);
+        }
+        // 2) central bar (Milky Way is a barred spiral)
+        for (let i = 0; i < 13000; i++) {
+          const t = Math.random() - 0.5, ba = 0.42, along = t * 5400;
+          push(CX + along * Math.cos(ba) + gauss() * 750, gauss() * 340, along * Math.sin(ba) + gauss() * 750,
+               1.0, 0.8, 0.5, 0.45 + Math.random() * 0.55);
+        }
+        // 3) bulge (spheroid)
+        for (let i = 0; i < 16000; i++) {
+          const rr = Math.abs(gauss()) * 1900, u = Math.random() * Math.PI * 2, v = Math.acos(2 * Math.random() - 1);
+          push(CX + rr * Math.sin(v) * Math.cos(u), rr * Math.cos(v) * 0.65, rr * Math.sin(v) * Math.sin(u),
+               1.0, 0.83, 0.52, 0.45 + Math.random() * 0.55);
+        }
+        // 4) thick disk + spheroidal halo -> real stars ABOVE and BELOW the plane (a model)
+        for (let i = 0; i < 26000; i++) {
+          let x, y, z;
+          if (Math.random() < 0.6) {
+            const rr = Math.pow(Math.random(), 0.6) * R, th = Math.random() * Math.PI * 2;
+            x = CX + rr * Math.cos(th); z = rr * Math.sin(th); y = gauss() * 950; // thick disk
+          } else {
+            const rr = Math.pow(Math.random(), 0.5) * R * 1.15, u = Math.random() * Math.PI * 2, v = Math.acos(2 * Math.random() - 1);
+            x = CX + rr * Math.sin(v) * Math.cos(u); y = rr * Math.cos(v) * 0.8; z = rr * Math.sin(v) * Math.sin(u); // halo
+          }
+          if (Math.random() > keepNearSun(x, y, z)) continue;
+          push(x, y, z, 0.85, 0.82, 0.78, 0.28 + Math.random() * 0.32);
+        }
+        addLabel('Galactic center', CX, 0, 0, 'mw', 'faint');
+        return pointsFloat(pos, col, size);
+      }
+
+      // ---------- streaming fetch with progress ----------
+      async function fetchBuf(url, onProg) {
+        const res = await fetch(url);
+        const total = +res.headers.get('content-length') || 0;
+        if (!res.body || !total) return await res.arrayBuffer();
+        const reader = res.body.getReader();
+        const chunks = []; let got = 0;
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value); got += value.length;
+          if (onProg) onProg(got / total);
+        }
+        const out = new Uint8Array(got); let off = 0;
+        for (const c of chunks) { out.set(c, off); off += c.length; }
+        return out.buffer;
+      }
+
+      // ---------- load ----------
+      let ready = false;
+      (async () => {
+        try {
+          const meta = await fetch('/universe/meta.json').then((r) => r.json());
+          const [sp, sc] = await Promise.all([
+            fetchBuf('/universe/stars_pos.bin', (f) => { loadPct.textContent = 'Loading ' + Math.round(f * 100) + '%'; }),
+            fetchBuf('/universe/stars_col.bin'),
+          ]);
+          groups.stars = pointsPacked(sp, sc);
+        groups.stars.material.uniforms.uFadeR.value = 6500; // taper the bubble edge (pc from Sun)
+        scene.add(groups.stars);
+
+          const [gp, gc] = await Promise.all([
+            fetchBuf('/universe/galaxies_pos.bin'), fetchBuf('/universe/galaxies_col.bin'),
+          ]);
+          groups.gal = pointsPacked(gp, gc); scene.add(groups.gal);
+
+          // dedicated Local Supercluster layer (2MRS, K-luminosity weighted)
+          if (meta.supercluster && meta.supercluster.count) {
+            try {
+              const [scp, scc] = await Promise.all([
+                fetchBuf('/universe/supercluster_pos.bin'), fetchBuf('/universe/supercluster_col.bin'),
+              ]);
+              groups.supercluster = pointsPacked(scp, scc); scene.add(groups.supercluster);
+              SUPERCLUSTER_COUNT = meta.supercluster.count;
+              SUPERCLUSTER_SOURCE = SUPERCLUSTER_COUNT.toLocaleString() + ' real 2MRS galaxies · web reconstruction';
+              addSuperclusterLabels();
+            } catch (e) { console.warn('supercluster load failed', e); }
+          }
+
+          // reconstructed cosmic web of the Local Supercluster (real nodes + model filaments)
+          if (meta.supweb && meta.supweb.count) {
+            try {
+              const [swp, swc] = await Promise.all([
+                fetchBuf('/universe/supweb_pos.bin'), fetchBuf('/universe/supweb_col.bin'),
+              ]);
+              groups.supweb = pointsPacked(swp, swc); scene.add(groups.supweb);
+              groups.supweb.material.uniforms.uFadeR.value = 300e6; // soft rim (pc) so the 210 Mpc ball has no hard edge
+              SUPWEB_COUNT = meta.supweb.count;
+            } catch (e) { console.warn('supweb load failed', e); }
+          }
+
+          // AI-reconstructed cosmic web (synthetic, off by default)
+          if (meta.webfill && meta.webfill.count) {
+            try {
+              const [wp, wc] = await Promise.all([
+                fetchBuf('/universe/webfill_pos.bin'), fetchBuf('/universe/webfill_col.bin'),
+              ]);
+              groups.webfill = pointsPacked(wp, wc); groups.webfill.visible = false; scene.add(groups.webfill);
+              WEBFILL_COUNT = meta.webfill.count;
+            } catch (e) { console.warn('webfill load failed', e); }
+          }
+
+          groups.mw = buildMilkyWay(); scene.add(groups.mw);
+          groups.localgroup = buildLocalGroup(); scene.add(groups.localgroup);
+          groups.solar = buildSolarSystem(); scene.add(groups.solar);
+
+          // real halo objects: globular clusters + dwarf satellites, filling the disc-to-Local-Group gap
+          try {
+            const halo = await fetch('/universe/halo.json').then((r) => r.json());
+            groups.haloGC = pointsFloat(halo.gc.pos, halo.gc.col, halo.gc.size); scene.add(groups.haloGC);
+            groups.haloDW = pointsFloat(halo.dw.pos, halo.dw.col, halo.dw.size); scene.add(groups.haloDW);
+            for (const l of halo.labels) addLabel(l.name, l.x, l.y, l.z, 'halo', 'faint');
+          } catch (e) { console.warn('halo load failed', e); }
+
+          for (const l of (meta.stars.labels || [])) addLabel(l.name, l.x, l.y, l.z, 'stars');
+
+          loading.style.display = 'none';
+          ready = true;
+        } catch (err) {
+          loadPct.textContent = 'Could not load the map data.';
+          console.error(err);
+        }
+      })();
+
+      // ---------- orbit + zoom ----------
+      let az = 0.7, pol = 1.2, tAz = 0.7, tPol = 1.2;
+      let dragging = false, lx = 0, ly = 0, interacted = 0;
+      let logDist = 1.2, tLog = 1.2;
+
+      root.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.ui-bottom') || e.target.closest('.info-panel') || e.target.closest('.ui-tl') || e.target.closest('.ui-tr')) return;
+        dragging = true; lx = e.clientX; ly = e.clientY; interacted = performance.now();
+        root.setPointerCapture(e.pointerId); root.classList.add('grabbing');
+      });
+      root.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        tAz -= (e.clientX - lx) * 0.005; tPol -= (e.clientY - ly) * 0.005;
+        tPol = Math.max(0.15, Math.min(Math.PI - 0.15, tPol));
+        lx = e.clientX; ly = e.clientY; interacted = performance.now();
+      });
+      const endDrag = () => { dragging = false; root.classList.remove('grabbing'); };
+      root.addEventListener('pointerup', endDrag);
+      root.addEventListener('pointercancel', endDrag);
+
+      root.addEventListener('wheel', (e) => {
+        if (e.target.closest('.info-panel')) return;
+        e.preventDefault();
+        tLog = Math.max(LOG_MIN, Math.min(LOG_MAX, tLog + e.deltaY * 0.0011));
+        zoom.value = logToSlider(tLog); interacted = performance.now(); syncBtns();
+      }, { passive: false });
+      zoom.addEventListener('input', () => { tLog = sliderToLog(+zoom.value); syncBtns(); });
+      document.querySelectorAll('.hud-btn[data-log]').forEach((b) =>
+        b.addEventListener('click', () => { tLog = +b.dataset.log; zoom.value = logToSlider(tLog); interacted = performance.now(); syncBtns(); }));
+      function syncBtns() {
+        document.querySelectorAll('.hud-btn[data-log]').forEach((b) =>
+          b.classList.toggle('active', Math.abs(tLog - (+b.dataset.log)) < 1.3));
+      }
+
+      // info panel
+      const infoPanel = document.getElementById('infoPanel');
+      document.getElementById('infoBtn').addEventListener('click', () => { infoPanel.hidden = !infoPanel.hidden; });
+      const aiBtn = document.getElementById('aiBtn');
+      aiBtn.addEventListener('click', () => {
+        if (!groups.webfill) { aiBtn.textContent = '✦ AI fill: loading…'; return; }
+        webfillOn = !webfillOn;
+        aiBtn.textContent = '✦ AI fill: ' + (webfillOn ? 'on' : 'off');
+        aiBtn.classList.toggle('ai-on', webfillOn);
+        if (webfillOn && tLog < 6.5) { tLog = 8.3; zoom.value = logToSlider(tLog); }
+      });
+      document.getElementById('infoClose').addEventListener('click', () => { infoPanel.hidden = true; });
+
+      // ---------- helpers ----------
+      const clamp01 = (x) => Math.max(0, Math.min(1, x));
+      const sstep = (x, a, b) => clamp01((x - a) / (b - a));
+      function fmtScale(camPc) {
+        const across = camPc * 1.6; // rough on-screen span
+        if (across < 3e-4) return (across / AU).toFixed(1) + ' AU across';
+        const ly = across * PC_TO_LY;
+        if (ly < 1) return (across / AU).toFixed(0) + ' AU across';
+        if (ly < 1e3) return ly.toFixed(ly < 10 ? 1 : 0) + ' light years across';
+        if (ly < 1e6) return (ly / 1e3).toFixed(0) + ' thousand light years across';
+        if (ly < 1e9) return (ly / 1e6).toFixed(0) + ' million light years across';
+        return (ly / 1e9).toFixed(1) + ' billion light years across';
+      }
+      function layerInfo(L) {
+        if (L < -2.0) return ['The solar system', 'Planets, belts, heliosphere & Oort cloud', 'Each point is a planet, asteroid or comet'];
+        if (L < 0.8) return ['Nearest stars', 'AT-HYG (Gaia) catalogue · 1,999,778 real stars', 'Each point is a star'];
+        if (L < 3.3) return ['Local stellar neighborhood', 'AT-HYG (Gaia) catalogue · 1,999,778 real stars', 'Each point is a star'];
+        if (L < 5.0) return ['The Milky Way & halo', 'Model disc + real globular clusters & dwarf satellites', 'Points: galaxy model, real clusters & dwarf galaxies'];
+        if (L < 6.6) return ['The Local Group', 'Nearby galaxies · real distances', 'Each point is a galaxy'];
+        if (L < 8.4) return ['The Local Supercluster', SUPERCLUSTER_SOURCE, 'Each point is a galaxy'];
+        return ['The cosmic web', GAL_SOURCE, 'Each point is an entire galaxy'];
+      }
+
+      // ---------- resize ----------
+      function resize() {
+        const w = window.innerWidth, h = window.innerHeight;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h; camera.updateProjectionMatrix();
+        const pr = renderer.getPixelRatio();
+        for (const k in groups) {
+          const m = groups[k].userData.pts ? groups[k].userData.pts.material : groups[k].material;
+          if (m) m.uniforms.uPixelRatio.value = pr;
+        }
+      }
+      window.addEventListener('resize', resize); resize();
+
+      // ---------- loop ----------
+      const tmp = new THREE.Vector3();
+      const SIZE_BASE = 2.6;
+      function frame() {
+        requestAnimationFrame(frame);
+        logDist += (tLog - logDist) * 0.09;
+        const idle = performance.now() - interacted > 4000;
+        if (idle && !dragging) tAz += 0.0005;
+        az += (tAz - az) * 0.09; pol += (tPol - pol) * 0.09;
+
+        const camPc = Math.pow(10, logDist);
+        camera.near = camPc * 1e-3; camera.far = camPc * 1e4; camera.updateProjectionMatrix();
+        camera.position.set(
+          camPc * Math.sin(pol) * Math.sin(az),
+          camPc * Math.cos(pol),
+          camPc * Math.sin(pol) * Math.cos(az)
+        );
+        camera.lookAt(0, 0, 0);
+        camera.updateMatrixWorld(); // refresh matrices before projecting labels this frame
+
+        if (ready) {
+          const uSize = SIZE_BASE * camPc;
+          const op = {
+            solar: 1 - sstep(logDist, -0.3, 0.6),
+            stars: (1 - sstep(logDist, 3.7, 4.9)) * sstep(logDist, -3.2, -1.6),
+            mw: sstep(logDist, 2.4, 3.8) * (1 - sstep(logDist, 5.0, 5.9)),
+            halo: sstep(logDist, 3.3, 4.1) * (1 - sstep(logDist, 6.4, 7.2)),
+            localgroup: sstep(logDist, 4.2, 5.0) * (1 - sstep(logDist, 7.8, 8.6)),
+            supercluster: sstep(logDist, 5.6, 6.6) * (1 - sstep(logDist, 8.2, 8.9)),
+            supweb: 1.0 * sstep(logDist, 5.8, 6.8) * (1 - sstep(logDist, 8.0, 8.6)),
+            gal: sstep(logDist, 7.9, 8.7),
+            webfill: (webfillOn ? 0.7 : 0) * sstep(logDist, 7.9, 8.7),
+          };
+          const linesOp = 1 - sstep(logDist, -2.6, -1.8); // orbit rings fade when leaving inner system
+          const apply = (g, o, linesO) => {
+            if (!g) return;
+            const pts = g.userData.pts || g;
+            pts.visible = o > 0.003;
+            pts.material.uniforms.uOpacity.value = o;
+            pts.material.uniforms.uSize.value = uSize;
+            if (g.userData.lines) { const lo = linesO ?? o; for (const ln of g.userData.lines) { ln.visible = lo > 0.003; ln.material.opacity = 0.25 * lo; } }
+          };
+          apply(groups.solar, op.solar, linesOp);
+          apply(groups.stars, op.stars);
+          apply(groups.mw, op.mw);
+          apply(groups.haloGC, op.halo);
+          apply(groups.haloDW, op.halo);
+          apply(groups.localgroup, op.localgroup);
+          apply(groups.supweb, op.supweb);
+          apply(groups.supercluster, op.supercluster);
+          apply(groups.gal, op.gal);
+          apply(groups.webfill, op.webfill);
+
+          const [name, src, dot] = layerInfo(logDist);
+          layerNameEl.textContent = name; sourceTextEl.textContent = src;
+          dotTextEl.textContent = dot;
+          spanTextEl.textContent = fmtScale(camPc);
+
+          const w = window.innerWidth, h = window.innerHeight;
+          for (const Ld of labelDefs) {
+            const o = op[Ld.band] ?? 0;
+            if (o < 0.3) { Ld.el.style.opacity = '0'; continue; }
+            tmp.copy(Ld.pos).project(camera);
+            if (tmp.z > 1 || tmp.z < -1) { Ld.el.style.opacity = '0'; continue; }
+            const sx = (tmp.x * 0.5 + 0.5) * w, sy = (-tmp.y * 0.5 + 0.5) * h;
+            if (sx < -80 || sx > w + 80 || sy < -40 || sy > h + 40) { Ld.el.style.opacity = '0'; continue; }
+            Ld.el.style.transform = `translate(9px,-50%) translate(${sx}px,${sy}px)`;
+            Ld.el.style.opacity = String(Math.min(1, o) * 0.9);
+          }
+        }
+        renderer.render(scene, camera);
+      }
+      frame();
+    }
+  </script>
+
+  <style is:global>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #01010a; }
+  </style>
+
+  <style>
+    .uni-root { position: fixed; inset: 0; z-index: 50; background: #01010a; overflow: hidden; touch-action: none; }
+    #uni { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; }
+    .uni-root.grabbing #uni { cursor: grabbing; }
+
+    .u-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    /* labels are created dynamically, so their styles must be :global to apply */
+    :global(.u-label) {
+      position: absolute; top: 0; left: 0; white-space: nowrap; opacity: 0; transition: opacity .3s;
+      font-family: var(--font-display); font-size: 11.5px; letter-spacing: 0.02em; color: #eae6ff;
+      text-shadow: 0 0 8px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.95); will-change: transform;
+    }
+    :global(.u-label.sun) { color: #ffd27f; }
+    :global(.u-label.faint) { color: #7dd3fc; font-size: 10.5px; opacity: 0.85; }
+
+    .ui-tl { position: absolute; top: 20px; left: 22px; z-index: 60; }
+    .back { display: inline-block; font-family: var(--font-display); font-size: 13px; color: var(--muted); transition: color .25s; }
+    .back:hover { color: var(--lilac); }
+    .title-row { display: flex; align-items: center; gap: 9px; margin-top: 10px; }
+    .ui-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: -0.01em; color: var(--text); }
+    .pulse { width: 8px; height: 8px; border-radius: 50%; background: #7dd3fc; box-shadow: 0 0 10px #7dd3fc; animation: pulse 1.9s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .ui-tr { position: absolute; top: 20px; right: 22px; z-index: 60; text-align: right; pointer-events: none; }
+    .scale-layer { font-family: var(--font-display); font-weight: 700; font-size: clamp(16px, 2.4vw, 22px); color: var(--text); letter-spacing: -0.01em; }
+    .scale-span { font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; color: #7dd3fc; margin-top: 3px; }
+    .scale-dot { font-family: var(--font-display); font-size: 12.5px; font-weight: 600; color: #ffd27f; margin-top: 8px; }
+    .scale-source { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    .uni-loading { position: absolute; inset: 0; z-index: 70; display: grid; place-content: center; justify-items: center; gap: 16px; background: #01010a; color: var(--text-dim); font-family: var(--font-display); font-size: 14px; }
+    .spinner { width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(168,130,255,0.2); border-top-color: var(--lilac); animation: spin .9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .ui-bottom {
+      position: absolute; left: 50%; transform: translateX(-50%); bottom: 22px; z-index: 60;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
+      width: min(880px, calc(100% - 32px)); padding: 10px 12px; border-radius: 14px;
+      background: rgba(6,4,14,0.62); border: 1px solid var(--border); backdrop-filter: blur(12px);
+    }
+    .jump-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .hud-btn {
+      border: 1px solid var(--border); border-radius: 9px; padding: 8px 13px;
+      font-family: var(--font-display); font-size: 12.5px; font-weight: 600; cursor: pointer;
+      background: rgba(255,255,255,0.04); color: var(--text-dim);
+      transition: background .15s, border-color .15s, color .15s, transform .08s;
+    }
+    .hud-btn:hover { background: rgba(168,130,255,0.12); color: var(--text); }
+    .hud-btn:active { transform: scale(0.97); }
+    .hud-btn.active { background: var(--purple); border-color: transparent; color: #140a24; }
+    .info-btn { width: 34px; text-align: center; font-style: italic; font-family: Georgia, serif; }
+    .ai-btn { color: #f0a; border-color: rgba(255,60,160,0.35); }
+    .ai-btn:hover { background: rgba(255,60,160,0.12); color: #ff7ac6; }
+    .ai-btn.ai-on { background: #b02766; border-color: transparent; color: #fff; }
+    .zoom-slider {
+      flex: 1; min-width: 120px; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 999px;
+      background: linear-gradient(90deg, #ffd27f, #d8b4fe, #7dd3fc); outline: none; cursor: pointer;
+    }
+    .zoom-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 2px solid #1a1230; box-shadow: 0 0 8px rgba(255,255,255,0.6); }
+    .zoom-slider::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 2px solid #1a1230; }
+
+    .ui-hint { position: absolute; left: 50%; transform: translateX(-50%); bottom: 4px; z-index: 60; font-size: 11px; color: var(--muted); pointer-events: none; }
+
+    .info-panel {
+      position: absolute; top: 0; right: 0; bottom: 0; z-index: 80; width: min(420px, 92vw);
+      padding: 60px 34px 34px; overflow-y: auto;
+      background: rgba(6,4,16,0.9); border-left: 1px solid var(--border); backdrop-filter: blur(16px);
+    }
+    .info-panel[hidden] { display: none; }
+    .info-panel h2 { font-family: var(--font-display); font-weight: 700; font-size: 22px; margin-bottom: 16px; color: var(--text); }
+    .info-panel p { font-size: 14.5px; line-height: 1.7; color: var(--text-dim); font-weight: 300; margin-bottom: 14px; }
+    .info-panel strong { color: var(--text); font-weight: 500; }
+    .info-src { font-size: 12.5px !important; color: var(--muted) !important; margin-top: 8px; }
+    .info-src a { color: var(--lilac); border-bottom: 1px solid rgba(168,130,255,0.4); }
+    .info-close { position: absolute; top: 18px; right: 18px; width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: var(--text); font-size: 20px; cursor: pointer; }
+    .info-close:hover { background: rgba(168,130,255,0.15); }
+
+    .uni-fallback { position: absolute; inset: 0; z-index: 90; display: grid; place-content: center; text-align: center; gap: 8px; color: var(--text-dim); font-size: 16px; }
+    .uni-fallback[hidden] { display: none; }
+    .uni-fallback a { color: var(--lilac); border-bottom: 1px solid rgba(168,130,255,0.4); }
+
+    @media (max-width: 640px) {
+      .ui-tr { top: 64px; }
+      .ui-hint { display: none; }
+      .jump-group { justify-content: center; }
+    }
+  </style>
+</Base>
