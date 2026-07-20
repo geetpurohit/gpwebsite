@@ -3,7 +3,7 @@ const chips = ['Machine Learning', 'XAI Frameworks', 'Causal Inference', 'Python
 const stats = [
   { num: '$1.2B+', label: 'Bad-debt impact' },
   { num: '73%', label: 'Faster hypotheses' },
-  { num: '3+ yrs', label: 'At Verizon' },
+  { num: '4+ yrs', label: 'Data science experience' },
   { num: '2×', label: 'STEM degrees' },
 ];
 ---
@@ -14,9 +14,9 @@ const stats = [
 
     <h1 class="title">
       <span class="static-lines">
-        <span class="line">Astrophysicist.</span>
-        <span class="line grad-text">Data Scientist.</span>
-        <span class="line">Storyteller.</span>
+        <span class="line">Astrophysicist</span>
+        <span class="line grad-text">Data Scientist</span>
+        <span class="line">Storyteller</span>
       </span>
       <span class="type-line" aria-hidden="true" hidden>
         <span class="typed grad-text"></span><span class="caret"></span>
@@ -33,8 +33,8 @@ const stats = [
     </div>
 
     <div class="ctas">
-      <a href="#projects" class="btn btn-primary">See my work&nbsp;↓</a>
-      <a href="#contact" class="btn btn-ghost">Get in touch</a>
+      <a href="#projects" class="btn btn-primary">See my work</a>
+      <a href="#contact" class="btn-quiet">Get in touch <span aria-hidden="true">→</span></a>
     </div>
 
     <dl class="stats">
@@ -60,22 +60,21 @@ const stats = [
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: clamp(110px, 16vh, 170px) var(--pad-x) clamp(60px, 9vh, 90px);
+    padding: clamp(110px, 16vh, 170px) var(--pad-x) clamp(90px, 12vh, 130px);
     overflow: hidden;
     z-index: 2;
   }
-  .hero-inner { position: relative; z-index: 2; max-width: 760px; }
+  .hero-inner { position: relative; z-index: 2; max-width: 820px; }
 
   .tag {
     display: inline-flex;
     align-items: center;
-    gap: 9px;
-    font-family: var(--font-display);
-    font-size: clamp(10px, 1.3vw, 12px);
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--purple-lt);
-    margin-bottom: 26px;
+    gap: 10px;
+    font-size: 14.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: var(--text-dim);
+    margin-bottom: 28px;
     opacity: 0;
     animation: fadeUp 0.8s var(--ease) forwards 0.15s;
   }
@@ -94,10 +93,10 @@ const stats = [
   .title {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(44px, 8.5vw, 104px);
-    line-height: 0.98;
-    letter-spacing: -0.04em;
-    margin-bottom: 24px;
+    font-size: clamp(46px, 9vw, 112px);
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    margin-bottom: 28px;
   }
   .title .line { display: block; opacity: 0; animation: fadeUp 0.85s var(--ease) forwards; }
   .static-lines .line:nth-child(1) { animation-delay: 0.28s; }
@@ -128,90 +127,83 @@ const stats = [
   }
 
   .sub {
-    font-size: clamp(17px, 1.5vw, 21px);
+    font-size: clamp(18px, 1.6vw, 22px);
     color: var(--text-dim);
     font-weight: 300;
-    line-height: 1.7;
-    max-width: 500px;
-    margin-bottom: 30px;
+    line-height: 1.6;
+    max-width: 540px;
+    margin-bottom: 26px;
     opacity: 0;
     animation: fadeUp 0.85s var(--ease) forwards 0.66s;
   }
   .sub em { color: var(--muted); font-style: italic; }
 
+  /* Quiet metadata line instead of a row of bordered chips */
   .chips {
-    display: flex; flex-wrap: wrap; gap: 9px;
-    margin-bottom: 34px;
+    display: flex; flex-wrap: wrap; align-items: center;
+    column-gap: 10px; row-gap: 6px;
+    margin-bottom: 38px;
     opacity: 0;
     animation: fadeUp 0.85s var(--ease) forwards 0.78s;
   }
   .chip {
-    font-size: 13px;
-    padding: 7px 15px;
-    border-radius: 999px;
-    border: 1px solid rgba(168,85,247,0.26);
-    background: rgba(168,85,247,0.06);
-    color: var(--lilac);
-    backdrop-filter: blur(4px);
+    font-size: 14.5px;
+    color: var(--muted);
+  }
+  .chip:not(:last-child)::after {
+    content: '·';
+    margin-left: 10px;
+    color: rgba(148,140,173,0.55);
   }
 
   .ctas {
-    display: flex; flex-wrap: wrap; gap: 13px;
-    margin-bottom: 52px;
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: clamp(18px, 3vw, 28px);
+    margin-bottom: 60px;
     opacity: 0;
     animation: fadeUp 0.85s var(--ease) forwards 0.9s;
   }
   .btn {
-    position: relative;
-    padding: 15px 32px;
-    border-radius: 10px;
-    font-size: 14.5px;
+    padding: 14px 30px;
+    border-radius: var(--radius-pill);
+    font-size: 15px;
     font-weight: 500;
     letter-spacing: 0.01em;
-    transition: transform 0.25s var(--ease), box-shadow 0.25s, opacity 0.25s, background 0.25s, border-color 0.25s, color 0.25s;
-    overflow: hidden;
+    transition: filter 0.25s, transform 0.25s var(--ease);
   }
   .btn-primary {
-    background: linear-gradient(120deg, var(--violet), var(--purple));
+    background: var(--purple);
     color: #fff;
-    box-shadow: 0 8px 30px -10px rgba(168,85,247,0.7);
   }
-  .btn-primary::after {
-    content: '';
-    position: absolute; inset: 0; left: -120%;
-    width: 60%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
-    transform: skewX(-20deg);
-    transition: left 0.6s var(--ease);
+  .btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-quiet {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--purple-lt);
+    transition: color 0.25s;
   }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 36px -8px rgba(168,85,247,0.85); }
-  .btn-primary:hover::after { left: 140%; }
-  .btn-ghost {
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    background: rgba(255,255,255,0.02);
-  }
-  .btn-ghost:hover { color: var(--text); border-color: rgba(168,85,247,0.5); background: rgba(168,85,247,0.06); }
+  .btn-quiet span { display: inline-block; transition: transform 0.25s var(--ease); }
+  .btn-quiet:hover { color: var(--lilac); }
+  .btn-quiet:hover span { transform: translateX(3px); }
 
   .stats {
     display: flex;
     flex-wrap: wrap;
-    gap: clamp(22px, 4vw, 48px);
+    gap: clamp(28px, 5vw, 64px);
     opacity: 0;
     animation: fadeUp 0.85s var(--ease) forwards 1.02s;
   }
-  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat { display: flex; flex-direction: column; gap: 4px; }
   .stat-num {
     font-family: var(--font-display);
-    font-size: clamp(22px, 2.6vw, 30px);
+    font-size: clamp(24px, 2.8vw, 34px);
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--text);
+    font-variant-numeric: tabular-nums; /* steady width while counting up */
   }
   .stat-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
+    font-size: 13.5px;
     color: var(--muted);
   }
 
@@ -243,13 +235,16 @@ const stats = [
     to   { opacity: 1; transform: none; }
   }
 
-  @media (max-width: 820px) {
+  /* No room for the hint on small screens or short viewports — it would
+     crowd the stats row. */
+  @media (max-width: 820px), (max-height: 760px) {
     .scroll-hint { display: none; }
   }
 </style>
 
 <script>
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    || document.documentElement.classList.contains('no-motion');
   const staticLines = document.querySelector('.static-lines') as HTMLElement | null;
   const typeLine = document.querySelector('.type-line') as HTMLElement | null;
   const typedEl = document.querySelector('.type-line .typed') as HTMLElement | null;
@@ -258,7 +253,7 @@ const stats = [
     staticLines.hidden = true;
     typeLine.hidden = false;
 
-    const words = ['Astrophysicist.', 'Data Scientist.', 'Storyteller.'];
+    const words = ['Astrophysicist', 'Data Scientist', 'Storyteller'];
     let wi = 0, ci = 0, deleting = false;
 
     const tick = () => {
@@ -279,5 +274,88 @@ const stats = [
     };
 
     setTimeout(tick, 1100);
+  }
+
+  // Stats count up once the hero has had a moment to land. Each figure climbs
+  // through its real units on the way: dollars sweep the magnitudes
+  // ($100 → $1K → $1M → $1.2B), experience runs through months before years.
+  const statEls = Array.from(document.querySelectorAll<HTMLElement>('.stat-num'));
+  if (!reduce && statEls.length) {
+    const fmtMoney = (p: number) => {
+      if (p <= 0) return '$0';
+      if (p >= 1) return '$1.2B+';
+      const v = Math.pow(10, 2 + 7.079 * p); // log-space: $100 → $1.2B
+      if (v >= 1e9) return '$' + (v / 1e9).toFixed(1) + 'B';
+      if (v >= 1e6) return '$' + Math.round(v / 1e6) + 'M';
+      if (v >= 1e3) return '$' + Math.round(v / 1e3) + 'K';
+      return '$' + Math.round(v);
+    };
+    const fmtYears = (p: number) => {
+      if (p >= 1) return '4+ yrs';
+      const months = Math.floor(48 * p);
+      if (months < 12) return months + ' mo';
+      const y = Math.floor(months / 12), m = months % 12;
+      return m ? `${y} yr ${m} mo` : `${y} yr`;
+    };
+    const fmtPct = (p: number) => (p >= 1 ? '73%' : Math.round(73 * p) + '%');
+    const fmtX = (p: number) => (p >= 1 ? '2×' : (2 * p).toFixed(1) + '×');
+
+    const formatters: Record<string, (p: number) => string> = {
+      '$1.2B+': fmtMoney,
+      '73%': fmtPct,
+      '4+ yrs': fmtYears,
+      '2×': fmtX,
+    };
+    const parsed = statEls
+      .map((el) => {
+        const fmt = formatters[(el.textContent ?? '').trim()];
+        return fmt ? { el, fmt } : null;
+      })
+      .filter((s): s is { el: HTMLElement; fmt: (p: number) => string } => s !== null);
+
+    const io = new IntersectionObserver((entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return;
+      io.disconnect();
+      // Give the reader a beat to take in the hero first, then count.
+      const t0 = performance.now() + 2000;
+      const dur = 2400;
+      parsed.forEach((s) => { s.el.textContent = s.fmt(0); });
+      const step = (now: number) => {
+        const p = Math.min(Math.max((now - t0) / dur, 0), 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        parsed.forEach((s) => { s.el.textContent = s.fmt(ease); });
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }, { threshold: 0.5 });
+    io.observe(statEls[0]);
+  }
+
+  // As you scroll away, the hero settles back: a slow drift and fade,
+  // so the transition into the page feels continuous. The scroll hint fades
+  // first — it has done its job, and the drifting stats would collide with it.
+  const heroInner = document.querySelector<HTMLElement>('.hero-inner');
+  const scrollHint = document.querySelector<HTMLElement>('.scroll-hint');
+  if (!reduce && heroInner) {
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const y = window.scrollY;
+      const range = window.innerHeight * 0.72;
+      const f = Math.min(y / range, 1);
+      heroInner.style.opacity = String(1 - f * 0.95);
+      heroInner.style.transform = `translateY(${y * 0.14}px)`;
+      if (scrollHint) {
+        // Kill the entrance animation first: its fill-mode would otherwise
+        // override the inline opacity we set here.
+        if (y > 0) scrollHint.style.animation = 'none';
+        const h = Math.max(0, 1 - y / 120);
+        scrollHint.style.opacity = String(h);
+        scrollHint.style.pointerEvents = h < 0.1 ? 'none' : '';
+      }
+    };
+    window.addEventListener('scroll', () => {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
   }
 </script>

@@ -28,7 +28,8 @@
   const canvas = document.getElementById('starfield') as HTMLCanvasElement | null;
   if (canvas) {
     const ctx = canvas.getContext('2d', { alpha: true })!;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || document.documentElement.classList.contains('no-motion');
     const fine = window.matchMedia('(pointer: fine)').matches;
     const TAU = Math.PI * 2;
 

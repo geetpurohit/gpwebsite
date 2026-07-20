@@ -1,60 +1,80 @@
 ---
-const jobs = [
+// Oldest first: the journey reads top-to-bottom, internships → where I am now.
+const journey = [
   {
-    company: 'Verizon',
-    date: 'Nov 2024 to Present',
-    role: 'Data Scientist III · Engineer III',
-    bullets: [
-      'Architected a credit-risk fullstack app that synthetically generates a customer database to monitor policy changes impacting <strong>$1.2B+ in bad-debt writeoff</strong>.',
-      'Engineered 9 Python &amp; SQL anomaly-detection microservices with Verizon EDW integration, saving <strong>50+ hours/month</strong> across 15 teams.',
-      'Led 2 ML XAI frameworks (Streamlit + Qlik), reducing hypothesis-generation time by <strong>73%</strong> for shareholder calls.',
-      'Built churn-forecasting models and intervention simulators (SMS, email, fee adjustments) that pushed decisioning coverage from <strong>0% → 60%</strong>.',
-      'Presented to 100+ stakeholders, directly influencing product roadmap and reducing future development costs.',
+    company: 'RankSense',
+    logo: '/logos/ranksense.png',
+    logoClass: 'logo-ranksense',
+    span: 'Jan 2021 to Oct 2021',
+    roles: [
+      {
+        date: 'Jan 2021 to Oct 2021',
+        role: 'Data Science Intern',
+        bullets: [
+          'Researched SEO optimization across 100+ client domains, running A/B tests with Bayesian methods and CausalImpact.',
+          'Improved click-through and baseline-conversion rates by ~32%.',
+        ],
+        impact: '32% CTR improvement',
+      },
     ],
-    impact: '$1.2B impact · 50h/mo saved · 73% faster',
-  },
-  {
-    company: 'Verizon',
-    date: 'Jan 2023 to Nov 2024',
-    role: 'Data Scientist I',
-    bullets: [
-      'Established a centralized DS pipeline framework/API for Corporate Finance on GitLab, Domino, and GCP, making collaboration <strong>63% more efficient</strong>.',
-      'Built a real-time AT&amp;T and T-Mobile port-in EDA pipeline using DataRobot to forecast competitor market-share trajectories.',
-      'Automated serverless forecasting for 9 major value brands (Walmart, Tracfone, Straight Talk, FiOS), pioneering a 12h email-report system.',
-      'Developed Tableau dashboards on GCP/BigQuery, eliminating <strong>10+ hours</strong> of weekly manual reporting.',
-      'Ran K-Means customer segmentation that surfaced 3 at-risk cohorts, which directly informed new retention campaigns.',
-    ],
-    impact: '63% efficiency gain · 10h/wk eliminated',
-  },
-  {
-    company: 'Verizon',
-    date: 'Jun 2022 to Aug 2022',
-    role: 'Predictive & Prescriptive Analytics Intern',
-    bullets: [
-      'My first real exposure to Verizon\'s data infrastructure, and the internship that turned into 3+ years.',
-    ],
-    impact: '',
   },
   {
     company: 'Human Genetics Institute of NJ',
-    date: 'Oct 2021 to Jun 2022',
-    role: 'Data Science Intern',
-    bullets: [
-      'Trained DeepLabCut ML models for kinematic pose estimation on wet-lab mouse video, using Python, TensorFlow, and NVIDIA CUDA.',
-      'Statistical validation via ANOVA and T-tests, benchmarked against published findings (Jones et al. 2020).',
-      'Sponsored 4 Oxford iMARS Python extensions for retinal-cord tissue post-microscopy analysis.',
+    logo: '/logos/rutgers-r.svg',
+    logoClass: 'logo-rutgers',
+    span: 'Oct 2021 to Jun 2022',
+    roles: [
+      {
+        date: 'Oct 2021 to Jun 2022',
+        role: 'Data Science Intern',
+        bullets: [
+          'Trained DeepLabCut ML models for kinematic pose estimation on wet-lab mouse video, using Python, TensorFlow, and NVIDIA CUDA.',
+          'Statistical validation via ANOVA and T-tests, benchmarked against published findings (Jones et al. 2020).',
+          'Sponsored 4 Oxford iMARS Python extensions for retinal-cord tissue post-microscopy analysis.',
+        ],
+        impact: 'Neuroscience × ML',
+      },
     ],
-    impact: 'Neuroscience × ML',
   },
   {
-    company: 'RankSense',
-    date: 'Jan 2021 to Oct 2021',
-    role: 'Data Science Intern',
-    bullets: [
-      'Researched SEO optimization across 100+ client domains, running A/B tests with Bayesian methods and CausalImpact.',
-      'Improved click-through and baseline-conversion rates by ~32%.',
+    company: 'Verizon',
+    logo: '/logos/verizon-check.svg',
+    logoClass: 'logo-verizon',
+    span: '2022 to Present',
+    roles: [
+      {
+        date: 'Jun 2022 to Aug 2022',
+        role: 'Predictive & Prescriptive Analytics Intern',
+        bullets: [
+          'My first real exposure to Verizon\'s data infrastructure, and the internship that turned into 3+ years.',
+        ],
+        impact: 'Return offer accepted',
+      },
+      {
+        date: 'Jan 2023 to Nov 2024',
+        role: 'Data Scientist I',
+        bullets: [
+          'Established a centralized DS pipeline framework/API for Corporate Finance on GitLab, Domino, and GCP, making collaboration <strong>63% more efficient</strong>.',
+          'Built a real-time AT&amp;T and T-Mobile port-in EDA pipeline using DataRobot to forecast competitor market-share trajectories.',
+          'Automated serverless forecasting for 9 major value brands (Walmart, Tracfone, Straight Talk, FiOS), pioneering a 12h email-report system.',
+          'Developed Tableau dashboards on GCP/BigQuery, eliminating <strong>10+ hours</strong> of weekly manual reporting.',
+          'Ran K-Means customer segmentation that surfaced 3 at-risk cohorts, which directly informed new retention campaigns.',
+        ],
+        impact: '63% efficiency gain · 10h/wk eliminated',
+      },
+      {
+        date: 'Nov 2024 to Present',
+        role: 'Data Scientist III',
+        bullets: [
+          'Architected a credit-risk fullstack app that synthetically generates a customer database to monitor policy changes impacting <strong>$1.2B+ in bad-debt writeoff</strong>.',
+          'Engineered 9 Python &amp; SQL anomaly-detection microservices with Verizon EDW integration, saving <strong>50+ hours/month</strong> across 15 teams.',
+          'Led 2 ML XAI frameworks (Streamlit + Qlik), reducing hypothesis-generation time by <strong>73%</strong> for shareholder calls.',
+          'Built churn-forecasting models and intervention simulators (SMS, email, fee adjustments) that pushed decisioning coverage from <strong>0% → 60%</strong>.',
+          'Presented to 100+ stakeholders, directly influencing product roadmap and reducing future development costs.',
+        ],
+        impact: '$1.2B impact · 50h/mo saved · 73% faster',
+      },
     ],
-    impact: '32% CTR improvement',
   },
 ];
 
@@ -73,21 +93,34 @@ const brokenLetters = 'broken'.split('').map((ch, i) => ({
     <h2 class="section-title reveal">Where I've been,<br>what I've <span class="fall-slot" id="fallSlot">{brokenLetters.map((l) => (
       <s class="fall-letter" style={`--d:${l.delay}ms`}>{l.ch}</s>
     ))}&nbsp;</span>built</h2>
-    <p class="section-sub reveal">3+ years turning data into decisions at scale. Every number below is real.</p>
+    <p class="section-sub reveal">3+ years turning data into decisions at scale.</p>
 
-    <div class="timeline">
-      {jobs.map((j) => (
-        <article class="exp reveal">
-          <div class="exp-left">
-            <div class="exp-company">{j.company}</div>
-            <div class="exp-date">{j.date}</div>
+    <div class="journey" id="journey">
+      <span class="rail" aria-hidden="true"><span class="rail-fill" id="railFill"></span></span>
+
+      {journey.map((c) => (
+        <article class="company reveal">
+          <div class:list={['badge', c.logoClass]} data-node>
+            {c.logo.endsWith('.svg')
+              ? <span class="mark" style={`--mark:url('${c.logo}')`} aria-hidden="true"></span>
+              : <img src={c.logo} alt="" width="24" height="24" loading="lazy" />}
           </div>
-          <div class="exp-right">
-            <h3 class="exp-role">{j.role}</h3>
-            <ul class="exp-bullets">
-              {j.bullets.map((b) => <li set:html={b} />)}
-            </ul>
-            {j.impact && <span class="exp-impact">↑ {j.impact}</span>}
+          <div class="company-body">
+            <header class="company-head">
+              <h3 class="company-name">{c.company}</h3>
+              <span class="company-span">{c.span}</span>
+            </header>
+
+            {c.roles.map((r) => (
+              <div class="role">
+                {c.roles.length > 1 && <span class="role-date">{r.date}</span>}
+                <h4 class="role-title">{r.role}</h4>
+                <ul class="role-bullets">
+                  {r.bullets.map((b) => <li set:html={b} />)}
+                </ul>
+                {r.impact && <span class="role-impact">↑ {r.impact}</span>}
+              </div>
+            ))}
           </div>
         </article>
       ))}
@@ -97,7 +130,7 @@ const brokenLetters = 'broken'.split('').map((ch, i) => ({
 
 <style>
   #experience .section-title s { color: var(--muted); text-decoration-color: rgba(168,85,247,0.5); }
-  .section-sub { margin-bottom: clamp(48px, 6vw, 72px); }
+  .section-sub { margin-bottom: clamp(56px, 7vw, 88px); }
 
   /* "broken" comes apart letter by letter and tumbles into a pile at the
      bottom of the page, while "built" slides in to take its place. */
@@ -115,160 +148,247 @@ const brokenLetters = 'broken'.split('').map((ch, i) => ({
   }
 
   /* Once a letter lets go it keeps the heading's look but drops the strike,
-     then tumbles down to the landing zone at the foot of the page. */
-  .fall-letter.drop {
+     then spirals off into the starfield's black hole. --tx/--ty (set by JS)
+     point from the letter to the hole's center. */
+  .fall-letter.suck {
+    position: fixed;
+    z-index: 60;
+    margin: 0;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(32px, 5vw, 60px);
+    font-size: clamp(38px, 5.5vw, 68px);
     line-height: 1;
     letter-spacing: -0.03em;
     color: var(--muted);
     text-decoration: none;
-    opacity: 0.85;
-    animation: pile 9s forwards;
+    pointer-events: none;
+    animation: suck 1.15s cubic-bezier(0.6, -0.1, 0.85, 0.5) forwards;
     animation-delay: var(--d, 0ms);
   }
-  /* --sx/--sy = offset from resting spot back up to the heading (set by JS);
-     --rr = final resting tilt. The letter falls from there and bounces to rest. */
-  @keyframes pile {
-    0%   { transform: translate(var(--sx), var(--sy)) rotate(0deg); animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.35); }
-    66%  { transform: translate(0, 0) rotate(var(--rr)); animation-timing-function: ease-out; }
-    78%  { transform: translate(0, -11px) rotate(var(--rr)); animation-timing-function: ease-in; }
-    88%  { transform: translate(0, 0) rotate(var(--rr)); animation-timing-function: ease-out; }
-    95%  { transform: translate(0, -3px) rotate(var(--rr)); }
-    100% { transform: translate(0, 0) rotate(var(--rr)); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .debris .fall-letter.drop { animation: none; }
+  @keyframes suck {
+    0%   { transform: none; opacity: 0.9; }
+    70%  { opacity: 0.85; }
+    100% { transform: translate(var(--tx), var(--ty)) rotate(660deg) scale(0.03); opacity: 0; }
   }
 
-  .timeline { display: flex; flex-direction: column; }
-  .exp {
+  /* ---- Journey timeline ---- */
+  .journey { position: relative; }
+
+  .rail {
+    position: absolute;
+    left: 27px;
+    top: 28px;
+    width: 2px;
+    height: 0; /* measured by JS to span first → last badge */
+    background: var(--border-soft);
+    border-radius: 2px;
+  }
+  .rail-fill {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(var(--purple-lt), var(--purple));
+    border-radius: 2px;
+    transform: scaleY(0);
+    transform-origin: top;
+    will-change: transform;
+  }
+
+  .company {
     display: grid;
-    grid-template-columns: 210px 1fr;
-    gap: clamp(20px, 4vw, 44px);
-    padding: 34px 0;
-    border-top: 1px solid var(--border);
+    grid-template-columns: 56px 1fr;
+    column-gap: clamp(24px, 4vw, 44px);
+    padding-bottom: clamp(56px, 7vw, 84px);
   }
-  .exp:first-child { border-top: none; }
+  .company:last-child { padding-bottom: 0; }
 
-  .exp-company {
+  .badge {
+    position: relative;
+    z-index: 2;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #0b0813;
+    box-shadow: 0 0 0 1px var(--border);
+    transition: box-shadow 0.45s var(--ease);
+  }
+  /* Logos are monochrome at rest and show their brand color on hover.
+     SVG marks are painted through a mask so the color is a plain background
+     swap; the PNG just drops its whitening filter. */
+  .mark {
+    display: block;
+    background: rgba(241,237,251,0.9);
+    -webkit-mask: var(--mark) center / contain no-repeat;
+    mask: var(--mark) center / contain no-repeat;
+    transition: background 0.35s;
+  }
+  .logo-verizon .mark { width: 20px; height: 24px; }
+  .logo-rutgers .mark { width: 24px; height: 21px; }
+  .logo-verizon:hover .mark { background: #e60000; }
+  .logo-rutgers:hover .mark { background: #cc0033; }
+
+  .badge img { opacity: 0.9; }
+  .logo-ranksense img { width: 26px; height: auto; filter: brightness(0) invert(1); transition: filter 0.35s; }
+  .logo-ranksense:hover img { filter: none; }
+  .badge.lit {
+    box-shadow:
+      0 0 0 1px rgba(192,132,252,0.55),
+      0 0 22px 2px rgba(168,85,247,0.35);
+  }
+
+  .company-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    min-height: 56px;
+    align-content: center;
+    margin-bottom: 10px;
+  }
+  .company-name {
     font-family: var(--font-display);
-    font-size: 14px;
+    font-size: clamp(20px, 2.1vw, 25px);
     font-weight: 600;
-    color: var(--purple-lt);
+    letter-spacing: -0.015em;
+    color: var(--text);
+  }
+  .company-span { font-size: 14.5px; color: var(--muted); }
+
+  .role { padding: 22px 0 0; }
+  /* Clear air between positions, so each promotion reads as its own chapter */
+  .role + .role { margin-top: clamp(30px, 4vw, 48px); }
+  .role-date {
+    display: block;
+    font-size: 14px;
+    color: var(--muted);
     margin-bottom: 4px;
   }
-  .exp-date { font-size: 13.5px; color: var(--muted); }
-
-  .exp-right { padding-left: 26px; border-left: 1px solid var(--border); transition: border-color 0.3s; }
-  .exp:hover .exp-right { border-left-color: rgba(168,85,247,0.4); }
-
-  .exp-role {
+  .role-title {
     font-family: var(--font-display);
-    font-size: clamp(18px, 1.8vw, 22px);
+    font-size: clamp(17px, 1.7vw, 20px);
     font-weight: 600;
     color: var(--text);
     letter-spacing: -0.01em;
-    margin-bottom: 14px;
+    margin-bottom: 13px;
   }
-  .exp-bullets { list-style: none; display: flex; flex-direction: column; gap: 11px; }
-  .exp-bullets li {
+  .role-bullets { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+  .role-bullets li {
     position: relative;
     padding-left: 20px;
-    font-size: 16.5px;
+    font-size: 17px;
     color: var(--text-dim);
     font-weight: 300;
-    line-height: 1.78;
+    line-height: 1.7;
+    max-width: 66ch;
   }
-  .exp-bullets li::before {
+  .role-bullets li::before {
     content: '';
-    position: absolute; left: 0; top: 13px;
+    position: absolute; left: 0; top: 12px;
     width: 9px; height: 1px;
     background: var(--purple);
   }
-  .exp-bullets strong { color: var(--text); font-weight: 600; }
+  .role-bullets strong { color: var(--purple-lt); font-weight: 600; }
 
-  .exp-impact {
+  .role-impact {
     display: inline-flex; align-items: center;
-    margin-top: 18px;
-    font-size: 12.5px;
-    letter-spacing: 0.03em;
-    color: var(--lilac);
-    border: 1px solid rgba(168,85,247,0.28);
-    background: rgba(168,85,247,0.06);
-    padding: 5px 13px;
-    border-radius: 999px;
+    margin-top: 16px;
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: var(--purple-lt);
   }
 
   @media (max-width: 680px) {
-    .exp { grid-template-columns: 1fr; gap: 14px; }
-    .exp-left { padding-bottom: 4px; }
-    .exp-right { padding-left: 16px; }
+    .rail { left: 21px; top: 22px; }
+    .company { grid-template-columns: 44px 1fr; column-gap: 18px; }
+    .badge { width: 44px; height: 44px; }
+    .logo-verizon .mark { width: 16px; height: 19px; }
+    .logo-rutgers .mark { width: 19px; height: 17px; }
+    .logo-ranksense img { width: 21px; }
+    .company-head { min-height: 44px; }
   }
 </style>
 
 <script>
   const slot = document.getElementById('fallSlot');
-  const debris = document.getElementById('debris');
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    || document.documentElement.classList.contains('no-motion');
 
-  if (slot && debris && !reduce) {
+  if (slot && !reduce) {
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
         if (!e.isIntersecting) return;
         io.disconnect();
-        // Let the reader register "broken" before it comes apart.
+        // Let the reader actually register "broken" before it comes apart.
         setTimeout(() => {
           const letters = Array.from(slot.querySelectorAll<HTMLElement>('.fall-letter'));
           const starts = letters.map((l) => l.getBoundingClientRect());
-          const debrisRect = debris.getBoundingClientRect();
-          // Rest the crumbs just above the footer's separator line.
-          const footerEl = document.querySelector('footer');
-          const lineY = footerEl ? footerEl.getBoundingClientRect().top : debrisRect.bottom;
+
+          // The starfield's main black hole (mirrors Starfield.astro's placement).
+          const W = window.innerWidth, H = window.innerHeight;
+          const holeX = W * (W < 820 ? 0.74 : 0.76);
+          const holeY = H * 0.52;
 
           const startW = slot.offsetWidth;
           slot.style.width = startW + 'px'; // lock width so "built" slides, not jumps
           void slot.offsetWidth;            // force reflow
 
-          // Land the crumbs at random across a band centred on the word, so the
-          // pile is jumbled (not a left-to-right reading of "broken").
-          const minLeft = Math.min(...starts.map((s) => s.left));
-          const maxRight = Math.max(...starts.map((s) => s.left + s.width));
-          const center = (minLeft + maxRight) / 2;
-          const spread = (maxRight - minLeft) * 1.7 + 40;
-
           letters.forEach((l, i) => {
             const s = starts[i];
-            // Random landing spot, random stack height, random tilt → a messy heap.
-            const restLeftVp = center + (Math.random() - 0.5) * spread;
-            const lift = Math.random() * s.height * 0.85;
-            const restTopVp = lineY - s.height - lift - 8; // sit on the line, with a small gap
-            const restRot = Math.round((Math.random() - 0.5) * 120) + 'deg';
-
-            // Resting position (absolute, anchored to the bottom zone so it scrolls
-            // with the page)…
-            l.style.position = 'absolute';
-            l.style.margin = '0';
-            l.style.left = restLeftVp - debrisRect.left + 'px';
-            l.style.top = restTopVp - debrisRect.top + 'px';
-            // …and how far back up to the heading it starts from.
-            const sx = s.left - restLeftVp;
-            const sy = s.top - restTopVp;
-            l.style.setProperty('--sx', sx + 'px');
-            l.style.setProperty('--sy', sy + 'px');
-            l.style.setProperty('--rr', restRot);
-            l.style.transform = `translate(${sx}px, ${sy}px)`; // start at the heading
-            debris.appendChild(l);
+            // Pin the letter where it sits, then send it spiralling into the hole.
+            l.style.left = s.left + 'px';
+            l.style.top = s.top + 'px';
+            l.style.setProperty('--tx', holeX - (s.left + s.width / 2) + 'px');
+            l.style.setProperty('--ty', holeY - (s.top + s.height / 2) + 'px');
+            document.body.appendChild(l);
+            l.classList.add('suck');
           });
 
-          requestAnimationFrame(() => {
-            slot.style.width = '0px';                        // gap closes → "built" slides in
-            letters.forEach((l) => l.classList.add('drop')); // crumbs tumble down and settle
-          });
-        }, 900);
+          requestAnimationFrame(() => { slot.style.width = '0px'; }); // "built" slides in
+          setTimeout(() => letters.forEach((l) => l.remove()), 2400);
+        }, 1900);
       });
     }, { threshold: 0.6 });
     io.observe(slot);
+  }
+
+  // Journey rail: the line draws itself as you scroll, and each company badge
+  // lights up as the line reaches it.
+  const journeyEl = document.getElementById('journey');
+  const railEl = journeyEl?.querySelector<HTMLElement>('.rail');
+  const fillEl = document.getElementById('railFill');
+  const badges = journeyEl ? Array.from(journeyEl.querySelectorAll<HTMLElement>('[data-node]')) : [];
+
+  if (journeyEl && railEl && fillEl && badges.length) {
+    const sizeRail = () => {
+      const first = badges[0].getBoundingClientRect();
+      const last = badges[badges.length - 1].getBoundingClientRect();
+      railEl.style.height = last.top - first.top + 'px';
+    };
+    sizeRail();
+    window.addEventListener('resize', sizeRail, { passive: true });
+
+    if (reduce) {
+      fillEl.style.transform = 'scaleY(1)';
+      badges.forEach((b) => b.classList.add('lit'));
+    } else {
+      let ticking = false;
+      const update = () => {
+        ticking = false;
+        const railRect = railEl.getBoundingClientRect();
+        // The line draws up to a "focus point" 38% down the viewport.
+        const focus = window.innerHeight * 0.38;
+        const p = Math.min(Math.max((focus - railRect.top) / railRect.height, 0), 1);
+        fillEl.style.transform = `scaleY(${p})`;
+        badges.forEach((b) => {
+          b.classList.toggle('lit', b.getBoundingClientRect().top + 20 <= focus);
+        });
+      };
+      const onScroll = () => {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      update();
+    }
   }
 </script>

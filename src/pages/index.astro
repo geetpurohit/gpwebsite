@@ -32,18 +32,6 @@ import EasterEgg from '../components/EasterEgg.astro';
   </main>
 
   <Footer />
-  <div id="debris" aria-hidden="true"></div>
   <BackToTop />
   <EasterEgg />
 </Base>
-
-<style>
-  /* Landing zone for the "broken" letters, pinned to the very bottom of the page. */
-  #debris {
-    position: absolute;
-    left: 0; right: 0; bottom: 0;
-    height: clamp(120px, 16vw, 180px);
-    z-index: 5;
-    pointer-events: none;
-  }
-</style>

@@ -1,164 +1,130 @@
 ---
-const projects = [
+const demos = [
   {
-    num: '01',
-    featured: true,
-    category: 'Personal',
-    title: 'Credit-Default Scorecard (Live Demo)',
-    desc: 'A loan-level credit-risk model you can actually play with. Enter an applicant and it scores their probability of default right in your browser, then shows exactly which factors drove the decision. Built with weight-of-evidence binning and logistic regression (how banks really build scorecards), benchmarked against XGBoost with SHAP, and trained on public LendingClub data.',
-    tags: ['Python', 'scikit-learn', 'WOE / IV', 'XGBoost', 'SHAP'],
-    metric: 'Try it live',
-    metricLabel: 'interactive, in-browser',
+    title: 'Credit-Default Scorecard',
+    hook: 'Score an applicant',
+    img: '/projects/shots/credit-risk.jpg',
     href: '/projects/credit-risk',
   },
   {
-    num: '02',
-    featured: true,
-    category: 'Personal',
-    title: 'Uplift Modeling: Who to Persuade (Live Demo)',
-    desc: 'Predicting who converts is the easy question. This causal model answers the useful one: who converts only because you reached them. It estimates the incremental effect of a marketing email per customer using T-learner and X-learner meta-learners, validated with the Qini curve, then sorts everyone into Persuadables, Sure Things, Lost Causes, and Sleeping Dogs. Score a customer live, in your browser.',
-    tags: ['Causal Inference', 'T / X-Learner', 'Qini', 'Python', 'scikit-learn'],
-    metric: 'Try it live',
-    metricLabel: 'interactive, in-browser',
+    title: 'AreYouBlinking',
+    hook: 'Speak in blinks',
+    img: '/projects/shots/blink.jpg',
+    href: '/projects/blink',
+  },
+  {
+    title: 'Mapping the Known Universe',
+    hook: 'Fly the cosmos',
+    img: '/projects/shots/universe.jpg',
+    href: '/projects/universe',
+  },
+  {
+    title: 'Gravitational Microlensing',
+    hook: 'Warp spacetime',
+    img: '/projects/shots/microlensing.jpg',
+    href: '/projects/microlensing',
+  },
+  {
+    title: 'Uplift Modeling',
+    hook: 'Find the persuadables',
+    img: '/projects/shots/uplift.jpg',
     href: '/projects/uplift',
   },
   {
-    num: '03',
-    featured: true,
-    category: 'Personal',
-    title: 'Significance: A/B Test Designer (Live Demo)',
-    desc: 'The experimentation toolkit behind a trustworthy A/B test. Power an experiment and size it before you launch, then analyze the results with a proper two-proportion z-test and confidence interval. Plus live demos of the two traps that quietly ruin most experiments: peeking (which inflates false positives past 25%) and skipping CUPED variance reduction. All computed in your browser.',
-    tags: ['A/B Testing', 'Power Analysis', 'CUPED', 'Sequential Testing', 'Python'],
-    metric: 'Try it live',
-    metricLabel: 'interactive, in-browser',
+    title: 'Significance',
+    hook: 'Design honest experiments',
+    img: '/projects/shots/experiment.jpg',
     href: '/projects/experiment',
   },
+];
+
+const rest = [
   {
-    num: '04',
     category: 'Work',
     title: 'Credit Risk Intelligence Platform',
     desc: 'Fullstack app that synthetically generates customer databases to monitor credit-policy changes and their downstream impact on bad-debt writeoff. Built end-to-end (data pipeline, ML models, and a Streamlit frontend) so finance teams can simulate policy scenarios without ever touching production data.',
-    tags: ['Python', 'Streamlit', 'GCP', 'SQL', 'Synthetic Data'],
     metric: '$1.2B+',
     metricLabel: 'in bad debt monitored',
   },
   {
-    num: '05',
     category: 'Work',
     title: 'XAI Gross-Adds Framework',
     desc: 'Explainable-AI framework isolating the real-time drivers of Verizon Gross Adds. Cut hypothesis-generation time by 73% for shareholder calls, so no more "we think it might be..." moments.',
-    tags: ['XAI', 'Qlik', 'Python', 'ML'],
     metric: '73%',
     metricLabel: 'faster decision-making',
   },
   {
-    num: '06',
-    category: 'Academic',
-    title: 'Gravitational Microlensing Sim',
-    desc: 'Academic project simulating gravitational microlensing events, the same physics that bends light around black holes. Built in Python with Jupyter. The astrophysics degree, paying dividends.',
-    tags: ['Python', 'Astrophysics', 'NumPy'],
-    metric: 'github.com/geetpurohit',
-    metricLabel: '',
-    href: 'https://github.com/geetpurohit',
-  },
-  {
-    num: '07',
     category: 'Work',
     title: 'Churn Prediction & Intervention Engine',
     desc: 'ML models forecasting customer churn and simulating responses to interventions (SMS, email, fee adjustments). Pushed internal decisioning coverage from 0% → 60%, cutting outsourced engagement volume by ~35%.',
-    tags: ['ML', 'Python', 'Simulation', 'DataRobot'],
     metric: '0 → 60%',
     metricLabel: 'decisioning coverage',
   },
   {
-    num: '08',
+    category: 'Academic',
+    title: 'Gravitational Microlensing Sim',
+    desc: 'Academic project simulating gravitational microlensing events, the same physics that bends light around black holes. Built in Python with Jupyter. The astrophysics degree, paying dividends.',
+    metric: 'The physics behind the live demo',
+    metricLabel: '',
+  },
+  {
     category: 'Academic',
     title: 'DeepLabCut Pose Estimation',
     desc: 'Trained computer-vision models to track mouse joint positions in wet-lab video experiments. Kinematic data benchmarked against published neuroscience research. The weirdest and most interesting project I\'ve worked on.',
-    tags: ['TensorFlow', 'CUDA', 'Computer Vision', 'R'],
     metric: 'Neuroscience × Deep Learning',
     metricLabel: '',
   },
   {
-    num: '09',
     category: 'Personal',
     title: 'AniParty: Video Sync Extension',
     desc: 'Personal project: a browser extension that syncs video playback between computers. Built in JavaScript, because watching anime with friends across the country shouldn\'t require a scheduling meeting.',
-    tags: ['JavaScript', 'Browser Extension', 'WebSockets'],
     metric: 'Solving the important problems',
     metricLabel: '',
   },
-  {
-    num: '10',
-    category: 'Personal',
-    title: 'AreYouBlinking: Talk in Morse With Your Eyes (Live Demo)',
-    desc: 'The unserious one. It reads your webcam, detects blinks, and decodes them into Morse code and text right on screen: short blink is a dot, long blink is a dash. Face tracking runs on-device with MediaPipe (nothing is uploaded); the eye-aspect-ratio math and blink state machine are hand-written vanilla JS, my first time ever writing the language.',
-    tags: ['Computer Vision', 'MediaPipe', 'Morse', 'Vanilla JS', 'WebAssembly'],
-    metric: 'Try it live',
-    metricLabel: 'blink a message at your webcam',
-    href: '/projects/blink',
-  },
 ];
-const featured = projects.filter((p) => p.featured);
-const rest = projects.filter((p) => !p.featured);
 ---
 
 <section id="projects" class="section">
   <div class="container">
-    <span class="section-label reveal">Projects & Case Studies</span>
-    <h2 class="section-title reveal">Things I've shipped</h2>
-    <p class="section-sub reveal">A mix of work projects (sanitized), academic deep cuts, and personal experiments.</p>
-
-    <div class="grid grid-featured">
-      {featured.map((p) => {
-        const Tag = p.href ? 'a' : 'article';
-        return (
-          <Tag
-            class:list={['card', 'reveal', 'interactive', { featured: p.featured }]}
-            {...(p.href ? { href: p.href, ...(p.href.startsWith('/') ? {} : { target: '_blank', rel: 'noopener' }) } : {})}
-          >
-            <div class="card-head">
-              <span class="card-num">{p.num} · Live demo</span>
-              <span class:list={['card-cat', `cat-${p.category.toLowerCase()}`]}>{p.category}</span>
-            </div>
-            <span class="card-go" aria-hidden="true">→</span>
-            <h3 class="card-title">{p.title}</h3>
-            <p class="card-desc">{p.desc}</p>
-            <div class="card-tags">
-              {p.tags.map((t) => <span class="card-tag">{t}</span>)}
-            </div>
-            <div class="card-metric">
-              <span class="metric-num">{p.metric}</span>
-              {p.metricLabel && <span class="metric-label">{p.metricLabel}</span>}
-            </div>
-          </Tag>
-        );
-      })}
+    <div class="section-head-center">
+      <span class="section-label reveal">Projects &amp; case studies</span>
+      <h2 class="section-title reveal">What I've shipped</h2>
+      <p class="section-sub reveal">
+        Six live demos you can play with right now, plus work projects (sanitized) and academic deep cuts.
+      </p>
     </div>
 
-    <span class="grid-label reveal">More projects</span>
-    <div class="grid grid-rest">
+    <div class="demo-grid">
+      {demos.map((p) => (
+        <a class="demo-card reveal interactive" href={p.href}>
+          <figure class="demo-shot">
+            <img src={p.img} alt={`Screenshot of ${p.title}`} width="1200" height="750" loading="lazy" />
+          </figure>
+          <div class="demo-body">
+            <h3 class="demo-title">{p.title}</h3>
+            <p class="demo-hook">{p.hook}</p>
+            <span class="demo-cta">Try it live <span aria-hidden="true">→</span></span>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <h3 class="more-label reveal">More work</h3>
+    <div class="more-grid">
       {rest.map((p) => {
         const Tag = p.href ? 'a' : 'article';
         return (
           <Tag
-            class:list={['card', 'reveal', 'interactive']}
-            {...(p.href ? { href: p.href, ...(p.href.startsWith('/') ? {} : { target: '_blank', rel: 'noopener' }) } : {})}
+            class:list={['more-item', 'reveal', { interactive: !!p.href }]}
+            {...(p.href ? { href: p.href, target: '_blank', rel: 'noopener' } : {})}
           >
-            <div class="card-head">
-              <span class="card-num">{p.num}</span>
-              <span class:list={['card-cat', `cat-${p.category.toLowerCase()}`]}>{p.category}</span>
-            </div>
-            <span class="card-go" aria-hidden="true">→</span>
-            <h3 class="card-title">{p.title}</h3>
-            <p class="card-desc">{p.desc}</p>
-            <div class="card-tags">
-              {p.tags.map((t) => <span class="card-tag">{t}</span>)}
-            </div>
-            <div class="card-metric">
-              <span class="metric-num">{p.metric}</span>
-              {p.metricLabel && <span class="metric-label">{p.metricLabel}</span>}
-            </div>
+            <span class:list={['more-cat', `cat-${p.category.toLowerCase()}`]}>{p.category}</span>
+            <h4 class="more-title">{p.title}{p.href && <span class="more-go" aria-hidden="true"> ↗</span>}</h4>
+            <p class="more-desc">{p.desc}</p>
+            <p class="more-metric">
+              <strong>{p.metric}</strong>
+              {p.metricLabel && <span> {p.metricLabel}</span>}
+            </p>
           </Tag>
         );
       })}
@@ -168,162 +134,130 @@ const rest = projects.filter((p) => !p.featured);
 
 <style>
   #projects { border-top: 1px solid var(--border-soft); }
-  .section-sub { margin-bottom: clamp(48px, 6vw, 72px); }
+  .section-head-center { margin-bottom: clamp(56px, 7vw, 88px); }
 
-  .grid {
+  .demo-grid {
     display: grid;
-    gap: 18px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
   }
-  .grid-featured { grid-template-columns: repeat(3, 1fr); }
-  .grid-rest { grid-template-columns: repeat(3, 1fr); }
 
-  .grid-label {
-    display: block;
-    font-family: var(--font-display);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: clamp(34px, 5vw, 52px) 0 18px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--border-soft);
-  }
-  .card {
-    position: relative;
+  .demo-card {
     display: flex;
     flex-direction: column;
-    padding: 30px;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    background: linear-gradient(165deg, rgba(255,255,255,0.025), rgba(168,85,247,0.012));
+    border-radius: var(--radius-card);
+    background: var(--surface);
     overflow: hidden;
-    transition: border-color 0.3s, transform 0.3s, background 0.3s;
+    transition: background 0.3s, transform 0.35s var(--ease);
   }
-  .card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 1px;
-    background: var(--grad-line);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .card:hover {
-    border-color: rgba(168,85,247,0.4);
+  .demo-card:hover {
+    background: var(--surface-hover);
     transform: translateY(-5px);
-    background: linear-gradient(165deg, rgba(168,85,247,0.08), rgba(124,58,237,0.03));
   }
-  .card:hover::before { opacity: 1; }
 
-  .card.featured {
-    padding: clamp(26px, 2.4vw, 32px);
-    background: linear-gradient(140deg, rgba(168,85,247,0.10), rgba(124,58,237,0.04));
-    border-color: rgba(168,85,247,0.28);
+  .demo-shot {
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: #0b0813;
   }
-  .card.featured .card-title { font-size: clamp(19px, 2vw, 23px); }
-  .card.featured .card-desc { font-size: 15px; }
+  .demo-shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.001);
+    transition: transform 0.6s var(--ease);
+  }
+  .demo-card:hover .demo-shot img { transform: scale(1.04); }
 
-  .card-head {
+  .demo-body {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
+    flex-direction: column;
+    padding: 22px 26px 26px;
   }
-  .card-num {
+  .demo-title {
     font-family: var(--font-display);
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    color: var(--muted);
-  }
-  .card-cat {
-    font-family: var(--font-display);
-    font-size: 10px;
+    font-size: clamp(19px, 1.8vw, 22px);
     font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: 999px;
-    border: 1px solid currentColor;
-    opacity: 0.9;
+    color: var(--text);
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    margin-bottom: 4px;
+    text-wrap: balance;
+  }
+  .demo-hook {
+    font-size: 16px;
+    color: var(--text-dim);
+    font-weight: 300;
+    margin-bottom: 16px;
+  }
+  .demo-cta {
+    font-size: 15.5px;
+    font-weight: 500;
+    color: var(--purple-lt);
+  }
+  .demo-cta span { display: inline-block; transition: transform 0.25s var(--ease); }
+  .demo-card:hover .demo-cta span { transform: translateX(3px); }
+
+  /* Non-interactive work as a quiet editorial list */
+  .more-label {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 2.4vw, 28px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin: clamp(72px, 9vw, 120px) 0 8px;
+  }
+  .more-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: clamp(40px, 6vw, 80px);
+  }
+  .more-item {
+    display: block;
+    padding: 30px 0;
+    border-top: 1px solid var(--border-soft);
+  }
+  /* Keep the top hairlines aligned across both columns */
+  .more-item:nth-child(-n+2) { border-top: none; padding-top: 22px; }
+
+  .more-cat {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 8px;
   }
   .cat-work     { color: var(--purple-lt); }
   .cat-academic { color: var(--lilac); }
   .cat-personal { color: var(--magenta); }
 
-  /* Hover affordance */
-  .card-go {
-    position: absolute;
-    top: 26px; right: 28px;
-    font-size: 20px;
-    line-height: 1;
-    color: var(--purple-lt);
-    opacity: 0;
-    transform: translate(-6px, 6px);
-    transition: opacity 0.3s, transform 0.3s var(--ease);
-    pointer-events: none;
-  }
-  .card:hover .card-go { opacity: 1; transform: translate(0, 0); }
-
-  .card-title {
+  .more-title {
     font-family: var(--font-display);
-    font-size: 21px;
+    font-size: 20px;
     font-weight: 600;
     color: var(--text);
     letter-spacing: -0.01em;
-    line-height: 1.22;
-    margin-bottom: 11px;
+    margin-bottom: 8px;
+    transition: color 0.25s;
   }
-  .card-desc {
+  .more-go { color: var(--muted); font-weight: 400; }
+  a.more-item:hover .more-title { color: var(--purple-lt); }
+
+  .more-desc {
     font-size: 15.5px;
     color: var(--text-dim);
     font-weight: 300;
-    line-height: 1.72;
-    margin-bottom: 18px;
+    line-height: 1.65;
+    margin-bottom: 12px;
   }
-  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; margin-top: auto; }
-  .card-tag {
-    font-size: 11.5px;
-    padding: 4px 11px;
-    border-radius: 6px;
-    background: rgba(168,85,247,0.08);
-    color: var(--lilac);
-    border: 1px solid rgba(168,85,247,0.16);
-  }
+  .more-metric { font-size: 14.5px; color: var(--muted); }
+  .more-metric strong { color: var(--text); font-weight: 600; }
 
-  /* Impact metric, promoted to a hero figure */
-  .card-metric {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
+  @media (max-width: 1000px) {
+    .demo-grid { grid-template-columns: 1fr 1fr; }
   }
-  .metric-num {
-    font-family: var(--font-display);
-    font-size: clamp(20px, 2.2vw, 26px);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    background: var(--grad-text);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-  }
-  .metric-label {
-    font-size: 12.5px;
-    letter-spacing: 0.04em;
-    color: var(--muted);
-  }
-  .card.featured .metric-num { font-size: clamp(26px, 3.4vw, 38px); }
-
-  @media (max-width: 920px) {
-    .grid-rest { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 820px) {
-    .grid-featured { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 600px) {
-    .grid-rest { grid-template-columns: 1fr; }
+  @media (max-width: 720px) {
+    .demo-grid { grid-template-columns: 1fr; }
+    .more-grid { grid-template-columns: 1fr; }
+    .more-item:nth-child(2) { border-top: 1px solid var(--border-soft); padding-top: 30px; }
   }
 </style>
