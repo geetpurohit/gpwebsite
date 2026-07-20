@@ -63,9 +63,11 @@ const systems = groups.map((g, gi) => ({
 
 <section id="skills" class="section">
   <div class="container">
-    <span class="section-label reveal">Skills</span>
-    <h2 class="section-title reveal">The toolkit</h2>
-    <p class="section-sub reveal">Proficiency built by shipping things, not just finishing courses.</p>
+    <div class="section-head-center">
+      <span class="section-label reveal">Skills</span>
+      <h2 class="section-title reveal">What I'm good at</h2>
+      <p class="section-sub reveal">Proficiency built by shipping things, not just finishing courses.</p>
+    </div>
 
     <div class="legend reveal">
       <span class="leg"><i class="dot t0"></i>Core</span>
@@ -103,33 +105,30 @@ const systems = groups.map((g, gi) => ({
 
 <style>
   #skills { border-top: 1px solid var(--border-soft); }
+  .section-head-center { margin-bottom: clamp(36px, 4vw, 52px); }
 
   .legend {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px 22px;
-    margin-bottom: clamp(40px, 5vw, 60px);
+    justify-content: center;
+    gap: 10px 24px;
+    margin-bottom: clamp(32px, 4vw, 44px);
   }
   .leg {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--text-dim);
-    letter-spacing: 0.02em;
   }
   .leg .dot { width: 9px; height: 9px; border-radius: 50%; }
   .dot.t0 { background: #f0e6ff; box-shadow: 0 0 8px 2px rgba(192,132,252,0.8); }
   .dot.t1 { background: var(--lilac); box-shadow: 0 0 6px 1px rgba(168,85,247,0.5); }
   .dot.t2 { background: rgba(216,180,254,0.5); }
   .leg-note {
-    font-family: var(--font-display);
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    font-size: 13px;
     color: var(--muted);
-    margin-left: auto;
   }
 
   .grid {
@@ -142,26 +141,23 @@ const systems = groups.map((g, gi) => ({
     --orbit: clamp(110px, 15vw, 152px);
     position: relative;
     min-height: clamp(300px, 36vw, 380px);
-    border: 1px solid var(--border);
-    border-radius: 18px;
+    border-radius: var(--radius-card);
     background:
       radial-gradient(circle at 50% 52%, rgba(168,85,247,0.10), rgba(168,85,247,0) 58%),
-      rgba(255,255,255,0.015);
+      var(--surface);
     overflow: hidden;
-    transition: border-color 0.3s, background 0.3s;
+    transition: background 0.3s;
   }
-  .system:hover { border-color: rgba(168,85,247,0.3); }
 
   .sys-title {
     position: absolute;
-    top: 20px; left: 22px;
+    top: 22px; left: 26px;
     z-index: 4;
     font-family: var(--font-display);
-    font-size: 12px;
+    font-size: 14.5px;
     font-weight: 600;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--purple-lt);
+    letter-spacing: 0;
+    color: var(--text);
   }
 
   /* Concentric orbit paths */
@@ -227,17 +223,15 @@ const systems = groups.map((g, gi) => ({
     display: block;
     width: 11px; height: 11px;
     border-radius: 50%;
-    transition: transform 0.25s var(--ease), box-shadow 0.25s;
   }
   .label {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     white-space: nowrap;
-    font-size: 13.5px;
+    font-size: 14px;
     font-weight: 300;
     color: var(--text-dim);
-    transition: color 0.25s;
   }
   .body.right .label { left: 17px; }
   .body.left  .label { right: 17px; }
@@ -246,9 +240,6 @@ const systems = groups.map((g, gi) => ({
   .tier-1 .node { background: var(--lilac); box-shadow: 0 0 9px 2px rgba(168,85,247,0.55); }
   .tier-2 .node { background: rgba(216,180,254,0.55); box-shadow: 0 0 6px 1px rgba(168,85,247,0.3); }
 
-  .body:hover { z-index: 5; }
-  .body:hover .node { transform: scale(1.55); }
-  .body:hover .label { color: var(--text); }
   .tier-0 .label { color: var(--text); }
 
   @media (prefers-reduced-motion: reduce) {
@@ -274,10 +265,9 @@ const systems = groups.map((g, gi) => ({
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 13px 6px 11px;
-      border: 1px solid rgba(168,85,247,0.16);
-      border-radius: 999px;
-      background: rgba(168,85,247,0.05);
+      padding: 6px 14px 6px 12px;
+      border-radius: var(--radius-pill);
+      background: rgba(255,255,255,0.05);
     }
     .label {
       position: static !important;

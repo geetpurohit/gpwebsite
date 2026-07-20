@@ -58,9 +58,14 @@
   --font-display: 'Space Grotesk', system-ui, sans-serif;
   --font-body:    'Outfit', system-ui, sans-serif;
 
-  --container: 1180px;
+  --container: 1080px;
   --pad-x: clamp(22px, 5vw, 80px);
-  --section-y: clamp(96px, 12vw, 168px);
+  --section-y: clamp(110px, 14vw, 200px);
+
+  --radius-card: 24px;
+  --radius-pill: 980px;
+  --surface:       rgba(255,255,255,0.035);
+  --surface-hover: rgba(255,255,255,0.06);
 
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -77,7 +82,7 @@ body {
   color: var(--text);
   font-family: var(--font-body);
   font-size: clamp(17px, 1.15vw, 19px);
-  line-height: 1.72;
+  line-height: 1.65;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -101,37 +106,36 @@ button { font-family: inherit; }
 .section-label {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  font-family: var(--font-display);
-  font-size: clamp(10px, 1.2vw, 11px);
-  letter-spacing: 0.34em;
-  text-transform: uppercase;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   color: var(--purple-lt);
-  margin-bottom: 16px;
-}
-.section-label::before {
-  content: '';
-  width: 26px; height: 1px;
-  background: linear-gradient(90deg, var(--purple), transparent);
+  margin-bottom: 14px;
 }
 
 .section-title {
   font-family: var(--font-display);
-  font-size: clamp(32px, 5vw, 60px);
+  font-size: clamp(38px, 5.5vw, 68px);
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.04;
-  margin-bottom: 20px;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin-bottom: 18px;
   text-wrap: balance;
 }
 
 .section-sub {
-  font-size: clamp(17px, 1.4vw, 20px);
+  font-size: clamp(18px, 1.5vw, 22px);
   color: var(--text-dim);
-  max-width: 580px;
-  line-height: 1.72;
+  max-width: 620px;
+  line-height: 1.6;
   font-weight: 300;
 }
+
+/* Centered section intros (Projects, Skills, Contact) */
+.section-head-center {
+  text-align: center;
+}
+.section-head-center .section-sub { margin-inline: auto; }
 
 .grad-text {
   background: var(--grad-text);
@@ -173,3 +177,12 @@ html { scrollbar-color: var(--violet-deep) var(--bg-deep); scrollbar-width: thin
   }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* Manual motion kill-switch (nav toggle), same rules as the OS preference */
+html.no-motion { scroll-behavior: auto; }
+html.no-motion *, html.no-motion *::before, html.no-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+html.no-motion .reveal { opacity: 1; transform: none; }

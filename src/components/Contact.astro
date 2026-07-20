@@ -50,48 +50,48 @@
 
   .contact-title {
     font-family: var(--font-display);
-    font-size: clamp(36px, 6vw, 64px);
+    font-size: clamp(40px, 6.5vw, 76px);
     font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1.02;
-    margin-bottom: 18px;
+    letter-spacing: -0.025em;
+    line-height: 1.03;
+    margin-bottom: 20px;
   }
   .contact-sub {
-    font-size: clamp(16px, 1.4vw, 19px);
+    font-size: clamp(17px, 1.4vw, 20px);
     color: var(--text-dim);
     font-weight: 300;
-    line-height: 1.7;
-    margin-bottom: 34px;
+    line-height: 1.6;
+    margin-bottom: 36px;
   }
   .email {
     display: inline-block;
     font-family: var(--font-display);
-    font-size: clamp(20px, 3vw, 26px);
+    font-size: clamp(21px, 3vw, 28px);
     font-weight: 600;
     color: var(--text);
     letter-spacing: -0.01em;
-    margin-bottom: 32px;
+    margin-bottom: 36px;
     transition: color 0.25s;
     word-break: break-word;
   }
   .email:hover { color: var(--purple-lt); }
 
-  .links { display: flex; justify-content: center; flex-wrap: wrap; gap: 13px; }
+  .links { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
   .link {
     display: inline-flex;
     align-items: center;
     gap: 9px;
-    padding: 13px 24px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    padding: 12px 26px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
     color: var(--text-dim);
     font-size: 15px;
-    transition: color 0.25s, border-color 0.25s, background 0.25s, transform 0.25s;
+    font-weight: 500;
+    transition: color 0.25s, background 0.25s, transform 0.25s var(--ease);
   }
   .link:hover {
     color: var(--text);
-    border-color: rgba(168,85,247,0.45);
-    background: rgba(168,85,247,0.06);
+    background: var(--surface-hover);
     transform: translateY(-2px);
   }
 </style>

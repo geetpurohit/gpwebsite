@@ -32,13 +32,22 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://geetpurohit
 
     <link rel="preload" href="/fonts/space-grotesk-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/outfit-400.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!-- Apply the user's saved motion preference before anything renders. -->
+    <script is:inline>
+      if (localStorage.getItem('gp-motion') === 'off') {
+        document.documentElement.classList.add('no-motion');
+      }
+    </script>
   </head>
   <body>
     <slot />
 
     <script>
       const els = document.querySelectorAll('.reveal');
-      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && els.length) {
+      const noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        || document.documentElement.classList.contains('no-motion');
+      if (!noMotion && els.length) {
         const io = new IntersectionObserver((entries) => {
           entries.forEach((e, i) => {
             if (e.isIntersecting) {
