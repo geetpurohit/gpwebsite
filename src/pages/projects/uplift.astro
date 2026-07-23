@@ -449,7 +449,7 @@ const description =
       align-items: start;
     }
     .map-col { min-width: 0; }
-    .ctrl-col { display: flex; flex-direction: column; gap: 18px; }
+    .ctrl-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 
     /* persuadability map */
     .pmap { display: grid; grid-template-columns: 16px 1fr; grid-template-rows: 1fr 16px; gap: 6px; margin-top: 18px; }
@@ -493,22 +493,27 @@ const description =
     .axis-cap { font-size: 10px; color: var(--muted); letter-spacing: .02em; }
     .axis-x { grid-column: 2; grid-row: 2; text-align: center; }
     .axis-y { grid-column: 1; grid-row: 1; writing-mode: vertical-rl; transform: rotate(180deg); display: flex; align-items: center; justify-content: center; }
-    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; align-content: start; }
-    .field { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
-    .field-top { display: flex; justify-content: space-between; align-items: baseline; color: var(--text-dim); }
-    .field-top output { font-family: var(--font-display); font-weight: 600; color: var(--lilac); font-size: 13px; }
-    .field-toggle { flex-direction: row; align-items: center; gap: 10px; color: var(--text-dim); cursor: pointer; grid-column: span 2; }
-    .field-toggle input { width: 16px; height: 16px; accent-color: var(--purple); cursor: pointer; }
-    input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 3px;
+    .fields { display: grid; grid-template-columns: 1fr; gap: 16px; align-content: start; }
+    /* .field* / input / .select are injected client-side via form.innerHTML, so they never receive
+       Astro's build-time data-astro-cid attribute; scoped (non-:global) rules would silently no-op. */
+    :global(.field) { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
+    :global(.field-top) { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; color: var(--text-dim); }
+    :global(.field-top output) { font-family: var(--font-display); font-weight: 600; color: var(--lilac); font-size: 13px; white-space: nowrap; }
+    :global(.field-toggle) { flex-direction: row; align-items: center; gap: 10px; color: var(--text-dim); cursor: pointer; }
+    :global(.field-toggle input) { width: 16px; height: 16px; accent-color: var(--purple); cursor: pointer; }
+    :global(input[type=range]) { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 3px;
       background: linear-gradient(90deg, var(--violet), var(--purple)); outline: none; }
-    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    :global(input[type=range]::-webkit-slider-thumb) { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
       background: #fff; border: 3px solid var(--purple); cursor: pointer; box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.2); }
-    input[type=range]::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 3px solid var(--purple); cursor: pointer; }
-    .select {
+    :global(input[type=range]::-moz-range-thumb) { width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 3px solid var(--purple); cursor: pointer; }
+    :global(.select) {
       background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text);
       border-radius: 9px; padding: 9px 11px; font-family: var(--font-body); font-size: 14px;
     }
-    .select:focus { border-color: rgba(var(--accent-rgb),0.5); outline: none; }
+    :global(.select:focus) { border-color: rgba(var(--accent-rgb),0.5); outline: none; }
+    /* native <option> popups ignore translucent/inherited theme colors and default to a white
+       background, so the light --text color becomes unreadable unless set explicitly here. */
+    :global(.select option) { background: #150f22; color: var(--text); }
 
     .readout {
       border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px;
@@ -573,10 +578,6 @@ const description =
       .map-layout { grid-template-columns: 1fr; }
       .tiles { grid-template-columns: 1fr 1fr; }
       .charts { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 520px) {
-      .fields { grid-template-columns: 1fr; }
-      .field-toggle { grid-column: span 1; }
     }
   </style>
 </Base>

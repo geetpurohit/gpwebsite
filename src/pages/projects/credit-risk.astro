@@ -425,22 +425,28 @@ const description =
       padding: clamp(22px, 3vw, 34px); border: 1px solid var(--border); border-radius: 20px;
       background: linear-gradient(165deg, rgba(255,255,255,0.022), rgba(168,85,247,0.02));
     }
-    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; }
-    .field { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
-    .field-top { display: flex; justify-content: space-between; align-items: baseline; color: var(--text-dim); }
-    .field-top output { font-family: var(--font-display); font-weight: 600; color: var(--lilac); font-size: 13px; }
-    input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 3px;
+    .fields { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    /* .field* / input / .select are injected client-side via form.innerHTML, so they never receive
+       Astro's build-time data-astro-cid attribute; scoped (non-:global) rules would silently no-op. */
+    :global(.field) { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
+    :global(.field-top) { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; color: var(--text-dim); }
+    :global(.field-top output) { font-family: var(--font-display); font-weight: 600; color: var(--lilac); font-size: 13px; white-space: nowrap; }
+    :global(input[type=range]) { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 3px;
       background: linear-gradient(90deg, var(--violet), var(--purple)); outline: none; }
-    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    :global(input[type=range]::-webkit-slider-thumb) { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
       background: #fff; border: 3px solid var(--purple); cursor: pointer; box-shadow: 0 0 0 3px rgba(168,85,247,0.2); }
-    input[type=range]::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 3px solid var(--purple); cursor: pointer; }
-    .select {
+    :global(input[type=range]::-moz-range-thumb) { width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 3px solid var(--purple); cursor: pointer; }
+    :global(.select) {
       background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text);
       border-radius: 9px; padding: 9px 11px; font-family: var(--font-body); font-size: 14px;
     }
-    .select:focus { border-color: rgba(168,85,247,0.5); outline: none; }
+    :global(.select:focus) { border-color: rgba(168,85,247,0.5); outline: none; }
+    /* native <option> popups ignore translucent/inherited theme colors and default to a white
+       background, so the light --text color becomes unreadable unless set explicitly here. */
+    :global(.select option) { background: #150f22; color: var(--text); }
 
-    .demo-right { display: flex; flex-direction: column; gap: 16px; }
+    .demo-left { min-width: 0; }
+    .demo-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
     .gauge-card, .contrib-card {
       border: 1px solid var(--border); border-radius: 16px; padding: 20px 22px;
       background: rgba(255,255,255,0.02);
@@ -462,14 +468,16 @@ const description =
     .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 3px; vertical-align: middle; }
     .dot.up { background: #34d399; } .dot.down { background: #f43f5e; }
     .contrib-list { display: flex; flex-direction: column; gap: 9px; }
-    .crow { display: grid; grid-template-columns: 130px 1fr 38px; align-items: center; gap: 10px; font-size: 12.5px; }
-    .clabel { color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .cbar { position: relative; height: 7px; background: rgba(255,255,255,0.05); border-radius: 4px; }
-    .cfill { position: absolute; top: 0; height: 100%; border-radius: 4px; }
-    .cfill.pos { left: 0; background: linear-gradient(90deg, #059669, #34d399); }
-    .cfill.neg { right: 0; background: linear-gradient(90deg, #f43f5e, #fb7185); }
-    .cval { font-family: var(--font-display); font-weight: 600; text-align: right; }
-    .cval.up { color: #34d399; } .cval.down { color: #f43f5e; }
+    /* .crow/.clabel/.cbar/.cfill/.cval are injected client-side via contrib.innerHTML, same
+       astro-cid scoping gotcha as .field* above. */
+    :global(.crow) { display: grid; grid-template-columns: 130px 1fr 38px; align-items: center; gap: 10px; font-size: 12.5px; }
+    :global(.clabel) { color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    :global(.cbar) { position: relative; height: 7px; background: rgba(255,255,255,0.05); border-radius: 4px; }
+    :global(.cfill) { position: absolute; top: 0; height: 100%; border-radius: 4px; }
+    :global(.cfill.pos) { left: 0; background: linear-gradient(90deg, #059669, #34d399); }
+    :global(.cfill.neg) { right: 0; background: linear-gradient(90deg, #f43f5e, #fb7185); }
+    :global(.cval) { font-family: var(--font-display); font-weight: 600; text-align: right; }
+    :global(.cval.up) { color: #34d399; } :global(.cval.down) { color: #f43f5e; }
     .contrib-foot { font-size: 11.5px; color: var(--muted); margin-top: 14px; line-height: 1.6; }
 
     /* Results */
@@ -522,8 +530,7 @@ const description =
       .charts { grid-template-columns: 1fr; }
     }
     @media (max-width: 520px) {
-      .fields { grid-template-columns: 1fr; }
-      .crow { grid-template-columns: 104px 1fr 34px; }
+      :global(.crow) { grid-template-columns: 104px 1fr 34px; }
     }
   </style>
 </Base>

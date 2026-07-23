@@ -39,11 +39,11 @@ EPS = 0.5  # Laplace smoothing for WOE
 NUMERIC = {
     "fico":       dict(label="FICO score",              inp=dict(min=600, max=850, step=5, default=690)),
     "term":       None,  # handled as categorical below
-    "dti":        dict(label="Debt-to-income (%)",       inp=dict(min=0, max=45, step=0.5, default=18)),
-    "annual_inc": dict(label="Annual income ($)",        inp=dict(min=10000, max=300000, step=1000, default=65000)),
-    "revol_util": dict(label="Revolving utilization (%)",inp=dict(min=0, max=150, step=1, default=45)),
-    "loan_amnt":  dict(label="Loan amount ($)",          inp=dict(min=1000, max=40000, step=500, default=15000)),
-    "emp_length": dict(label="Employment length (yrs)",  inp=dict(min=0, max=10, step=1, default=5)),
+    "dti":        dict(label="Debt-to-income",           inp=dict(min=0, max=45, step=0.5, default=18)),
+    "annual_inc": dict(label="Annual income",            inp=dict(min=10000, max=300000, step=1000, default=65000)),
+    "revol_util": dict(label="Revolving utilization",    inp=dict(min=0, max=150, step=1, default=45)),
+    "loan_amnt":  dict(label="Loan amount",               inp=dict(min=1000, max=40000, step=500, default=15000)),
+    "emp_length": dict(label="Employment length",        inp=dict(min=0, max=10, step=1, default=5)),
 }
 NUMERIC.pop("term")
 CATEG = {
