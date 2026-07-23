@@ -54,7 +54,7 @@
     },
     {
       "key": "history",
-      "label": "Spend last year ($)",
+      "label": "Spend last year",
       "type": "numeric",
       "input": {
         "min": 0,

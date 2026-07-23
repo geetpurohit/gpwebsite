@@ -45,7 +45,7 @@ OUT = (Path(__file__).resolve().parents[1] / "public" / "uplift")
 NUMERIC = {
     "recency": dict(label="Months since last purchase",
                     inp=dict(min=1, max=12, step=1, default=6)),
-    "history": dict(label="Spend last year ($)",
+    "history": dict(label="Spend last year",
                     inp=dict(min=0, max=3000, step=25, default=250), log=True),
 }
 BINARY = {

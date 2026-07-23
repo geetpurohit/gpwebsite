@@ -73,7 +73,7 @@
     },
     {
       "key": "dti",
-      "label": "Debt-to-income (%)",
+      "label": "Debt-to-income",
       "type": "numeric",
       "input": {
         "min": 0,
@@ -118,7 +118,7 @@
     },
     {
       "key": "annual_inc",
-      "label": "Annual income ($)",
+      "label": "Annual income",
       "type": "numeric",
       "input": {
         "min": 10000,
@@ -163,7 +163,7 @@
     },
     {
       "key": "revol_util",
-      "label": "Revolving utilization (%)",
+      "label": "Revolving utilization",
       "type": "numeric",
       "input": {
         "min": 0,
@@ -208,7 +208,7 @@
     },
     {
       "key": "loan_amnt",
-      "label": "Loan amount ($)",
+      "label": "Loan amount",
       "type": "numeric",
       "input": {
         "min": 1000,
@@ -253,7 +253,7 @@
     },
     {
       "key": "emp_length",
-      "label": "Employment length (yrs)",
+      "label": "Employment length",
       "type": "numeric",
       "input": {
         "min": 0,
@@ -854,13 +854,13 @@
     },
     "iv": {
       "labels": [
-        "Employment length (yrs)",
+        "Employment length",
         "Loan purpose",
-        "Revolving utilization (%)",
-        "Annual income ($)",
+        "Revolving utilization",
+        "Annual income",
         "Home ownership",
-        "Loan amount ($)",
-        "Debt-to-income (%)",
+        "Loan amount",
+        "Debt-to-income",
         "FICO score",
         "Term"
       ],
@@ -878,13 +878,13 @@
     },
     "shap": {
       "labels": [
-        "Revolving utilization (%)",
-        "Employment length (yrs)",
+        "Revolving utilization",
+        "Employment length",
         "Loan purpose",
-        "Loan amount ($)",
-        "Annual income ($)",
+        "Loan amount",
+        "Annual income",
         "Home ownership",
-        "Debt-to-income (%)",
+        "Debt-to-income",
         "FICO score",
         "Term"
       ],

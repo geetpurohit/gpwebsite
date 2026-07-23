@@ -1,0 +1,677 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const title = 'Triage: Routing Clinical Notes | Geet Purohit';
+const description =
+  'A clinical-NLP demo that routes a free-text medical note to the right specialty, extracts clinical entities with negation detection, and answers questions grounded in the note. Trained on MTSamples, runs entirely in your browser.';
+
+// These questions mirror the `questions` list exported by train.py (kept in sync by hand).
+const questions = [
+  { q: "What are the patient's symptoms?", target: 'problem' },
+  { q: 'What medications is the patient taking?', target: 'medication' },
+  { q: 'What tests or imaging were performed?', target: 'test' },
+  { q: 'Is there any chest pain or shortness of breath?', target: 'problem' },
+  { q: 'What is the assessment or diagnosis?', target: 'problem' },
+  { q: 'What anatomy or body region is involved?', target: 'anatomy' },
+];
+
+// Kept as a JS string so Astro does not try to evaluate the {placeholders} as expressions.
+const promptTemplate = `You are a clinical assistant. Answer the question using ONLY the
+passages below. If the answer is not in them, say you do not know.
+Do not infer beyond the text.
+
+Question: {question}
+
+Passages:
+{top_retrieved_sentences}
+
+Answer (cite the passage number):`;
+---
+
+<Base title={title} description={description}>
+  <main class="tr">
+    <div class="tr-container">
+      <a class="back" href="/#projects">← geetpurohit.com</a>
+
+      <!-- ===== Header ===== -->
+      <header class="tr-head reveal">
+        <span class="section-label">Project · Clinical NLP</span>
+        <h1 class="tr-title">Route a <span class="grad-text">Clinical Note</span></h1>
+        <p class="tr-lead">
+          A free-text medical note comes in. This model reads it and does three things a
+          clinical-NLP pipeline actually has to do: <strong>routes</strong> it to the right
+          specialty, <strong>extracts</strong> the clinical entities (with negation, so
+          <em>denies chest pain</em> is not the same as <em>chest pain</em>), and
+          <strong>answers questions grounded</strong> in the text. Trained on the public
+          <a href="https://www.mtsamples.com/" target="_blank" rel="noopener">MTSamples</a>
+          transcriptions and running entirely in your browser. No server, and the note never
+          leaves this page.
+        </p>
+        <div class="tags">
+          <span class="tag">Python</span>
+          <span class="tag">TF-IDF</span>
+          <span class="tag">Logistic Regression</span>
+          <span class="tag">NER</span>
+          <span class="tag">NegEx</span>
+          <span class="tag">Retrieval / RAG</span>
+          <span class="tag">scikit-learn</span>
+        </div>
+      </header>
+
+      <div id="loadBanner" class="banner" hidden>
+        Could not load <code>triage.json</code>. Run <code>triage/train.py</code> to generate it.
+      </div>
+
+      <!-- ===== Workspace ===== -->
+      <section class="work reveal">
+        <div class="work-top">
+          <div class="picker">
+            <label class="picker-lab" for="noteSelect">Clinical note</label>
+            <select id="noteSelect" class="select"></select>
+          </div>
+          <div class="seg" role="tablist" aria-label="Lens">
+            <button class="seg-btn active" data-mode="route" role="tab">Route</button>
+            <button class="seg-btn" data-mode="entities" role="tab">Entities</button>
+            <button class="seg-btn" data-mode="ask" role="tab">Ask</button>
+          </div>
+        </div>
+
+        <div class="work-grid">
+          <!-- the shared note, re-highlighted per lens -->
+          <article class="note-panel">
+            <div class="note-meta">
+              <span id="noteName" class="note-name">-</span>
+              <span id="noteTrue" class="note-true"></span>
+            </div>
+            <div id="noteText" class="note-text" aria-live="polite"></div>
+          </article>
+
+          <!-- right rail: one panel visible per lens -->
+          <aside class="lens">
+            <!-- ROUTE -->
+            <div id="panelRoute" class="panel">
+              <h2 class="panel-h">Predicted specialty</h2>
+              <p class="panel-sub">Softmax over a logistic-regression scorecard, computed live from the note.</p>
+              <div id="probList" class="prob-list"></div>
+              <div class="terms">
+                <div class="terms-h">Why: top terms pushing this note toward <span id="topClassName">-</span></div>
+                <div id="termChips" class="term-chips"></div>
+              </div>
+            </div>
+
+            <!-- ENTITIES -->
+            <div id="panelEntities" class="panel" hidden>
+              <h2 class="panel-h">Clinical entities</h2>
+              <p class="panel-sub">Gazetteer match plus NegEx negation. Negated findings are struck through.</p>
+              <div class="legend">
+                <span class="lg lg-problem"><i></i>Problem <b id="cnt-problem">0</b></span>
+                <span class="lg lg-medication"><i></i>Medication <b id="cnt-medication">0</b></span>
+                <span class="lg lg-test"><i></i>Test <b id="cnt-test">0</b></span>
+                <span class="lg lg-anatomy"><i></i>Anatomy <b id="cnt-anatomy">0</b></span>
+              </div>
+              <div class="neg-note">
+                <span id="cnt-neg">0</span> finding(s) detected as <span class="neg-chip">negated</span>,
+                which a naive keyword search would get backwards.
+              </div>
+            </div>
+
+            <!-- ASK -->
+            <div id="panelAsk" class="panel" hidden>
+              <h2 class="panel-h">Ask the note</h2>
+              <p class="panel-sub">Retrieval over the note's sentences (TF-IDF cosine, boosted by entity type). The grounding sentences light up on the left.</p>
+              <div class="chips">
+                {questions.map((q, i) => (
+                  <button class="chip" data-qi={i} data-target={q.target}>{q.q}</button>
+                ))}
+              </div>
+              <div id="answerBox" class="answer" hidden>
+                <div class="answer-h">Top grounding</div>
+                <div id="answerList" class="answer-list"></div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ===== Results ===== -->
+      <section class="results reveal">
+        <h2 class="block-h">How good is the routing?</h2>
+        <p class="block-sub">Held-out 25% test set. The model is deliberately linear and inspectable, and its mistakes are clinically sensible.</p>
+        <div class="tiles">
+          <div class="tile"><div id="mTop1" class="tile-num">-</div><div class="tile-cap">Top-1 accuracy <span>correct specialty first</span></div></div>
+          <div class="tile"><div id="mTop3" class="tile-num">-</div><div class="tile-cap">Top-3 accuracy <span>correct in top 3 suggestions</span></div></div>
+          <div class="tile"><div id="mF1" class="tile-num">-</div><div class="tile-cap">Macro-F1 <span>averaged over specialties</span></div></div>
+          <div class="tile"><div id="mBase" class="tile-num">-</div><div class="tile-cap">Random baseline <span id="mClasses">12 classes</span></div></div>
+        </div>
+
+        <div class="charts">
+          <figure class="chart">
+            <figcaption class="chart-cap">Per-specialty F1. Where the model is confident vs. where specialties blur together.</figcaption>
+            <div id="f1Bars" class="f1-bars"></div>
+          </figure>
+          <figure class="chart">
+            <figcaption class="chart-cap">Confusion matrix (row-normalized). A bright diagonal is good; off-diagonal heat shows which specialties get mistaken for each other.</figcaption>
+            <div id="confusion" class="confusion"></div>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ===== Method ===== -->
+      <section class="method reveal">
+        <h2 class="block-h">How it works</h2>
+        <ol class="steps">
+          <li><strong>Scope.</strong> MTSamples has 40 buckets, but many are document types (Discharge Summary, Progress Notes) or catch-alls (Surgery, General Medicine), not routable specialties. Keeping genuine specialties with at least 80 notes leaves 12 classes.</li>
+          <li><strong>Route.</strong> TF-IDF over the note, trimmed to the 1,200 most discriminative terms by chi-squared, then multinomial logistic regression. Small enough to ship the whole model to the browser, which reproduces the training math exactly.</li>
+          <li><strong>Extract.</strong> A gazetteer tagger for problems, medications, tests, and anatomy, with NegEx-style negation so asserted and denied findings are told apart. Everything it highlights is traceable to a term and a rule.</li>
+          <li><strong>Ground.</strong> Each sentence is vectorized in the same TF-IDF space; a question is matched by cosine similarity, boosted when a sentence carries the entity type the question is about. This is the retrieval half of a RAG system, done client-side.</li>
+          <li><strong>Generate (production).</strong> In production the retrieved passages become the context for an LLM. That prompt is the one honest server-side step, and it looks like this:</li>
+        </ol>
+        <pre class="prompt"><code>{promptTemplate}</code></pre>
+        <div class="repo">
+          <a class="btn" href="https://github.com/geetpurohit/triage" target="_blank" rel="noopener">View the code on GitHub →</a>
+        </div>
+        <p class="disclaimer">MTSamples is public-domain, de-identified sample documentation. This is a demonstration of clinical-NLP technique, not a medical device.</p>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    type Ent = { s: number; e: number; l: string; neg: boolean };
+    type Sent = { s: number; e: number; v: Record<string, number>; labels: string[] };
+    type Note = {
+      specialty: string; sample_name: string; text: string; truncated: boolean;
+      entities: Ent[]; sentences: Sent[];
+    };
+
+    const $ = (id: string) => document.getElementById(id)!;
+    const MOTION = !(window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || document.documentElement.classList.contains('no-motion'));
+    const ABBR: Record<string, string> = {
+      'Cardiovascular / Pulmonary': 'Cardio/Pulm', 'ENT - Otolaryngology': 'ENT',
+      'Gastroenterology': 'GI', 'Hematology - Oncology': 'Heme/Onc', 'Nephrology': 'Nephro',
+      'Neurology': 'Neuro', 'Neurosurgery': 'NeuroSurg', 'Obstetrics / Gynecology': 'OB/Gyn',
+      'Ophthalmology': 'Ophtho', 'Orthopedic': 'Ortho', 'Radiology': 'Radiology', 'Urology': 'Urology',
+    };
+    const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
+    const pct = (x: number) => (x * 100).toFixed(1) + '%';
+
+    let data: any, classes: string[], vocab: Record<string, number>, idf: number[];
+    let coef: number[][], intercept: number[];
+    let notes: Note[], curIdx = 0, mode = 'route', activeQi = -1;
+    let curVec: Map<number, number>, curProbs: number[], curTopTerms: string[] = [];
+
+    function tokenize(t: string): string[] { return t.toLowerCase().match(/[a-z]{2,}/g) || []; }
+
+    // TfidfVectorizer(vocabulary, ngram=(1,1), norm='l2') reproduced exactly.
+    function vectorize(text: string): Map<number, number> {
+      const counts = new Map<number, number>();
+      for (const tok of tokenize(text)) {
+        const j = vocab[tok];
+        if (j !== undefined) counts.set(j, (counts.get(j) || 0) + 1);
+      }
+      const vec = new Map<number, number>();
+      let norm = 0;
+      for (const [j, c] of counts) { const w = c * idf[j]; vec.set(j, w); norm += w * w; }
+      norm = Math.sqrt(norm) || 1;
+      for (const [j, w] of vec) vec.set(j, w / norm);
+      return vec;
+    }
+
+    function classify(vec: Map<number, number>): number[] {
+      const z = intercept.map((b, ci) => {
+        let s = b; const row = coef[ci];
+        for (const [j, w] of vec) s += row[j] * w;
+        return s;
+      });
+      const m = Math.max(...z);
+      const e = z.map((v) => Math.exp(v - m));
+      const S = e.reduce((a, b) => a + b, 0);
+      return e.map((v) => v / S);
+    }
+
+    function topTermsFor(ci: number, vec: Map<number, number>, n = 6): string[] {
+      const inv: [number, number][] = [];
+      for (const [j, w] of vec) inv.push([j, coef[ci][j] * w]);
+      inv.sort((a, b) => b[1] - a[1]);
+      const names: string[] = [];
+      for (const [j, contrib] of inv) {
+        if (contrib <= 0 || names.length >= n) break;
+        names.push(termOf(j));
+      }
+      return names;
+    }
+
+    let _inv: Record<number, string> | null = null;
+    function termOf(j: number): string {
+      if (!_inv) { _inv = {}; for (const t in vocab) _inv[vocab[t]] = t; }
+      return _inv[j];
+    }
+
+    // ---- rendering the note with span highlights --------------------------------
+    function renderSpans(text: string, spans: { s: number; e: number; cls: string; title?: string }[]) {
+      const clean = spans.filter((x) => x.e > x.s).sort((a, b) => a.s - b.s);
+      let html = '', pos = 0, i = 0;
+      for (const sp of clean) {
+        if (sp.s < pos) continue;
+        html += esc(text.slice(pos, sp.s));
+        const st = MOTION ? ` style="animation-delay:${Math.min(i, 40) * 26}ms"` : '';
+        const tt = sp.title ? ` title="${esc(sp.title)}"` : '';
+        html += `<mark class="${sp.cls}"${tt}${st}>${esc(text.slice(sp.s, sp.e))}</mark>`;
+        pos = sp.e; i++;
+      }
+      html += esc(text.slice(pos));
+      return html.replace(/\n/g, '<br>');
+    }
+
+    function renderNote() {
+      const note = notes[curIdx];
+      let spans: { s: number; e: number; cls: string; title?: string }[] = [];
+      if (mode === 'entities') {
+        spans = note.entities.map((en) => ({
+          s: en.s, e: en.e, cls: `ent ent-${en.l}${en.neg ? ' neg' : ''}`,
+          title: en.l + (en.neg ? ' (negated)' : ''),
+        }));
+      } else if (mode === 'ask' && activeQi >= 0) {
+        const ranked = retrieve(activeQi);
+        spans = ranked.slice(0, 3).filter((r) => r.score > 0.02)
+          .map((r) => ({ s: r.sent.s, e: r.sent.e, cls: 'ground' }));
+      } else if (mode === 'route') {
+        const set = new Set(curTopTerms);
+        for (const term of set) {
+          const re = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+          let m; while ((m = re.exec(note.text))) spans.push({ s: m.index, e: m.index + term.length, cls: 'term' });
+        }
+      }
+      $('noteText').innerHTML = renderSpans(note.text, spans)
+        + (note.truncated ? '<span class="trunc"> … (note trimmed for display)</span>' : '');
+    }
+
+    // ---- retrieval --------------------------------------------------------------
+    function retrieve(qi: number) {
+      const note = notes[curIdx];
+      const q = data.questions[qi];
+      const qvec = vectorize(q.q);
+      return note.sentences.map((sent) => {
+        let dot = 0;
+        for (const idx in sent.v) { const w = qvec.get(+idx); if (w) dot += w * sent.v[idx]; }
+        const entBoost = q.target && sent.labels.includes(q.target) ? 0.15 : 0;
+        const txt = note.text.slice(sent.s, sent.e).toLowerCase();
+        const cueBoost = (q.cues || []).some((c: string) => txt.includes(c)) ? 0.12 : 0;
+        return { sent, score: dot + entBoost + cueBoost };
+      }).sort((a, b) => b.score - a.score);
+    }
+
+    // ---- note selection ---------------------------------------------------------
+    function selectNote(i: number) {
+      curIdx = i;
+      const note = notes[i];
+      $('noteName').textContent = note.sample_name || 'Clinical note';
+      $('noteTrue').textContent = 'True: ' + note.specialty;
+      curVec = vectorize(note.text);
+      curProbs = classify(curVec);
+      const top = curProbs.map((p, ci) => [ci, p] as [number, number]).sort((a, b) => b[1] - a[1]);
+      curTopTerms = topTermsFor(top[0][0], curVec);
+      renderProbs(top);
+      renderTermChips(top[0][0]);
+      renderEntityCounts();
+      activeQi = -1;
+      $('answerBox').hidden = true;
+      document.querySelectorAll('.chip').forEach((c) => c.classList.remove('on'));
+      renderNote();
+    }
+
+    function renderProbs(top: [number, number][]) {
+      const html = top.map(([ci, p], rank) => {
+        const cls = rank === 0 ? 'prob-row lead' : 'prob-row';
+        return `<div class="${cls}">
+          <span class="prob-name">${esc(classes[ci])}</span>
+          <span class="prob-bar"><span class="prob-fill" style="width:0%"></span></span>
+          <span class="prob-val">${pct(p)}</span>
+        </div>`;
+      }).join('');
+      $('probList').innerHTML = html;
+      // animate widths after paint
+      requestAnimationFrame(() => {
+        const fills = $('probList').querySelectorAll<HTMLElement>('.prob-fill');
+        top.forEach(([, p], k) => { fills[k].style.width = Math.max(1.5, p * 100) + '%'; });
+      });
+      $('topClassName').textContent = classes[top[0][0]];
+    }
+
+    function renderTermChips(ci: number) {
+      $('termChips').innerHTML = curTopTerms.length
+        ? curTopTerms.map((t) => `<span class="tchip">${esc(t)}</span>`).join('')
+        : '<span class="tchip muted">no strong positive terms</span>';
+    }
+
+    function renderEntityCounts() {
+      const note = notes[curIdx];
+      const c: Record<string, number> = { problem: 0, medication: 0, test: 0, anatomy: 0 };
+      let neg = 0;
+      for (const en of note.entities) { c[en.l] = (c[en.l] || 0) + 1; if (en.neg) neg++; }
+      for (const k of Object.keys(c)) $('cnt-' + k).textContent = String(c[k]);
+      $('cnt-neg').textContent = String(neg);
+    }
+
+    function setMode(m: string) {
+      mode = m;
+      document.querySelectorAll('.seg-btn').forEach((b) =>
+        b.classList.toggle('active', (b as HTMLElement).dataset.mode === m));
+      $('panelRoute').hidden = m !== 'route';
+      $('panelEntities').hidden = m !== 'entities';
+      $('panelAsk').hidden = m !== 'ask';
+      renderNote();
+    }
+
+    function askQuestion(qi: number) {
+      activeQi = qi;
+      document.querySelectorAll('.chip').forEach((c) =>
+        c.classList.toggle('on', +(c as HTMLElement).dataset.qi! === qi));
+      const ranked = retrieve(qi).slice(0, 3).filter((r) => r.score > 0.02);
+      const note = notes[curIdx];
+      $('answerBox').hidden = ranked.length === 0;
+      $('answerList').innerHTML = ranked.map((r) => {
+        const s = note.text.slice(r.sent.s, r.sent.e).trim();
+        return `<div class="ans-row"><span class="ans-score">${r.score.toFixed(2)}</span><span>${esc(s)}</span></div>`;
+      }).join('') || '';
+      renderNote();
+    }
+
+    // ---- results charts ---------------------------------------------------------
+    const plays: { el: Element; play: () => void; done: boolean }[] = [];
+    function renderResults() {
+      const m = data.meta;
+      animateNum($('mTop1'), m.accuracy, pct);
+      animateNum($('mTop3'), m.top3_accuracy, pct);
+      animateNum($('mF1'), m.macro_f1, (x) => x.toFixed(2));
+      animateNum($('mBase'), m.random_baseline, pct);
+      $('mClasses').textContent = m.n_classes + ' classes';
+
+      // F1 bars
+      const per = [...data.metrics.per_class].sort((a, b) => b.f1 - a.f1);
+      $('f1Bars').innerHTML = per.map((row) => `
+        <div class="f1-row">
+          <span class="f1-name">${esc(ABBR[row.specialty] || row.specialty)}</span>
+          <span class="f1-track"><span class="f1-fill" data-w="${(row.f1 * 100).toFixed(1)}" style="width:0%"></span></span>
+          <span class="f1-val">${row.f1.toFixed(2)}</span>
+        </div>`).join('');
+      onPlay($('f1Bars'), () => {
+        $('f1Bars').querySelectorAll<HTMLElement>('.f1-fill').forEach((f) => {
+          f.style.width = f.dataset.w + '%';
+        });
+      });
+
+      // confusion matrix
+      const cm = data.metrics.confusion as number[][];
+      const n = classes.length;
+      let grid = '<div class="cm-corner"></div>';
+      for (let j = 0; j < n; j++) grid += `<div class="cm-col">${esc(ABBR[classes[j]] || classes[j])}</div>`;
+      for (let i = 0; i < n; i++) {
+        grid += `<div class="cm-row">${esc(ABBR[classes[i]] || classes[i])}</div>`;
+        for (let j = 0; j < n; j++) {
+          const v = cm[i][j];
+          const diag = i === j ? ' diag' : '';
+          grid += `<div class="cm-cell${diag}" data-a="${v.toFixed(2)}" title="${esc(classes[i])} → ${esc(classes[j])}: ${(v * 100).toFixed(0)}%" style="--a:0"></div>`;
+        }
+      }
+      const conf = $('confusion');
+      conf.style.setProperty('--n', String(n));
+      conf.innerHTML = grid;
+      onPlay(conf, () => {
+        conf.querySelectorAll<HTMLElement>('.cm-cell').forEach((c, k) => {
+          const a = c.getAttribute('data-a')!;
+          setTimeout(() => c.style.setProperty('--a', a), MOTION ? Math.min(k, 80) * 8 : 0);
+        });
+      });
+    }
+
+    function onPlay(el: Element, play: () => void) { plays.push({ el, play, done: false }); }
+
+    function animateNum(el: HTMLElement, to: number, fmt: (x: number) => string) {
+      if (!MOTION) { el.textContent = fmt(to); return; }
+      const dur = 900, start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / dur);
+        const e = 1 - Math.pow(1 - t, 3);
+        el.textContent = fmt(to * e);
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    // ---- boot -------------------------------------------------------------------
+    async function main() {
+      try {
+        const res = await fetch('/triage/triage.json', { cache: 'no-cache' });
+        data = await res.json();
+      } catch { $('loadBanner').hidden = false; return; }
+
+      classes = data.classes;
+      vocab = data.model.vocab; idf = data.model.idf;
+      coef = data.model.coef; intercept = data.model.intercept;
+      notes = data.notes;
+
+      // note picker, grouped by specialty
+      const sel = $('noteSelect') as HTMLSelectElement;
+      const groups: Record<string, number[]> = {};
+      notes.forEach((nt, i) => { (groups[nt.specialty] ||= []).push(i); });
+      let html = '';
+      for (const spec of classes) {
+        if (!groups[spec]) continue;
+        html += `<optgroup label="${esc(spec)}">`;
+        for (const i of groups[spec]) {
+          const nm = notes[i].sample_name || `Note ${i + 1}`;
+          html += `<option value="${i}">${esc(nm.length > 42 ? nm.slice(0, 42) + '…' : nm)}</option>`;
+        }
+        html += '</optgroup>';
+      }
+      sel.innerHTML = html;
+      sel.addEventListener('change', () => selectNote(+sel.value));
+
+      document.querySelectorAll('.seg-btn').forEach((b) =>
+        b.addEventListener('click', () => setMode((b as HTMLElement).dataset.mode!)));
+      document.querySelectorAll('.chip').forEach((c) =>
+        c.addEventListener('click', () => askQuestion(+(c as HTMLElement).dataset.qi!)));
+
+      renderResults();
+      // lead with a note the model routes correctly and confidently (honest first
+      // impression; the browsable list still includes the harder, misrouted ones).
+      let startIdx = 0, bestConf = -1;
+      notes.forEach((nt, i) => {
+        const probs = classify(vectorize(nt.text));
+        let top = 0; for (let k = 1; k < probs.length; k++) if (probs[k] > probs[top]) top = k;
+        if (classes[top] === nt.specialty && probs[top] > bestConf) { bestConf = probs[top]; startIdx = i; }
+      });
+      (document.getElementById('noteSelect') as HTMLSelectElement).value = String(startIdx);
+      selectNote(startIdx);
+
+      // fire chart animations when scrolled into view
+      if (!MOTION) { plays.forEach((p) => p.play()); }
+      else {
+        const io = new IntersectionObserver((ents) => {
+          ents.forEach((en) => {
+            if (!en.isIntersecting) return;
+            const rec = plays.find((p) => p.el === en.target && !p.done);
+            if (rec) { rec.done = true; rec.play(); }
+            io.unobserve(en.target);
+          });
+        }, { threshold: 0.25 });
+        plays.forEach((p) => io.observe(p.el));
+      }
+    }
+
+    main();
+  </script>
+
+  <style>
+    .tr {
+      position: relative; z-index: 2; padding: clamp(28px, 6vw, 64px) var(--pad-x) 120px;
+      /* Triage theme: clinical emerald */
+      --em-deep: #047857; --em: #10b981; --em-lt: #34d399; --mint: #6ee7b7;
+      --accent-rgb: 16,185,129;
+      --c-problem: #fb7185; --c-medication: #f59e0b; --c-test: #38bdf8; --c-anatomy: #c084fc;
+      --grad-text: linear-gradient(120deg, #6ee7b7 0%, #34d399 40%, #10b981 75%, #a7f3d0 100%);
+    }
+    .tr-container { width: 100%; max-width: 1080px; margin-inline: auto; }
+    .back {
+      display: inline-block; font-family: var(--font-display); font-size: 13px;
+      color: var(--muted); margin-bottom: clamp(32px, 6vw, 56px); transition: color .25s;
+    }
+    .back:hover { color: var(--em-lt); }
+
+    .tr-title { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 6vw, 68px); letter-spacing: -0.03em; line-height: 1.02; margin-bottom: 22px; }
+    .tr-lead { font-size: clamp(16.5px, 1.3vw, 19px); color: var(--text-dim); font-weight: 300; line-height: 1.8; max-width: 820px; }
+    .tr-lead strong { color: var(--text); font-weight: 500; }
+    .tr-lead em { color: var(--em-lt); font-style: normal; }
+    .tr-lead a { color: var(--mint); text-decoration: underline; text-underline-offset: 2px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+    .tag { font-family: var(--font-display); font-size: 12px; padding: 5px 13px; border-radius: 7px;
+      background: rgba(var(--accent-rgb),0.05); border: 1px solid var(--border); color: var(--text-dim); }
+
+    .banner { margin: 28px 0 0; padding: 13px 18px; border-radius: 11px; font-size: 14px; color: var(--em-lt);
+      background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.24); }
+    .banner code { font-family: ui-monospace, monospace; color: var(--mint); }
+
+    .block-h { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -0.02em; margin-bottom: 8px; }
+    .block-sub { color: var(--text-dim); font-weight: 300; margin-bottom: 24px; max-width: 640px; line-height: 1.7; }
+
+    /* Workspace */
+    .work { margin-top: clamp(48px, 7vw, 76px); }
+    .work-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; }
+    .picker { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1; }
+    .picker-lab { font-size: 13px; color: var(--muted); }
+    .select {
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text);
+      border-radius: 10px; padding: 11px 13px; font-family: var(--font-body); font-size: 14.5px; max-width: 420px;
+    }
+    .select:focus { border-color: rgba(var(--accent-rgb),0.5); outline: none; }
+    :global(.select optgroup) { background: #0c1512; color: var(--em-lt); font-style: normal; }
+    :global(.select option) { background: #0c1512; color: var(--text); }
+
+    .seg { display: inline-flex; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 4px; }
+    .seg-btn {
+      border: none; background: transparent; color: var(--text-dim); cursor: pointer;
+      font-family: var(--font-display); font-size: 14px; font-weight: 500; padding: 8px 20px; border-radius: var(--radius-pill); transition: all .25s;
+    }
+    .seg-btn.active { background: linear-gradient(120deg, var(--em), var(--em-deep)); color: #04120c; }
+
+    .work-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: clamp(18px, 3vw, 30px);
+      border: 1px solid var(--border); border-radius: 20px; padding: clamp(18px, 3vw, 28px);
+      background: linear-gradient(165deg, rgba(255,255,255,0.02), rgba(var(--accent-rgb),0.02)); align-items: start; }
+
+    .note-panel { min-width: 0; }
+    .note-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+    .note-name { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--text); }
+    .note-true { font-size: 12px; color: var(--em-lt); background: rgba(var(--accent-rgb),0.1); padding: 3px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
+    .note-text {
+      font-size: 14.5px; line-height: 1.95; color: var(--text-dim); white-space: normal;
+      max-height: 460px; overflow-y: auto; padding-right: 10px; font-weight: 300;
+    }
+    .note-text::-webkit-scrollbar { width: 7px; }
+    .trunc { color: var(--muted); font-style: italic; }
+
+    /* highlight marks (injected at runtime -> :global) */
+    :global(.note-text mark) { background: transparent; color: inherit; border-radius: 4px; padding: 1px 2px; }
+    :global(.note-text .ent) { animation: entpop .4s var(--ease) both; }
+    @keyframes entpop { from { opacity: .2; } to { opacity: 1; } }
+    :global(.note-text .ent-problem) { background: rgba(251,113,133,0.16); color: #fecdd3; box-shadow: inset 0 -2px 0 var(--c-problem); }
+    :global(.note-text .ent-medication) { background: rgba(245,158,11,0.16); color: #fde68a; box-shadow: inset 0 -2px 0 var(--c-medication); }
+    :global(.note-text .ent-test) { background: rgba(56,189,248,0.16); color: #bae6fd; box-shadow: inset 0 -2px 0 var(--c-test); }
+    :global(.note-text .ent-anatomy) { background: rgba(192,132,252,0.16); color: #e9d5ff; box-shadow: inset 0 -2px 0 var(--c-anatomy); }
+    :global(.note-text .ent.neg) { text-decoration: line-through; opacity: 0.6; }
+    :global(.note-text .ground) { background: rgba(var(--accent-rgb),0.15); color: #d1fae5; box-shadow: inset 0 -2px 0 var(--em); border-radius: 4px; animation: entpop .5s var(--ease) both; }
+    :global(.note-text .term) { background: rgba(var(--accent-rgb),0.12); color: var(--mint); }
+
+    .lens { min-width: 0; }
+    .panel { border: 1px solid var(--border); border-radius: 16px; padding: 20px 22px; background: rgba(255,255,255,0.02); }
+    .panel-h { font-family: var(--font-display); font-weight: 600; font-size: 17px; margin-bottom: 4px; }
+    .panel-sub { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin-bottom: 18px; }
+
+    /* Route panel */
+    .prob-list { display: flex; flex-direction: column; gap: 7px; }
+    :global(.prob-row) { display: grid; grid-template-columns: 92px 1fr 46px; align-items: center; gap: 9px; font-size: 12px; }
+    :global(.prob-row.lead .prob-name) { color: var(--em-lt); font-weight: 600; }
+    :global(.prob-name) { color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    :global(.prob-bar) { height: 7px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+    :global(.prob-fill) { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--em-deep), var(--em-lt)); transition: width .8s var(--ease); }
+    :global(.prob-row.lead .prob-fill) { background: linear-gradient(90deg, var(--em), var(--mint)); }
+    :global(.prob-val) { font-family: var(--font-display); font-weight: 600; text-align: right; color: var(--text); }
+    .terms { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 16px; }
+    .terms-h { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    #topClassName { color: var(--em-lt); }
+    .term-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    :global(.tchip) { font-family: ui-monospace, monospace; font-size: 12px; padding: 4px 9px; border-radius: 6px;
+      background: rgba(var(--accent-rgb),0.1); color: var(--mint); border: 1px solid rgba(var(--accent-rgb),0.2); }
+    :global(.tchip.muted) { color: var(--muted); background: none; }
+
+    /* Entities panel */
+    .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .lg { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-dim); }
+    .lg i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+    .lg b { margin-left: auto; font-family: var(--font-display); color: var(--text); }
+    .lg-problem i { background: var(--c-problem); } .lg-medication i { background: var(--c-medication); }
+    .lg-test i { background: var(--c-test); } .lg-anatomy i { background: var(--c-anatomy); }
+    .neg-note { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+    .neg-note #cnt-neg { color: var(--text); font-weight: 600; }
+    .neg-chip { color: var(--c-problem); text-decoration: line-through; }
+
+    /* Ask panel */
+    .chips { display: flex; flex-direction: column; gap: 8px; }
+    .chip { text-align: left; border: 1px solid var(--border); background: rgba(255,255,255,0.02); color: var(--text-dim);
+      border-radius: 10px; padding: 10px 13px; font-family: var(--font-body); font-size: 13px; cursor: pointer; transition: all .2s; }
+    .chip:hover { border-color: rgba(var(--accent-rgb),0.4); color: var(--text); }
+    .chip.on { border-color: var(--em); background: rgba(var(--accent-rgb),0.1); color: var(--em-lt); }
+    .answer { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 14px; }
+    .answer-h { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .answer-list { display: flex; flex-direction: column; gap: 8px; }
+    :global(.ans-row) { display: grid; grid-template-columns: 34px 1fr; gap: 8px; font-size: 12.5px; color: var(--text-dim); line-height: 1.5; }
+    :global(.ans-score) { font-family: var(--font-display); font-weight: 600; color: var(--em-lt); font-size: 12px; }
+
+    /* Results */
+    .results { margin-top: clamp(56px, 8vw, 92px); }
+    .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 22px 0 34px; }
+    .tile { border: 1px solid var(--border); border-radius: 14px; padding: 20px; background: rgba(255,255,255,0.02); }
+    .tile-num { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 3.4vw, 34px); color: var(--em-lt); }
+    .tile-cap { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+    .tile-cap span { display: block; opacity: 0.7; font-size: 11px; }
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .chart { border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; background: rgba(255,255,255,0.02); min-width: 0; }
+    .chart-cap { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+
+    .f1-bars { display: flex; flex-direction: column; gap: 8px; }
+    :global(.f1-row) { display: grid; grid-template-columns: 80px 1fr 32px; align-items: center; gap: 10px; font-size: 12px; }
+    :global(.f1-name) { color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    :global(.f1-track) { height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+    :global(.f1-fill) { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--em-deep), var(--em-lt)); transition: width 1s var(--ease); }
+    :global(.f1-val) { font-family: var(--font-display); font-weight: 600; text-align: right; color: var(--text); }
+
+    .confusion { display: grid; grid-template-columns: 64px repeat(var(--n), 1fr); gap: 2px; font-size: 9px; }
+    :global(.cm-corner) { }
+    :global(.cm-col) { color: var(--muted); text-align: center; transform: rotate(-32deg); transform-origin: bottom center; height: 46px; display: flex; align-items: flex-end; justify-content: center; font-size: 8.5px; white-space: nowrap; }
+    :global(.cm-row) { color: var(--muted); display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 8.5px; white-space: nowrap; }
+    :global(.cm-cell) { aspect-ratio: 1; border-radius: 3px; background: rgba(var(--accent-rgb), calc(var(--a) * 0.92 + 0.02)); transition: background .5s var(--ease); }
+    :global(.cm-cell.diag) { background: rgba(110,231,183, calc(var(--a) * 0.92 + 0.04)); }
+
+    /* Method */
+    .method { margin-top: clamp(56px, 8vw, 92px); }
+    .steps { margin: 18px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 12px; color: var(--text-dim); font-weight: 300; line-height: 1.65; }
+    .steps strong { color: var(--text); font-weight: 600; }
+    .prompt { margin: 22px 0 0; padding: 18px 20px; border-radius: 12px; background: rgba(0,0,0,0.35); border: 1px solid var(--border);
+      overflow-x: auto; font-family: ui-monospace, monospace; font-size: 12.5px; line-height: 1.65; color: var(--mint); }
+    .repo { margin-top: 28px; }
+    .btn { display: inline-block; font-family: var(--font-display); font-weight: 600; font-size: 14px; padding: 12px 22px; border-radius: 10px; color: var(--text);
+      border: 1px solid rgba(var(--accent-rgb),0.4); background: rgba(var(--accent-rgb),0.08); transition: all .25s; }
+    .btn:hover { background: rgba(var(--accent-rgb),0.16); border-color: var(--em); }
+    .disclaimer { margin-top: 22px; font-size: 12.5px; color: var(--muted); font-style: italic; }
+
+    @media (max-width: 860px) {
+      .work-grid { grid-template-columns: 1fr; }
+      .charts { grid-template-columns: 1fr; }
+      .tiles { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 520px) {
+      .work-top { flex-direction: column; align-items: stretch; }
+      .seg { justify-content: center; }
+    }
+  </style>
+</Base>
