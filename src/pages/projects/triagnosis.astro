@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 
-const title = 'Triage: Routing Clinical Notes | Geet Purohit';
+const title = 'Triagnosis: Routing Clinical Notes | Geet Purohit';
 const description =
   'A clinical-NLP demo that routes a free-text medical note to the right specialty, extracts clinical entities with negation detection, and answers questions grounded in the note. Trained on MTSamples, runs entirely in your browser.';
 
@@ -35,7 +35,7 @@ Answer (cite the passage number):`;
 
       <!-- ===== Header ===== -->
       <header class="tr-head reveal">
-        <span class="section-label">Project · Clinical NLP</span>
+        <span class="section-label">Triagnosis · Clinical NLP</span>
         <h1 class="tr-title">Route a <span class="grad-text">Clinical Note</span></h1>
         <p class="tr-lead">
           A free-text medical note comes in. This model reads it and does three things a
@@ -59,8 +59,30 @@ Answer (cite the passage number):`;
       </header>
 
       <div id="loadBanner" class="banner" hidden>
-        Could not load <code>triage.json</code>. Run <code>triage/train.py</code> to generate it.
+        Could not load <code>triagnosis.json</code>. Run <code>triagnosis/train.py</code> to generate it.
       </div>
+
+      <!-- ===== Signature visual: watch a real note get routed ===== -->
+      <section class="route-viz reveal">
+        <div class="rv-head">
+          <h2 class="block-h">Watch it route</h2>
+          <p class="block-sub">
+            The real model, read word by word. Each word casts a weighted vote, the running odds
+            shift with every one, and softmax settles the call. This case looks pulmonary at first
+            (a chronic cough, a lung mass), so Cardiovascular leads, until the biopsy and oncology
+            terms flip it to Hematology-Oncology. A logistic-regression scorecard is a one-layer
+            network, so this is not a metaphor, it is literally the model.
+          </p>
+        </div>
+        <div class="rv-stage">
+          <svg id="rvSvg" viewBox="0 0 1000 470" preserveAspectRatio="xMidYMid meet"
+               role="img" aria-label="Animation of a clinical note being routed to a medical specialty"></svg>
+          <div class="rv-foot">
+            <span class="rv-caption" id="rvCaption">Reading the note</span>
+            <button class="rv-replay" id="rvReplay" type="button" hidden>Replay ↺</button>
+          </div>
+        </div>
+      </section>
 
       <!-- ===== Workspace ===== -->
       <section class="work reveal">
@@ -168,7 +190,7 @@ Answer (cite the passage number):`;
         </ol>
         <pre class="prompt"><code>{promptTemplate}</code></pre>
         <div class="repo">
-          <a class="btn" href="https://github.com/geetpurohit/triage" target="_blank" rel="noopener">View the code on GitHub →</a>
+          <a class="btn" href="https://github.com/geetpurohit/triagnosis" target="_blank" rel="noopener">View the code on GitHub →</a>
         </div>
         <p class="disclaimer">MTSamples is public-domain, de-identified sample documentation. This is a demonstration of clinical-NLP technique, not a medical device.</p>
       </section>
@@ -439,10 +461,352 @@ Answer (cite the passage number):`;
       requestAnimationFrame(step);
     }
 
+    // ---- signature "watch it route" visualization -------------------------------
+    // Drives an SVG scene from the REAL model: the clinical terms it highlights,
+    // the class each term most supports (argmax of its coefficient row), and the
+    // real softmax probabilities. A logistic-regression scorecard is exactly a
+    // one-layer network (features -> weighted sum -> softmax), so the diagram is
+    // honest, not a decorative stand-in.
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    function svgEl(tag: string, attrs: Record<string, any>, parent: Element): SVGElement {
+      const e = document.createElementNS(SVGNS, tag);
+      for (const k in attrs) e.setAttribute(k, String(attrs[k]));
+      parent.appendChild(e);
+      return e as SVGElement;
+    }
+    function tween(setter: (v: number) => void, from: number, to: number, dur: number, delay = 0) {
+      if (!MOTION) { setter(to); return; }
+      const t0 = performance.now() + delay;
+      const step = (now: number) => {
+        const p = Math.max(0, Math.min(1, (now - t0) / dur));
+        const e = 1 - Math.pow(1 - p, 3);
+        setter(from + (to - from) * e);
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    function buildRouteViz() {
+      const svg = document.getElementById('rvSvg') as unknown as SVGSVGElement | null;
+      const capEl = document.getElementById('rvCaption');
+      const replayBtn = document.getElementById('rvReplay') as HTMLButtonElement | null;
+      if (!svg || !capEl) return;
+
+      const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+      const softmax = (z: number[]) => {
+        const m = Math.max(...z), e = z.map((v) => Math.exp(v - m)), s = e.reduce((a, b) => a + b, 0);
+        return e.map((v) => v / s);
+      };
+
+      // A short, readable excerpt. The prediction is computed FROM THIS EXCERPT, so
+      // accumulating each of its words reproduces the excerpt's real softmax exactly.
+      // A genuine race: Cardiovascular leads the whole read (cough, lung mass), then
+      // the biopsy/carcinoma/oncology terms flip it to Hematology-Oncology at the end.
+      const LINES = [
+        'A patient reports a chronic cough,',
+        'with worsening shortness of breath.',
+        'A chest x-ray revealed a lung mass.',
+        'A CT scan of the chest was ordered.',
+        'The mass was concerning for malignancy.',
+        'A biopsy showed carcinoma and lymph nodes.',
+        'Oncology was consulted for chemotherapy.',
+      ];
+      const excerpt = LINES.join(' ');
+      const vec = vectorize(excerpt);
+      const probs = classify(vec);
+      const predIdx = probs.reduce((b, p, i) => (p > probs[b] ? i : b), 0);
+      const priors = softmax(intercept);
+
+      const ABBR2: Record<string, string> = {
+        'Cardiovascular / Pulmonary': 'Cardiovascular', 'ENT - Otolaryngology': 'ENT',
+        'Gastroenterology': 'Gastroenterology', 'Hematology - Oncology': 'Hematology/Onc',
+        'Nephrology': 'Nephrology', 'Neurology': 'Neurology', 'Neurosurgery': 'Neurosurgery',
+        'Obstetrics / Gynecology': 'Obstetrics/Gyn', 'Ophthalmology': 'Ophthalmology',
+        'Orthopedic': 'Orthopedic', 'Radiology': 'Radiology', 'Urology': 'Urology',
+      };
+      const lbl = (c: number) => ABBR2[classes[c]] || classes[c];
+
+      // ----- geometry (7 lines on the left, 12 class rows on the right) -----
+      const NOTE_X = 34, LINE_Y0 = 82, LINE_DY = 47, FONT = 17;
+      const NODE_X = 628, LABEL_X = 648, TRACK_X = 806, TRACK_W = 152, TRACK_Y0 = 44, TRACK_DY = 33;
+
+      // Rows RACE: they reorder live by current probability, so the lead can change
+      // hands and there is no winner pinned to the top from the start.
+      const currentRank: number[] = classes.map((_, i) => i);
+      const currentNodeY = (ci: number) => TRACK_Y0 + currentRank[ci] * TRACK_DY;
+
+      // clear and layer the scene
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      const defs = svgEl('defs', {}, svg);
+      const grad = svgEl('linearGradient', { id: 'rvWin', x1: 0, y1: 0, x2: 1, y2: 0 }, defs);
+      svgEl('stop', { offset: 0, 'stop-color': '#047857' }, grad);
+      svgEl('stop', { offset: 1, 'stop-color': '#6ee7b7' }, grad);
+      const gArrow = svgEl('g', {}, svg);
+      const gWordBg = svgEl('g', {}, svg);
+      const gText = svgEl('g', {}, svg);
+      const gCursor = svgEl('g', {}, svg);
+      const gNodes = svgEl('g', {}, svg);
+      const gPulse = svgEl('g', {}, svg);
+
+      // ----- each word is its own <text>, positioned with a generous gap so the
+      //       highlight pills never touch (adjacent lit words must read as separate) -----
+      type Word = {
+        disp: string; token: string; j: number; textEl: SVGTextElement;
+        box: { x: number; y: number; w: number; h: number }; rx: number; ry: number; lit: boolean;
+      };
+      const words: Word[] = [];
+      const WORD_GAP = 15;
+      function layoutWords() {
+        while (gText.firstChild) gText.removeChild(gText.firstChild);
+        words.length = 0;
+        LINES.forEach((line, li) => {
+          const y = LINE_Y0 + li * LINE_DY;
+          let curX = NOTE_X;
+          line.split(' ').forEach((disp) => {
+            const el = svgEl('text', { x: curX, y, class: 'rv-word' }, gText) as unknown as SVGTextElement;
+            el.textContent = disp;
+            const wpx = el.getComputedTextLength();
+            const bb = (el as any).getBBox();
+            // tokenize the SAME way the model's vectorizer does (/[a-z]{2,}/), so e.g.
+            // "x-ray" maps to the real feature "ray" and lights up like any other term.
+            const token = (disp.toLowerCase().match(/[a-z]{2,}/g) || [])[0] || '';
+            const j = token ? (vocab as any)[token] : undefined;
+            words.push({
+              disp, token, j: j === undefined ? -1 : j, textEl: el, lit: false,
+              box: { x: curX - 4, y: bb.y - 3, w: wpx + 8, h: bb.height + 6 },
+              rx: curX + wpx + 3, ry: bb.y + bb.height / 2,
+            });
+            curX += wpx + WORD_GAP;
+          });
+        });
+      }
+
+      // ----- reading cursor -----
+      const cursor = svgEl('rect', { x: NOTE_X, y: LINE_Y0 - 20, width: 10, height: 26, rx: 6,
+        class: 'rv-cursor', opacity: 0 }, gCursor) as SVGRectElement;
+
+      // Each row is a <g> translated to its current rank. reorder() animates the
+      // translate (CSS transition) and moves the "leader" styling to whoever is #1.
+      const nodeEls: Record<number, { g: SVGGElement; dot: SVGElement; label: SVGElement; fill: SVGElement; pctText: SVGElement; ring: SVGElement }> = {};
+      for (let ci = 0; ci < classes.length; ci++) {
+        const g = svgEl('g', { class: 'rv-noderow' }, gNodes) as unknown as SVGGElement;
+        g.style.transition = 'none'; // no entrance slide from y=0
+        g.style.transform = `translateY(${currentNodeY(ci)}px)`;
+        const ring = svgEl('circle', { cx: NODE_X, cy: 0, r: 9, class: 'rv-ring', opacity: 0 }, g);
+        const dot = svgEl('circle', { cx: NODE_X, cy: 0, r: 4.5, class: 'rv-node' }, g);
+        const label = svgEl('text', { x: LABEL_X, y: 4, class: 'rv-label' }, g);
+        label.textContent = lbl(ci);
+        svgEl('rect', { x: TRACK_X, y: -4, width: TRACK_W, height: 8, rx: 4, class: 'rv-track' }, g);
+        const fill = svgEl('rect', { x: TRACK_X, y: -4, width: 0, height: 8, rx: 4, class: 'rv-fill' }, g);
+        const pctText = svgEl('text', { x: TRACK_X + TRACK_W + 10, y: 4, class: 'rv-pct' }, g);
+        nodeEls[ci] = { g, dot, label, fill, pctText, ring };
+      }
+      // hand the transition back to CSS after the initial paint
+      requestAnimationFrame(() => { for (let c = 0; c < classes.length; c++) nodeEls[c].g.style.transition = ''; });
+
+      function reorder(pr: number[], animate: boolean) {
+        const ranked = pr.map((p, c) => [c, p] as [number, number]).sort((a, b) => b[1] - a[1]);
+        ranked.forEach(([c], rank) => { currentRank[c] = rank; });
+        const leader = ranked[0][0];
+        for (let c = 0; c < classes.length; c++) {
+          const g = nodeEls[c].g;
+          if (animate) g.style.transform = `translateY(${currentNodeY(c)}px)`;
+          else { g.style.transition = 'none'; g.style.transform = `translateY(${currentNodeY(c)}px)`; requestAnimationFrame(() => { g.style.transition = ''; }); }
+          const isLead = c === leader;
+          nodeEls[c].fill.classList.toggle('win', isLead);
+          nodeEls[c].label.classList.toggle('win', isLead);
+          nodeEls[c].dot.setAttribute('data-win', isLead ? '1' : '0');
+        }
+      }
+
+      function edgePath(x: number, y: number, ci: number): string {
+        const ny = currentNodeY(ci);
+        const c1x = x + 80, c2x = NODE_X - 120;
+        return `M ${x.toFixed(1)} ${y.toFixed(1)} C ${c1x.toFixed(1)} ${y.toFixed(1)}, ${c2x.toFixed(1)} ${ny.toFixed(1)}, ${(NODE_X - 8).toFixed(1)} ${ny.toFixed(1)}`;
+      }
+
+      // cancel-safe per-attribute tween (later calls override earlier ones)
+      function tweenAttr(el: any, attr: string, to: number, dur: number) {
+        if (!MOTION) { el.setAttribute(attr, String(to)); return; }
+        const key = '_r_' + attr;
+        if (el[key]) cancelAnimationFrame(el[key]);
+        const from = parseFloat(el.getAttribute(attr) || '0'), t0 = performance.now();
+        const step = (now: number) => {
+          const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+          el.setAttribute(attr, String(from + (to - from) * e));
+          if (p < 1) el[key] = requestAnimationFrame(step);
+        };
+        el[key] = requestAnimationFrame(step);
+      }
+
+      const setCaption = (s: string) => { capEl!.textContent = s; };
+
+      // paint all 12 bars + live percentages to a probability distribution
+      function setBars(pr: number[], animate: boolean) {
+        for (let c = 0; c < classes.length; c++) {
+          const w = pr[c] * TRACK_W;
+          if (animate) tweenAttr(nodeEls[c].fill, 'width', w, 432);
+          else nodeEls[c].fill.setAttribute('width', String(w));
+          nodeEls[c].pctText.textContent = pr[c] >= 0.005 ? Math.round(pr[c] * 100) + '%' : '';
+        }
+      }
+
+      function moveCursor(box: { x: number; y: number; w: number; h: number }, dur: number) {
+        return new Promise<void>((res) => {
+          if (!MOTION) { setCursorBox(box); res(); return; }
+          const f = { x: +cursor.getAttribute('x')!, y: +cursor.getAttribute('y')!, w: +cursor.getAttribute('width')!, h: +cursor.getAttribute('height')! };
+          const t0 = performance.now();
+          const step = (now: number) => {
+            const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 2);
+            cursor.setAttribute('x', String(f.x + (box.x - f.x) * e));
+            cursor.setAttribute('y', String(f.y + (box.y - f.y) * e));
+            cursor.setAttribute('width', String(f.w + (box.w - f.w) * e));
+            cursor.setAttribute('height', String(f.h + (box.h - f.h) * e));
+            if (p < 1) requestAnimationFrame(step); else res();
+          };
+          requestAnimationFrame(step);
+        });
+      }
+      function setCursorBox(b: { x: number; y: number; w: number; h: number }) {
+        cursor.setAttribute('x', String(b.x)); cursor.setAttribute('y', String(b.y));
+        cursor.setAttribute('width', String(b.w)); cursor.setAttribute('height', String(b.h));
+      }
+
+      function lightWord(w: Word) {
+        w.lit = true; w.textEl.classList.add('lit');
+        svgEl('rect', { x: w.box.x, y: w.box.y, width: w.box.w, height: w.box.h, rx: 6,
+          class: 'rv-wordbg', 'data-tok': w.token }, gWordBg);
+      }
+
+      // fire an arrow from the word to each of its strongest positive classes,
+      // pulse a dot along it, then fade it (the persistent state lives in the bars)
+      function fireArrows(w: Word, tops: [number, number][]) {
+        tops.forEach(([c, val]) => {
+          const path = svgEl('path', { d: edgePath(w.rx, w.ry, c), class: 'rv-arrow' }, gArrow) as SVGPathElement;
+          path.style.opacity = String(Math.min(0.85, 0.28 + val * 2.6));
+          const len = path.getTotalLength();
+          path.style.strokeDasharray = String(len); path.style.strokeDashoffset = String(len);
+          requestAnimationFrame(() => { path.style.transition = 'stroke-dashoffset .54s ease'; path.style.strokeDashoffset = '0'; });
+          // start the dot AT the word (cx/cy set now) so it never flashes at (0,0)
+          const dot = svgEl('circle', { r: 3, cx: w.rx, cy: w.ry, class: 'rv-pulse' }, gPulse);
+          const t0 = performance.now(), dur = 670;
+          const step = (now: number) => {
+            const p = Math.min(1, (now - t0) / dur), pt = path.getPointAtLength(p * len);
+            dot.setAttribute('cx', String(pt.x)); dot.setAttribute('cy', String(pt.y));
+            if (p < 1) requestAnimationFrame(step);
+            else { dot.remove(); path.style.transition = 'opacity .5s ease'; path.style.opacity = '0'; setTimeout(() => path.remove(), 540); }
+          };
+          requestAnimationFrame(step);
+        });
+      }
+
+      const contribOf = (j: number) => classes.map((_, c) => coef[c][j] * (vec.get(j) || 0));
+
+      function resetScene() {
+        while (gArrow.firstChild) gArrow.removeChild(gArrow.firstChild);
+        while (gWordBg.firstChild) gWordBg.removeChild(gWordBg.firstChild);
+        while (gPulse.firstChild) gPulse.removeChild(gPulse.firstChild);
+        words.forEach((w) => { w.lit = false; w.textEl.classList.remove('lit'); });
+        for (let c = 0; c < classes.length; c++) {
+          nodeEls[c].fill.setAttribute('width', '0');
+          nodeEls[c].fill.classList.remove('win');
+          nodeEls[c].label.classList.remove('win');
+          nodeEls[c].dot.setAttribute('data-win', '0');
+          nodeEls[c].pctText.textContent = '';
+          nodeEls[c].dot.setAttribute('r', '4.5');
+          nodeEls[c].ring.setAttribute('opacity', '0');
+        }
+        cursor.setAttribute('opacity', '0');
+      }
+
+      function finalState() {
+        resetScene();
+        words.forEach((w) => { if (w.j >= 0) lightWord(w); });
+        setBars(probs, false);
+        reorder(probs, false); // final ranking, so faint arrows point to final rows
+        // faint persistent arrows so the static picture still reads as "routing"
+        const seen = new Set<string>();
+        words.forEach((w) => {
+          if (w.j < 0 || seen.has(w.token)) return; seen.add(w.token);
+          const cs = contribOf(w.j);
+          const top = cs.map((v, c) => [c, v] as [number, number]).sort((a, b) => b[1] - a[1])[0];
+          if (top[1] > 0) { const pa = svgEl('path', { d: edgePath(w.rx, w.ry, top[0]), class: 'rv-arrow' }, gArrow); (pa as any).style.opacity = '0.4'; }
+        });
+        nodeEls[predIdx].dot.setAttribute('r', '7'); nodeEls[predIdx].ring.setAttribute('opacity', '1');
+        setCaption('→ ' + lbl(predIdx) + '  ·  ' + (probs[predIdx] * 100).toFixed(0) + '% confident');
+      }
+
+      // ----- word-by-word timeline (cancelable via gen) -----
+      let gen = 0;
+      async function playViz() {
+        const my = ++gen;
+        if (replayBtn) replayBtn.hidden = true;
+        resetScene();
+        if (!MOTION) { finalState(); if (replayBtn) replayBtn.hidden = false; return; }
+
+        const logit = intercept.slice();
+        setBars(priors, false);
+        reorder(priors, false);
+        setCaption('Before reading, every specialty is about equally likely');
+        setCursorBox(words[0].box);
+        cursor.setAttribute('opacity', '1');
+        await sleep(780); if (my !== gen) return;
+
+        const counted = new Set<string>();
+        for (const w of words) {
+          if (my !== gen) return;
+          const willFire = w.j >= 0 && !counted.has(w.token);
+          // linger on the words that actually vote; glide quickly over the rest
+          await moveCursor(w.box, willFire ? 162 : 89); if (my !== gen) return;
+          if (willFire) {
+            counted.add(w.token);
+            lightWord(w);
+            const cs = contribOf(w.j);
+            for (let c = 0; c < classes.length; c++) logit[c] += cs[c];
+            const tops = cs.map((v, c) => [c, v] as [number, number]).filter((x) => x[1] > 1e-4)
+              .sort((a, b) => b[1] - a[1]).slice(0, 3);
+            const shown = w.disp.replace(/[^A-Za-z-]+$/, '');
+            setCaption('“' + shown + '”  votes  →  ' + tops.map(([c]) => lbl(c)).join(',  '));
+            fireArrows(w, tops);
+            const pr = softmax(logit);
+            setBars(pr, true);
+            reorder(pr, true); // rows race: leaders climb as the odds shift
+            await sleep(456); if (my !== gen) return;
+          } else {
+            await sleep(58); if (my !== gen) return;
+          }
+        }
+
+        // land exactly on the real distribution and crown the winner
+        setBars(probs, true);
+        reorder(probs, true);
+        tweenAttr(nodeEls[predIdx].dot, 'r', 7, 720);
+        nodeEls[predIdx].ring.setAttribute('opacity', '1');
+        await sleep(780); if (my !== gen) return;
+        cursor.setAttribute('opacity', '0');
+        setCaption('→ ' + lbl(predIdx) + '  ·  ' + (probs[predIdx] * 100).toFixed(0) + '% confident');
+        if (replayBtn) replayBtn.hidden = false;
+      }
+
+      replayBtn?.addEventListener('click', () => playViz());
+
+      // Lay out the words once fonts are ready (so widths, and thus the pills and
+      // arrow anchors, are correct), then arm playback on scroll into view.
+      const ready = (document as any).fonts?.ready ?? Promise.resolve();
+      ready.then(() => {
+        layoutWords();
+        if (!MOTION) { finalState(); if (replayBtn) replayBtn.hidden = false; return; }
+        const io = new IntersectionObserver((ents) => {
+          if (ents.some((en) => en.isIntersecting)) { io.disconnect(); playViz(); }
+        }, { threshold: 0.35 });
+        io.observe(svg);
+      });
+    }
+
     // ---- boot -------------------------------------------------------------------
     async function main() {
       try {
-        const res = await fetch('/triage/triage.json', { cache: 'no-cache' });
+        const res = await fetch('/triagnosis/triagnosis.json', { cache: 'no-cache' });
         data = await res.json();
       } catch { $('loadBanner').hidden = false; return; }
 
@@ -485,6 +849,8 @@ Answer (cite the passage number):`;
       (document.getElementById('noteSelect') as HTMLSelectElement).value = String(startIdx);
       selectNote(startIdx);
 
+      buildRouteViz();
+
       // fire chart animations when scrolled into view
       if (!MOTION) { plays.forEach((p) => p.play()); }
       else {
@@ -506,7 +872,7 @@ Answer (cite the passage number):`;
   <style>
     .tr {
       position: relative; z-index: 2; padding: clamp(28px, 6vw, 64px) var(--pad-x) 120px;
-      /* Triage theme: clinical emerald */
+      /* Triagnosis theme: clinical emerald */
       --em-deep: #047857; --em: #10b981; --em-lt: #34d399; --mint: #6ee7b7;
       --accent-rgb: 16,185,129;
       --c-problem: #fb7185; --c-medication: #f59e0b; --c-test: #38bdf8; --c-anatomy: #c084fc;
@@ -531,6 +897,42 @@ Answer (cite the passage number):`;
     .banner { margin: 28px 0 0; padding: 13px 18px; border-radius: 11px; font-size: 14px; color: var(--em-lt);
       background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.24); }
     .banner code { font-family: ui-monospace, monospace; color: var(--mint); }
+
+    /* Signature routing visualization */
+    .route-viz { margin-top: clamp(44px, 6vw, 68px); }
+    .rv-head { margin-bottom: 20px; }
+    .rv-stage { border: 1px solid var(--border); border-radius: 20px; padding: clamp(14px, 2.4vw, 26px);
+      background: linear-gradient(165deg, rgba(255,255,255,0.022), rgba(var(--accent-rgb),0.025)); }
+    #rvSvg { width: 100%; height: auto; display: block; }
+    .rv-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; padding: 0 4px; }
+    .rv-caption { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--em-lt); min-height: 20px; }
+    .rv-replay { font-family: var(--font-display); font-size: 13px; font-weight: 500; color: var(--text-dim);
+      background: rgba(var(--accent-rgb),0.08); border: 1px solid var(--border); border-radius: var(--radius-pill);
+      padding: 7px 16px; cursor: pointer; transition: all .2s; white-space: nowrap; }
+    .rv-replay:hover { color: var(--em-lt); border-color: rgba(var(--accent-rgb),0.45); background: rgba(var(--accent-rgb),0.14); }
+
+    /* SVG scene nodes are created at runtime -> :global */
+    /* .rv-word keeps a constant weight (lit only recolors) so the glyphs never
+       widen past the pill that was measured around them. */
+    :global(.rv-word) { font-family: var(--font-body); font-size: 16.5px; font-weight: 400; fill: var(--text-dim); transition: fill .25s; }
+    :global(.rv-word.lit) { fill: #04140d; }
+    :global(.rv-wordbg) { fill: var(--em-lt); animation: rvpop .28s var(--ease) both; }
+    @keyframes rvpop { from { opacity: 0; } to { opacity: 1; } }
+    :global(.rv-cursor) { fill: rgba(52,211,153,0.08); stroke: var(--em-lt); stroke-width: 1.4; }
+    :global(.rv-arrow) { fill: none; stroke: var(--em); stroke-width: 1.7; }
+    :global(.rv-pulse) { fill: #eafff5; filter: drop-shadow(0 0 5px rgba(52,211,153,0.9)); }
+    :global(.rv-noderow) { transition: transform .5s cubic-bezier(0.4, 0, 0.2, 1); }
+    :global(.rv-node) { fill: var(--muted); transition: fill .3s; }
+    :global(.rv-node[data-win="1"]) { fill: var(--em-lt); }
+    :global(.rv-ring) { fill: none; stroke: var(--em-lt); stroke-width: 1.5; transition: opacity .4s; }
+    :global(.rv-label) { font-family: var(--font-display); font-size: 12px; fill: var(--muted); }
+    :global(.rv-label.win) { fill: var(--em-lt); font-weight: 600; font-size: 13px; }
+    :global(.rv-track) { fill: rgba(255,255,255,0.05); }
+    :global(.rv-fill) { fill: var(--em-deep); }
+    :global(.rv-fill.win) { fill: url(#rvWin); }
+    :global(.rv-pct) { font-family: var(--font-display); font-size: 11px; fill: var(--muted); }
+    :global(.rv-pct.win) { fill: var(--em-lt); font-weight: 600; font-size: 13px; }
+    @media (max-width: 620px) { .rv-caption { font-size: 12.5px; } }
 
     .block-h { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -0.02em; margin-bottom: 8px; }
     .block-sub { color: var(--text-dim); font-weight: 300; margin-bottom: 24px; max-width: 640px; line-height: 1.7; }
@@ -634,21 +1036,25 @@ Answer (cite the passage number):`;
     .tile-num { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 3.4vw, 34px); color: var(--em-lt); }
     .tile-cap { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
     .tile-cap span { display: block; opacity: 0.7; font-size: 11px; }
-    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    /* Stacked, so the 12x12 matrix gets the full column width — at ~48px per
+       column the rotated labels finally fit inside their own cell instead of
+       spilling out of the box. */
+    .charts { display: grid; grid-template-columns: 1fr; gap: 24px; }
     .chart { border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; background: rgba(255,255,255,0.02); min-width: 0; }
     .chart-cap { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
 
-    .f1-bars { display: flex; flex-direction: column; gap: 8px; }
-    :global(.f1-row) { display: grid; grid-template-columns: 80px 1fr 32px; align-items: center; gap: 10px; font-size: 12px; }
+    .f1-bars { display: flex; flex-direction: column; gap: 8px; max-width: 620px; }
+    :global(.f1-row) { display: grid; grid-template-columns: 92px 1fr 34px; align-items: center; gap: 12px; font-size: 12.5px; }
     :global(.f1-name) { color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     :global(.f1-track) { height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
     :global(.f1-fill) { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--em-deep), var(--em-lt)); transition: width 1s var(--ease); }
     :global(.f1-val) { font-family: var(--font-display); font-weight: 600; text-align: right; color: var(--text); }
 
-    .confusion { display: grid; grid-template-columns: 64px repeat(var(--n), 1fr); gap: 2px; font-size: 9px; }
+    .confusion { display: grid; grid-template-columns: 74px repeat(var(--n), 1fr); gap: 3px; font-size: 10px;
+      max-width: 660px; margin-inline: auto; padding-top: 6px; }
     :global(.cm-corner) { }
-    :global(.cm-col) { color: var(--muted); text-align: center; transform: rotate(-32deg); transform-origin: bottom center; height: 46px; display: flex; align-items: flex-end; justify-content: center; font-size: 8.5px; white-space: nowrap; }
-    :global(.cm-row) { color: var(--muted); display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 8.5px; white-space: nowrap; }
+    :global(.cm-col) { color: var(--muted); text-align: center; transform: rotate(-34deg); transform-origin: bottom center; height: 52px; display: flex; align-items: flex-end; justify-content: center; font-size: 9.5px; white-space: nowrap; }
+    :global(.cm-row) { color: var(--muted); display: flex; align-items: center; justify-content: flex-end; padding-right: 7px; font-size: 9.5px; white-space: nowrap; }
     :global(.cm-cell) { aspect-ratio: 1; border-radius: 3px; background: rgba(var(--accent-rgb), calc(var(--a) * 0.92 + 0.02)); transition: background .5s var(--ease); }
     :global(.cm-cell.diag) { background: rgba(110,231,183, calc(var(--a) * 0.92 + 0.04)); }
 
@@ -666,7 +1072,6 @@ Answer (cite the passage number):`;
 
     @media (max-width: 860px) {
       .work-grid { grid-template-columns: 1fr; }
-      .charts { grid-template-columns: 1fr; }
       .tiles { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 520px) {

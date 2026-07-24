@@ -235,6 +235,49 @@ const stats = [
     to   { opacity: 1; transform: none; }
   }
 
+  /* Per-letter hover: these spans are injected client-side by the typing
+     effect, so they never get Astro's build-time data-astro-cid attribute and
+     need :global() to be styled at all (same gotcha as the dynamic form
+     controls on the uplift/credit-risk demos). */
+  :global(.hl) {
+    display: inline-block;
+    transition: transform 0.22s var(--ease), filter 0.22s ease;
+  }
+  :global(.hl.peek) {
+    text-shadow: 0 0 16px rgba(168,85,247,0.6);
+  }
+  /* Detached from .typed and moved to <body> to fly toward the black hole, so
+     it must restate the heading's font by hand (inheritance resets once it's
+     reparented) and trade the gradient fill for a fading, muted tone — the
+     same "drained of color as it falls in" treatment Experience.astro uses
+     for the word "broken". */
+  :global(.hl.sucked) {
+    position: fixed;
+    z-index: 60;
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(46px, 9vw, 112px);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--muted);
+    pointer-events: none;
+    animation: gp-suck 0.7s cubic-bezier(0.6, -0.1, 0.85, 0.5) forwards;
+  }
+  @keyframes gp-suck {
+    0%   { transform: none; opacity: 0.95; }
+    65%  { opacity: 0.85; }
+    100% { transform: translate(var(--tx), var(--ty)) rotate(560deg) scale(0.05); opacity: 0; }
+  }
+  :global(.hl.respawn) { animation: gp-respawn 0.38s var(--ease) both; }
+  @keyframes gp-respawn {
+    from { opacity: 0; transform: scale(0.3); filter: brightness(1.8); }
+    to   { opacity: 1; transform: none; filter: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.hl.sucked) { display: none; }
+  }
+
   /* No room for the hint on small screens or short viewports — it would
      crowd the stats row. */
   @media (max-width: 820px), (max-height: 760px) {
@@ -255,18 +298,46 @@ const stats = [
 
     const words = ['Astrophysicist', 'Data Scientist', 'Storyteller'];
     let wi = 0, ci = 0, deleting = false;
+    // true only while a word sits fully typed and paused — the safe window to
+    // hover/pull a letter, since nothing else is mutating the DOM then.
+    let wordSettled = false;
+    // bumped every new word, so a letter mid-flight can tell it's gone stale
+    // (word changed underneath it) and should just vanish instead of
+    // reappearing in the wrong word.
+    let wordGen = 0;
+
+    // Builds/trims .hl letter spans to match ci, touching only the boundary
+    // letter each tick (not a full re-render) so a letter mid-hover-animation
+    // is never yanked out from under the pointer while typing continues.
+    const renderTyped = () => {
+      const word = words[wi];
+      while (typedEl!.children.length > ci) typedEl!.removeChild(typedEl!.lastChild!);
+      while (typedEl!.children.length < ci) {
+        const ch = word[typedEl!.children.length];
+        const span = document.createElement('span');
+        span.className = 'hl';
+        // A lone regular space inside a display:inline-block span collapses to
+        // zero width (CSS trims leading/trailing whitespace in its own inline
+        // formatting context) — a non-breaking space renders it for real.
+        span.textContent = ch === ' ' ? ' ' : ch;
+        typedEl!.appendChild(span);
+      }
+    };
 
     const tick = () => {
+      wordSettled = false;
       const word = words[wi];
       ci += deleting ? -1 : 1;
-      typedEl.textContent = word.slice(0, ci);
+      renderTyped();
 
       if (!deleting && ci === word.length) {
         deleting = true;
+        wordSettled = true;
         setTimeout(tick, 1500);
       } else if (deleting && ci === 0) {
         deleting = false;
         wi = (wi + 1) % words.length;
+        wordGen++;
         setTimeout(tick, 450);
       } else {
         setTimeout(tick, deleting ? 45 : 85 + Math.random() * 55);
@@ -274,6 +345,84 @@ const stats = [
     };
 
     setTimeout(tick, 1100);
+
+    // Hover a letter and it leans toward the black hole in the corner; hold on
+    // it and it actually breaks off and spirals in, then reappears a moment
+    // later. Same "letters detach and spiral into the hole" language as the
+    // Experience section's "broken", just hover-triggered and repeatable
+    // instead of a one-time scroll reveal, and reusing Starfield.astro's exact
+    // hole-placement formula so it flies at the real thing.
+    const fine = window.matchMedia('(pointer: fine)').matches;
+    if (fine) {
+      const HOLD_MS = 380, FLY_MS = 700;
+      let holdTimer = 0;
+      let heldSpan: HTMLElement | null = null;
+
+      const holeTarget = () => {
+        const W = window.innerWidth, H = window.innerHeight;
+        return { x: W * (W < 820 ? 0.78 : 0.815), y: H * (W < 820 ? 0.87 : 0.52) };
+      };
+
+      const releaseHold = (span: HTMLElement | null) => {
+        clearTimeout(holdTimer);
+        if (span) { span.classList.remove('peek'); span.style.transform = ''; span.style.filter = ''; }
+        if (heldSpan === span) heldSpan = null;
+      };
+
+      const commit = (span: HTMLElement, parent: HTMLElement, gen: number) => {
+        if (!wordSettled || gen !== wordGen || span.dataset.flying) { releaseHold(span); return; }
+        span.dataset.flying = '1';
+        span.classList.remove('peek');
+        span.style.transform = '';
+        span.style.filter = '';
+        const next = span.nextSibling;
+        const r = span.getBoundingClientRect();
+        const { x: hx, y: hy } = holeTarget();
+        span.style.left = r.left + 'px';
+        span.style.top = r.top + 'px';
+        span.style.width = r.width + 'px';
+        span.style.setProperty('--tx', hx - (r.left + r.width / 2) + 'px');
+        span.style.setProperty('--ty', hy - (r.top + r.height / 2) + 'px');
+        document.body.appendChild(span);
+        span.classList.add('sucked');
+        setTimeout(() => {
+          span.classList.remove('sucked');
+          span.style.left = '';
+          span.style.top = '';
+          span.style.width = '';
+          span.style.removeProperty('--tx');
+          span.style.removeProperty('--ty');
+          delete span.dataset.flying;
+          if (gen === wordGen && parent.isConnected) {
+            if (next && next.parentNode === parent) parent.insertBefore(span, next);
+            else parent.appendChild(span);
+            span.classList.add('respawn');
+            setTimeout(() => span.classList.remove('respawn'), 380);
+          }
+        }, FLY_MS);
+      };
+
+      typeLine.addEventListener('pointerover', (e) => {
+        const span = (e.target as Element)?.closest?.('.hl') as HTMLElement | null;
+        if (!span || !wordSettled || span.dataset.flying || span === heldSpan) return;
+        releaseHold(heldSpan);
+        heldSpan = span;
+        const parent = span.parentElement as HTMLElement;
+        const gen = wordGen;
+        const r = span.getBoundingClientRect();
+        const { x: hx, y: hy } = holeTarget();
+        const dx = hx - (r.left + r.width / 2), dy = hy - (r.top + r.height / 2);
+        const d = Math.hypot(dx, dy) || 1;
+        span.classList.add('peek');
+        span.style.transform = `translate(${(dx / d) * 7}px, ${(dy / d) * 6}px) scale(0.9)`;
+        span.style.filter = 'brightness(0.82) blur(0.2px)';
+        holdTimer = window.setTimeout(() => commit(span, parent, gen), HOLD_MS);
+      });
+      typeLine.addEventListener('pointerout', (e) => {
+        const span = (e.target as Element)?.closest?.('.hl') as HTMLElement | null;
+        if (span && span === heldSpan) releaseHold(span);
+      });
+    }
   }
 
   // Stats count up once the hero has had a moment to land. Each figure climbs
