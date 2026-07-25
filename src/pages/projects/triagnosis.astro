@@ -601,8 +601,9 @@ Answer (cite the passage number):`;
         const pctText = svgEl('text', { x: TRACK_X + TRACK_W + 10, y: 4, class: 'rv-pct' }, g);
         nodeEls[ci] = { g, dot, label, fill, pctText, ring };
       }
-      // hand the transition back to CSS after the initial paint
-      requestAnimationFrame(() => { for (let c = 0; c < classes.length; c++) nodeEls[c].g.style.transition = ''; });
+      // commit the initial positions, then hand the transition back to CSS
+      void document.body.offsetHeight;
+      for (let c = 0; c < classes.length; c++) nodeEls[c].g.style.transition = '';
 
       function reorder(pr: number[], animate: boolean) {
         const ranked = pr.map((p, c) => [c, p] as [number, number]).sort((a, b) => b[1] - a[1]);
@@ -610,12 +611,18 @@ Answer (cite the passage number):`;
         const leader = ranked[0][0];
         for (let c = 0; c < classes.length; c++) {
           const g = nodeEls[c].g;
-          if (animate) g.style.transform = `translateY(${currentNodeY(c)}px)`;
-          else { g.style.transition = 'none'; g.style.transform = `translateY(${currentNodeY(c)}px)`; requestAnimationFrame(() => { g.style.transition = ''; }); }
+          if (!animate) g.style.transition = 'none';
+          g.style.transform = `translateY(${currentNodeY(c)}px)`;
           const isLead = c === leader;
           nodeEls[c].fill.classList.toggle('win', isLead);
           nodeEls[c].label.classList.toggle('win', isLead);
           nodeEls[c].dot.setAttribute('data-win', isLead ? '1' : '0');
+        }
+        if (!animate) {
+          // force a reflow so the snapped transforms commit, THEN re-enable the CSS
+          // transition (otherwise the snap animates as a slide on the next paint)
+          void document.body.offsetHeight;
+          for (let c = 0; c < classes.length; c++) nodeEls[c].g.style.transition = '';
         }
       }
 
