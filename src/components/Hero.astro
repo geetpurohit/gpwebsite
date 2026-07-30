@@ -313,13 +313,30 @@ const stats = [
       const word = words[wi];
       while (typedEl!.children.length > ci) typedEl!.removeChild(typedEl!.lastChild!);
       while (typedEl!.children.length < ci) {
-        const ch = word[typedEl!.children.length];
+        const idx = typedEl!.children.length;
+        const ch = word[idx];
         const span = document.createElement('span');
         span.className = 'hl';
         // A lone regular space inside a display:inline-block span collapses to
         // zero width (CSS trims leading/trailing whitespace in its own inline
         // formatting context) — a non-breaking space renders it for real.
         span.textContent = ch === ' ' ? ' ' : ch;
+        // Safari/WebKit doesn't paint a parent's background-clip:text gradient
+        // through nested child elements: .typed's grad-text inherits
+        // color:transparent down into each .hl fine (plain CSS inheritance),
+        // but never gets the gradient painted behind the glyphs, so the
+        // letters render fully invisible (yet still selectable) on iOS. Give
+        // each letter its own slice of the same gradient, indexed by position
+        // in the word, so it still reads as one continuous sweep.
+        span.style.setProperty('background-image', 'var(--grad-text)');
+        span.style.setProperty('-webkit-background-clip', 'text');
+        span.style.setProperty('background-clip', 'text');
+        span.style.setProperty('-webkit-text-fill-color', 'transparent');
+        span.style.setProperty('color', 'transparent');
+        if (word.length > 1) {
+          span.style.setProperty('background-size', (word.length * 100) + '% 100%');
+          span.style.setProperty('background-position', ((idx * 100) / (word.length - 1)) + '% 0');
+        }
         typedEl!.appendChild(span);
       }
     };

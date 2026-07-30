@@ -96,7 +96,8 @@
     \textbf{\Huge \scshape Geet Purohit} \\ \vspace{1pt}
     \small 973-814-0238 $|$ \href{mailto:geetp40@gmail.com}{\underline{geetp40@gmail.com}} $|$
     \href{https://linkedin.com/in/geetpurohit}{\underline{linkedin.com/in/geetpurohit}} $|$
-    \href{https://github.com/geetpurohit}{\underline{github.com/geetpurohit}}
+    \href{https://github.com/geetpurohit}{\underline{github.com/geetpurohit}} $|$
+    \href{https://geetpurohit.com}{\underline{geetpurohit.com}}
 \end{center}
 
 %-----------EXPERIENCE-----------
@@ -122,7 +123,7 @@
       \resumeItemListEnd
 
     \resumeSubheading
-      {Data Engineering Intern}{Oct. 2021 -- Jun. 2022}
+      {AI/ML Intern}{Oct. 2021 -- Jun. 2022}
       {Human Genetics Institute of New Jersey}{}
       \resumeItemListStart
         \resumeItem{Trained \textbf{DeepLabCut} models for kinematic pose estimation on \textbf{1,000+} wet-lab experiments (Python, TensorFlow, CUDA) and shipped 4 IMARIS extensions automating 3D lesion reconstruction, making post-microscopy analysis \textbf{5x faster}.}
@@ -135,23 +136,22 @@
     \resumeSubHeadingListStart
 
       \resumeProjectHeading
+          {\textbf{CreditLens} $|$ \emph{Explainable Credit-Risk Scorecard Engine} $\cdot$ \href{https://geetpurohit.com/projects/credit-risk}{\underline{geetpurohit.com}}}{2026}
+          \resumeItemListStart
+            \resumeItem{Built an end-to-end \textbf{predictive} credit-default engine on \textbf{2.26M} LendingClub loans (weight-of-evidence binning, logistic scorecard, XGBoost/SHAP challenger; validated on ROC-AUC, KS, Gini, and calibration), deployed as a \textbf{zero-backend, in-browser app} with transparent, auditable feature attributions and no target leakage.}
+          \resumeItemListEnd
+
+      \resumeProjectHeading
           {\textbf{Persuade} $|$ \emph{Causal Inference, Heterogeneous Treatment Effects} $\cdot$ \href{https://geetpurohit.com/projects/uplift}{\underline{geetpurohit.com}}}{2026}
           \resumeItemListStart
-            \resumeItem{Built a causal uplift model estimating \textbf{heterogeneous treatment effects} per customer with T-learner and X-learner meta-learners, quantifying the incremental lift of a treatment and validating it on the \textbf{Qini curve}, where accuracy is undefined for counterfactual targeting.}
+            \resumeItem{Built a \textbf{prescriptive} causal uplift model estimating heterogeneous treatment effects per customer with T-learner and X-learner meta-learners, validated on the \textbf{Qini curve}, recommending who should receive a treatment rather than just who is likely to respond.}
             \resumeItem{Deployed it as a \textbf{zero-backend, in-browser app} that scores customers live and separates persuadables from sure things, lost causes, and sleeping dogs, directing treatment spend at the users a campaign actually moves.}
           \resumeItemListEnd
 
       \resumeProjectHeading
-          {\textbf{Significance} $|$ \emph{A/B Test Design \& Analysis Toolkit} $\cdot$ \href{https://geetpurohit.com/projects/experiment}{\underline{geetpurohit.com}}}{2026}
+          {\textbf{Triagnosis} $|$ \emph{Clinical NLP: Specialty Routing \& Entity Extraction} $\cdot$ \href{https://geetpurohit.com/projects/triagnosis}{\underline{geetpurohit.com}}}{2026}
           \resumeItemListStart
-            \resumeItem{Built an interactive experimentation toolkit that \textbf{powers and sizes} an A/B test, then analyzes results with a two-proportion z-test and confidence interval, computed live in the browser.}
-            \resumeItem{Demonstrated via Monte Carlo the two failure modes that invalidate most tests: \textbf{peeking} (false positives inflating past \textbf{25\%}) and skipping \textbf{CUPED} variance reduction (\textbf{\textasciitilde50\%} tighter estimates).}
-          \resumeItemListEnd
-
-      \resumeProjectHeading
-          {\textbf{CreditLens} $|$ \emph{Explainable Credit-Risk Scorecard Engine} $\cdot$ \href{https://geetpurohit.com/projects/credit-risk}{\underline{geetpurohit.com}}}{2026}
-          \resumeItemListStart
-            \resumeItem{Built an end-to-end credit-default engine on \textbf{2.26M} LendingClub loans (weight-of-evidence binning, logistic scorecard, XGBoost/SHAP challenger; validated on ROC-AUC, KS, Gini, and calibration), deployed as a \textbf{zero-backend, in-browser app} with no target leakage.}
+            \resumeItem{Built a clinical-NLP pipeline over de-identified transcriptions with three lenses (\textbf{12-way specialty classifier}, TF-IDF + chi2 + logistic regression, top-1 \textbf{0.66}/top-3 \textbf{0.97}/macro-F1 \textbf{0.66}; NegEx entity/negation extraction; hybrid retrieval), deployed as a \textbf{zero-backend, in-browser app} with a live routing viz that reorders all 12 specialty rankings in real time via running softmax as the note is read word-by-word.}
           \resumeItemListEnd
 
     \resumeSubHeadingListEnd
@@ -160,7 +160,7 @@
 \section{Technical Skills}
  \begin{itemize}[leftmargin=0.15in, label={}]
     \small{\item{
-     \textbf{Experimentation \& Causal Inference}{: A/B test design, quasi-experimental methods, uplift modeling, meta-learners (T/X-learner), heterogeneous treatment effects} \\
+     \textbf{Applied ML \& Consulting}{: predictive \& prescriptive modeling, explainable AI (SHAP), causal inference/uplift, NLP, stakeholder storytelling} \\
      \textbf{Languages}{: Python, SQL, R, Scala, Java, JavaScript/TypeScript} \\
      \textbf{ML}{: scikit-learn, XGBoost/LightGBM, PyTorch, TensorFlow, LLMs, MLflow} \\
      \textbf{Data, Cloud \& Viz}{: Apache Spark, GCP/BigQuery, Airflow, dbt, Docker, PostgreSQL, Tableau, Streamlit} \\
