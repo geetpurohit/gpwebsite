@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#2a1147"/>
+      <stop offset="55%" stop-color="#0a0512"/>
+      <stop offset="100%" stop-color="#020104"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+  <text x="256" y="326" font-family="Arial, 'Helvetica Neue', sans-serif" font-weight="800"
+        font-size="230" letter-spacing="-8" text-anchor="middle" fill="#f1edfb">GP<tspan fill="#a855f7">.</tspan></text>
+</svg>
