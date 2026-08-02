@@ -23,7 +23,7 @@
   type Comet = { x: number; y: number; vx: number; vy: number; len: number };
   type Spark = { ang: number; sp: number };
   type Nova = { x: number; y: number; t: number; max: number; sparks: Spark[] };
-  type Hole = { x: number; y: number; vx?: number; vy?: number; R: number; E: number };
+  type Hole = { x: number; y: number; vx?: number; vy?: number; R: number; E: number; cf?: number };
 
   const canvas = document.getElementById('starfield') as HTMLCanvasElement | null;
   if (canvas) {
@@ -54,6 +54,85 @@
       [216, 180, 254],
       [232, 121, 249],
     ];
+
+    /* ---- Keeping the sky off the words ----
+       Text has no background to hide behind, so a black hole or a supernova
+       lands straight on top of it. Every bright thing this canvas draws fades
+       as it nears real glyphs, and holes shrink their lensing too so stars
+       stop smearing across a paragraph.
+
+       Rects are measured per *line box* via Range.getClientRects(), not from
+       element boxes: a centred column reports its full width as an element but
+       only its actual runs as ranges, and using the element box would blank
+       the sky across empty gutters where the effect looks its best.
+
+       They're stored in document space and offset by scroll at query time, so
+       scrolling costs nothing and only a layout change forces a re-measure. */
+    const TEXT_SEL = 'h1,h2,h3,h4,h5,h6,p,li,figcaption,blockquote,a,button,label,.section-label';
+    const BUCKET = 96;
+
+    let textEls: Element[] = [];
+    let buckets = new Map<number, number[][]>(); // row → [l, t, r, b] in document space
+    let textTop = Infinity, textBottom = -Infinity;
+
+    function collectTextEls() {
+      // Only leaves: a card wrapping a heading would otherwise blank its whole
+      // footprint instead of just the lines inside it.
+      textEls = Array.from(document.querySelectorAll(TEXT_SEL))
+        .filter((el) => !el.querySelector(TEXT_SEL));
+    }
+
+    function measureText() {
+      buckets = new Map();
+      textTop = Infinity; textBottom = -Infinity;
+      const sy = window.scrollY || 0;
+      for (const el of textEls) {
+        const box = el.getBoundingClientRect();
+        if (!box.width || !box.height) continue;
+        if (box.bottom < -H || box.top > H * 2) continue; // far offscreen, re-measured on scroll
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const rects = range.getClientRects();
+        const list = rects.length ? rects : [box];
+        for (const r of list as ArrayLike<DOMRect>) {
+          if (r.width < 3 || r.height < 3) continue;
+          const t = r.top + sy, b = r.bottom + sy;
+          if (t < textTop) textTop = t;
+          if (b > textBottom) textBottom = b;
+          const rect = [r.left, t, r.right, b];
+          for (let k = Math.floor(t / BUCKET); k <= Math.floor(b / BUCKET); k++) {
+            let arr = buckets.get(k);
+            if (!arr) buckets.set(k, arr = []);
+            arr.push(rect);
+          }
+        }
+      }
+    }
+
+    // 1 when the point is clear of any text, easing to 0 as it closes in.
+    // `reach` is how far out the object throws light, not its hard radius.
+    function clearFactor(x: number, y: number, reach: number) {
+      const dy0 = y + (window.scrollY || 0);
+      if (dy0 + reach < textTop || dy0 - reach > textBottom) return 1;
+      let worst = 0;
+      const k0 = Math.floor((dy0 - reach) / BUCKET);
+      const k1 = Math.floor((dy0 + reach) / BUCKET);
+      for (let k = k0; k <= k1; k++) {
+        const arr = buckets.get(k);
+        if (!arr) continue;
+        for (let i = 0; i < arr.length; i++) {
+          const r = arr[i];
+          const dx = Math.max(r[0] - x, 0, x - r[2]);
+          const dy = Math.max(r[1] - dy0, 0, dy0 - r[3]);
+          const d = Math.hypot(dx, dy);
+          if (d >= reach) continue;
+          const t = 1 - d / reach;
+          const s = t * t * (3 - 2 * t); // smoothstep, so the fade has no seam
+          if (s > worst) { worst = s; if (worst > 0.995) return 1 - worst; }
+        }
+      }
+      return 1 - worst;
+    }
 
     function build() {
       dpr = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -89,6 +168,8 @@
         };
       });
 
+      collectTextEls();
+      measureText();
     }
 
     function dot(x: number, y: number, r: number, a: number, tint: number[]) {
@@ -157,12 +238,18 @@
 
         const x = ox + dx, y = oy + dy;
         a = Math.min(1, a * Math.min(mag, 3.5));
+        // Only the big bright ones are worth the per-star lookup, and they're
+        // the only ones that actually speckle a paragraph. Dimmed, not removed.
+        if (s.r > 1.3 && a > 0.5) a *= 0.4 + clearFactor(x, y, 26) * 0.6;
         dot(x, y, s.r, a, tint);
         if (s.r > 1.3 && a > 0.62) dot(x, y, s.r * 2.4, (a - 0.62) * 0.4, tint);
       }
     }
 
-    function drawHoleShape(x: number, y: number, R: number) {
+    function drawHoleShape(x: number, y: number, R: number, cf: number) {
+      if (cf <= 0.02) return;
+      ctx.save();
+      ctx.globalAlpha = cf;
       const glow = ctx.createRadialGradient(x, y, R * 0.9, x, y, R * 1.7);
       glow.addColorStop(0, 'rgba(0,0,0,0)');
       glow.addColorStop(0.4, 'rgba(150,92,235,0.18)');
@@ -182,6 +269,7 @@
       ctx.strokeStyle = 'rgba(245,238,255,0.95)';
       ctx.beginPath(); ctx.arc(x, y, R * 1.015, 0, TAU); ctx.stroke();
       ctx.restore();
+      ctx.restore();
     }
 
     function drawComets() {
@@ -190,6 +278,10 @@
         c.x += c.vx; c.y += c.vy;
         if (c.x > W + 140 || c.y > H + 140 || c.x < -140 || c.y < -140) { comets.splice(i, 1); continue; }
         const tx = c.x - c.vx * (c.len / 12), ty = c.y - c.vy * (c.len / 12);
+        // Comets only dim rather than vanish: they cross the page in a second
+        // and blinking out mid-flight would read as a dropped frame.
+        ctx.save();
+        ctx.globalAlpha = 0.3 + clearFactor(c.x, c.y, 80) * 0.7;
         const g = ctx.createLinearGradient(c.x, c.y, tx, ty);
         g.addColorStop(0, 'rgba(245,240,255,0.95)');
         g.addColorStop(0.35, 'rgba(200,160,255,0.4)');
@@ -202,6 +294,7 @@
         ctx.lineTo(tx, ty);
         ctx.stroke();
         dot(c.x, c.y, 2, 0.95, [248, 244, 255]);
+        ctx.restore();
       }
     }
 
@@ -213,6 +306,13 @@
         if (age >= 1) { novae.splice(i, 1); continue; }
         const ease = 1 - Math.pow(1 - age, 2.2);
         const fade = 1 - age;
+
+        // A supernova is the brightest thing on the page; landing one on a
+        // paragraph is the worst case this system exists to prevent.
+        const cf = clearFactor(n.x, n.y, n.max * 1.5);
+        if (cf <= 0.02) continue;
+        ctx.save();
+        ctx.globalAlpha = cf;
 
         const [cdx, cdy] = lensDelta(n.x, n.y, holes);
         const cx0 = n.x + cdx, cy0 = n.y + cdy;
@@ -257,6 +357,7 @@
           const [ex, ey] = lensDelta(px, py, holes);
           dot(px + ex, py + ey, Math.max(0.6, 1.8 * fade), fade * 0.85, [255, 240, 255]);
         }
+        ctx.restore();
       }
     }
 
@@ -313,8 +414,20 @@
         }
       }
 
-      const holes: Hole[] = roamers.slice();
-      if (mainOn) holes.push({ x: mainX, y: mainY, R: mainR, E: mainE });
+      // Lensing shrinks with the hole's visibility, so stars stop smearing
+      // across a paragraph that the hole itself has already faded out of.
+      // Reach tracks the hole's own visible extent (the glow reaches ~1.7R), so
+      // merely sitting beside a column dims it a little while actually covering
+      // the words takes it out. Any wider and the hero's hole never shows at all.
+      const holes: Hole[] = [];
+      for (const r of roamers) {
+        const cf = clearFactor(r.x, r.y, r.R * 1.35);
+        holes.push({ x: r.x, y: r.y, R: r.R, E: r.E * cf, cf });
+      }
+      if (mainOn) {
+        const cf = clearFactor(mainX, mainY, mainR * 1.35);
+        holes.push({ x: mainX, y: mainY, R: mainR, E: mainE * cf, cf });
+      }
 
       drawStars(now, holes);
 
@@ -323,8 +436,7 @@
       drawComets();
       ctx.globalCompositeOperation = 'source-over';
 
-      for (const r of roamers) drawHoleShape(r.x, r.y, r.R);
-      if (mainOn) drawHoleShape(mainX, mainY, mainR);
+      for (const h of holes) drawHoleShape(h.x, h.y, h.R, h.cf ?? 1);
 
       (window as any).__bhs = holes;
 
@@ -347,7 +459,22 @@
         pty = (e.clientY / H - 0.5) * 16;
       }, { passive: true });
     }
-    window.addEventListener('scroll', () => { scrollY = window.scrollY || 0; }, { passive: true });
+    // Text only moves relative to the viewport when the page scrolls, and the
+    // rects are already stored in document space. What a scroll does change is
+    // which elements are close enough to be worth measuring, and reveal
+    // animations settle as they come into view, so re-measure on a throttle.
+    let lastMeasure = 0;
+    function maybeMeasure() {
+      const t = performance.now();
+      if (t - lastMeasure < 180) return;
+      lastMeasure = t;
+      measureText();
+    }
+
+    window.addEventListener('scroll', () => {
+      scrollY = window.scrollY || 0;
+      maybeMeasure();
+    }, { passive: true });
 
     document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else start(); });
 
@@ -355,6 +482,10 @@
     window.addEventListener('resize', () => { clearTimeout(rt); rt = window.setTimeout(build, 150); });
 
     build();
+    // Web fonts and late layout both move every glyph on the page.
+    window.addEventListener('load', () => { collectTextEls(); measureText(); });
+    (document as any).fonts?.ready?.then(() => { collectTextEls(); measureText(); });
+
     raf = requestAnimationFrame(frame);
   }
 </script>

@@ -1,38 +1,52 @@
 ---
 // Oldest first: the journey reads top-to-bottom, internships → where I am now.
-const journey = [
+// Each stop is a *role*, not a company, so the Verizon climb (intern → I → III)
+// reads as three chapters instead of one block.
+//
+// Split of labour inside a stop: bullets carry what the work was, cards carry
+// the named things that shipped and their headline number. A project should
+// appear in one or the other, never both.
+const stops = [
   {
     company: 'RankSense',
     logo: '/logos/ranksense.png',
     logoClass: 'logo-ranksense',
-    span: 'Jan 2021 to Oct 2021',
-    roles: [
+    date: 'Jan 2021 to Oct 2021',
+    role: 'Data Science Intern',
+    bullets: [
+      'Researched SEO optimization at scale, separating the on-page changes that actually moved organic traffic from the ones that only looked like they did.',
+    ],
+    cards: [
       {
-        date: 'Jan 2021 to Oct 2021',
-        role: 'Data Science Intern',
-        bullets: [
-          'Researched SEO optimization across 100+ client domains, running A/B tests with Bayesian methods and CausalImpact.',
-          'Improved click-through and baseline-conversion rates by ~32%.',
-        ],
-        impact: '32% CTR improvement',
+        title: 'SEO Experimentation Framework',
+        desc: 'Bayesian A/B tests and CausalImpact analysis run across 100+ client domains.',
+        metric: '~32%',
+        metricLabel: 'lift in CTR and conversion',
       },
     ],
   },
   {
     company: 'Human Genetics Institute of NJ',
-    logo: '/logos/rutgers-r.svg',
-    logoClass: 'logo-rutgers',
-    span: 'Oct 2021 to Jun 2022',
-    roles: [
+    logo: '/logos/abraira.png',
+    logoClass: 'logo-abraira',
+    date: 'Oct 2021 to Jun 2022',
+    role: 'Data Science Intern',
+    bullets: [
+      'Machine learning inside a wet lab: turning raw microscopy and behavioral video into measurements a neuroscience paper could stand on.',
+      'Statistical validation via ANOVA and T-tests, benchmarked against published findings (Jones et al. 2020).',
+    ],
+    cards: [
       {
-        date: 'Oct 2021 to Jun 2022',
-        role: 'Data Science Intern',
-        bullets: [
-          'Trained DeepLabCut ML models for kinematic pose estimation on wet-lab mouse video, using Python, TensorFlow, and NVIDIA CUDA.',
-          'Statistical validation via ANOVA and T-tests, benchmarked against published findings (Jones et al. 2020).',
-          'Sponsored 4 Oxford iMARS Python extensions for retinal-cord tissue post-microscopy analysis.',
-        ],
-        impact: 'Neuroscience × ML',
+        title: 'DeepLabCut Pose Estimation',
+        desc: 'Computer vision tracking mouse joint positions frame by frame in wet-lab video. Python, TensorFlow, CUDA.',
+        metric: 'Kinematics',
+        metricLabel: 'from raw video, no markers',
+      },
+      {
+        title: 'iMARS Microscopy Extensions',
+        desc: 'Python extensions for post-microscopy analysis of retinal-cord tissue.',
+        metric: '4',
+        metricLabel: 'Oxford iMARS extensions sponsored',
       },
     ],
   },
@@ -40,39 +54,74 @@ const journey = [
     company: 'Verizon',
     logo: '/logos/verizon-check.svg',
     logoClass: 'logo-verizon',
-    span: '2022 to Present',
-    roles: [
+    date: 'Jun 2022 to Aug 2022',
+    role: 'Predictive & Prescriptive Analytics Intern',
+    bullets: [
+      'My first real exposure to Verizon\'s data infrastructure, and the internship that turned into 3+ years.',
+    ],
+    note: 'Return offer accepted.',
+    cards: [
       {
-        date: 'Jun 2022 to Aug 2022',
-        role: 'Predictive & Prescriptive Analytics Intern',
-        bullets: [
-          'My first real exposure to Verizon\'s data infrastructure, and the internship that turned into 3+ years.',
-        ],
-        impact: 'Return offer accepted',
+        title: 'Serverless Brand Forecasting',
+        desc: 'Automated forecasts for Walmart, Tracfone, Straight Talk, FiOS and 5 more, on a 12-hour email report cycle.',
+        metric: '9 brands',
+        metricLabel: 'forecast, no human in the loop',
+      },
+    ],
+  },
+  {
+    company: 'Verizon',
+    logo: '/logos/verizon-check.svg',
+    logoClass: 'logo-verizon',
+    date: 'Jan 2023 to Nov 2024',
+    role: 'Data Scientist I',
+    bullets: [
+      'Developed Tableau dashboards on GCP and BigQuery, eliminating <strong>10+ hours</strong> of weekly manual reporting.',
+      'Ran K-Means customer segmentation that surfaced 3 at-risk cohorts, which directly informed new retention campaigns.',
+    ],
+    cards: [
+      {
+        title: 'Centralized DS Pipeline Framework',
+        desc: 'A shared framework and API on GitLab, Domino, and GCP, so Corporate Finance teams stopped rebuilding the same plumbing.',
+        metric: '63%',
+        metricLabel: 'more efficient collaboration',
       },
       {
-        date: 'Jan 2023 to Nov 2024',
-        role: 'Data Scientist I',
-        bullets: [
-          'Established a centralized DS pipeline framework/API for Corporate Finance on GitLab, Domino, and GCP, making collaboration <strong>63% more efficient</strong>.',
-          'Built a real-time AT&amp;T and T-Mobile port-in EDA pipeline using DataRobot to forecast competitor market-share trajectories.',
-          'Automated serverless forecasting for 9 major value brands (Walmart, Tracfone, Straight Talk, FiOS), pioneering a 12h email-report system.',
-          'Developed Tableau dashboards on GCP/BigQuery, eliminating <strong>10+ hours</strong> of weekly manual reporting.',
-          'Ran K-Means customer segmentation that surfaced 3 at-risk cohorts, which directly informed new retention campaigns.',
-        ],
-        impact: '63% efficiency gain · 10h/wk eliminated',
+        title: 'Competitor Port-In Forecasting',
+        desc: 'Real-time DataRobot EDA pipeline reading AT&amp;T and T-Mobile port-ins to forecast market-share trajectories.',
+        metric: 'Real time',
+        metricLabel: 'competitive share tracking',
+      },
+    ],
+  },
+  {
+    company: 'Verizon',
+    logo: '/logos/verizon-check.svg',
+    logoClass: 'logo-verizon',
+    date: 'Nov 2024 to Present',
+    role: 'Data Scientist III',
+    bullets: [
+      'Engineered 9 Python and SQL anomaly-detection microservices with Verizon EDW integration, saving <strong>50+ hours/month</strong> across 15 teams.',
+      'Presented to 100+ stakeholders, directly influencing product roadmap and reducing future development costs.',
+    ],
+    cards: [
+      {
+        title: 'Credit Risk Intelligence Platform',
+        desc: 'Fullstack app generating a synthetic customer database, so finance can simulate credit-policy changes without touching production.',
+        metric: '$1.2B+',
+        metricLabel: 'in bad debt monitored',
       },
       {
-        date: 'Nov 2024 to Present',
-        role: 'Data Scientist III',
-        bullets: [
-          'Architected a credit-risk fullstack app that synthetically generates a customer database to monitor policy changes impacting <strong>$1.2B+ in bad-debt writeoff</strong>.',
-          'Engineered 9 Python &amp; SQL anomaly-detection microservices with Verizon EDW integration, saving <strong>50+ hours/month</strong> across 15 teams.',
-          'Led 2 ML XAI frameworks (Streamlit + Qlik), reducing hypothesis-generation time by <strong>73%</strong> for shareholder calls.',
-          'Built churn-forecasting models and intervention simulators (SMS, email, fee adjustments) that pushed decisioning coverage from <strong>0% → 60%</strong>.',
-          'Presented to 100+ stakeholders, directly influencing product roadmap and reducing future development costs.',
-        ],
-        impact: '$1.2B impact · 50h/mo saved · 73% faster',
+        title: 'XAI Gross-Adds Framework',
+        desc: 'Explainable-AI frameworks (Streamlit + Qlik) isolating the real drivers of Gross Adds ahead of shareholder calls.',
+        metric: '73%',
+        metricLabel: 'faster hypothesis generation',
+      },
+      {
+        title: 'Churn Intervention Engine',
+        desc: 'Churn forecasting plus a simulator for SMS, email, and fee-adjustment interventions. Cut outsourced engagement volume ~35%.',
+        metric: '0 → 60%',
+        metricLabel: 'internal decisioning coverage',
       },
     ],
   },
@@ -93,34 +142,61 @@ const brokenLetters = 'broken'.split('').map((ch, i) => ({
     <h2 class="section-title reveal">Where I've been,<br>what I've <span class="fall-slot" id="fallSlot">{brokenLetters.map((l) => (
       <s class="fall-letter" style={`--d:${l.delay}ms`}>{l.ch}</s>
     ))}&nbsp;</span>built</h2>
-    <p class="section-sub reveal">3+ years turning data into decisions at scale.</p>
+    <p class="section-sub reveal">3+ years turning data into decisions at scale. Scroll the trajectory.</p>
 
     <div class="journey" id="journey">
-      <span class="rail" aria-hidden="true"><span class="rail-fill" id="railFill"></span></span>
+      <!-- The spine is drawn through the measured badge centres at runtime, so
+           it stays correct at any width and collapses to a straight rail on
+           mobile without a second code path. -->
+      <svg class="spine" id="spine" aria-hidden="true" focusable="false" fill="none">
+        <defs>
+          <linearGradient id="spineGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#c084fc" />
+            <stop offset="100%" stop-color="#a855f7" />
+          </linearGradient>
+        </defs>
+        <path class="spine-base" id="spineBase" />
+        <path class="spine-fill" id="spineFill" />
+      </svg>
 
-      {journey.map((c) => (
-        <article class="company reveal">
-          <div class:list={['badge', c.logoClass]} data-node>
-            {c.logo.endsWith('.svg')
-              ? <span class="mark" style={`--mark:url('${c.logo}')`} aria-hidden="true"></span>
-              : <img src={c.logo} alt="" width="24" height="24" loading="lazy" />}
+      {stops.map((s, i) => (
+        <article
+          class="stop"
+          data-stop
+          data-side={i % 2 === 0 ? 'left' : 'right'}
+          style={`--bx:${i % 2 === 0 ? 1 : -1}`}
+        >
+          <div class="stop-node">
+            <div class:list={['badge', s.logoClass]} data-node>
+              {s.logo.endsWith('.svg')
+                ? <span class="mark" style={`--mark:url('${s.logo}')`} aria-hidden="true"></span>
+                : <img src={s.logo} alt="" width="24" height="24" loading="lazy" />}
+            </div>
           </div>
-          <div class="company-body">
-            <header class="company-head">
-              <h3 class="company-name">{c.company}</h3>
-              <span class="company-span">{c.span}</span>
-            </header>
 
-            {c.roles.map((r) => (
-              <div class="role">
-                {c.roles.length > 1 && <span class="role-date">{r.date}</span>}
-                <h4 class="role-title">{r.role}</h4>
-                <ul class="role-bullets">
-                  {r.bullets.map((b) => <li set:html={b} />)}
-                </ul>
-                {r.impact && <span class="role-impact">↑ {r.impact}</span>}
+          <div class="stop-role">
+            <span class="stop-date" style="--d:0ms">{s.date}</span>
+            <h3 class="stop-company" style="--d:50ms">{s.company}</h3>
+            <h4 class="stop-title" style="--d:110ms">{s.role}</h4>
+            <ul class="stop-bullets">
+              {s.bullets.map((b, bi) => (
+                <li set:html={b} style={`--d:${190 + bi * 80}ms`} />
+              ))}
+            </ul>
+          </div>
+
+          <div class="stop-cards">
+            {s.cards.map((c, ci) => (
+              <div class="pcard" style={`--d:${280 + ci * 90}ms`}>
+                <h5 class="pcard-title">{c.title}</h5>
+                <p class="pcard-desc" set:html={c.desc} />
+                <p class="pcard-metric">
+                  <strong>{c.metric}</strong>
+                  {c.metricLabel && <span>{c.metricLabel}</span>}
+                </p>
               </div>
             ))}
+            {s.note && <p class="stop-note" style="--d:300ms">{s.note}</p>}
           </div>
         </article>
       ))}
@@ -129,8 +205,9 @@ const brokenLetters = 'broken'.split('').map((ch, i) => ({
 </section>
 
 <style>
+  #experience { border-top: 1px solid var(--border-soft); }
   #experience .section-title s { color: var(--muted); text-decoration-color: rgba(168,85,247,0.5); }
-  .section-sub { margin-bottom: clamp(56px, 7vw, 88px); }
+  .section-sub { margin-bottom: clamp(64px, 8vw, 100px); }
 
   /* "broken" comes apart letter by letter and tumbles into a pile at the
      bottom of the page, while "built" slides in to take its place. */
@@ -171,141 +248,265 @@ const brokenLetters = 'broken'.split('').map((ch, i) => ({
     100% { transform: translate(var(--tx), var(--ty)) rotate(660deg) scale(0.03); opacity: 0; }
   }
 
-  /* ---- Journey timeline ---- */
-  .journey { position: relative; }
-
-  .rail {
-    position: absolute;
-    left: 27px;
-    top: 28px;
-    width: 2px;
-    height: 0; /* measured by JS to span first → last badge */
-    background: var(--border-soft);
-    border-radius: 2px;
+  /* ---- Journey: a weaving trajectory rather than a straight rail ---- */
+  .journey {
+    position: relative;
+    /* Centre channel the spine lives in. How far each node actually swings off
+       centre is computed per stop at runtime (see --amp), because a fixed swing
+       against wildly different content heights turns short hops into hairpins. */
+    --gutter: clamp(96px, 15vw, 220px);
   }
-  .rail-fill {
+
+  .spine {
     position: absolute;
     inset: 0;
-    background: linear-gradient(var(--purple-lt), var(--purple));
-    border-radius: 2px;
-    transform: scaleY(0);
-    transform-origin: top;
-    will-change: transform;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 1;
+  }
+  /* Quiet enough that the road ahead is a promise rather than a spoiler, but
+     present enough that the trajectory doesn't look severed at the fill's edge. */
+  .spine-base {
+    stroke: rgba(168,130,255,0.16);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .spine-fill {
+    stroke: url(#spineGrad);
+    stroke-width: 2;
+    stroke-linecap: round;
+    will-change: stroke-dashoffset;
   }
 
-  .company {
-    display: grid;
-    grid-template-columns: 56px 1fr;
-    column-gap: clamp(24px, 4vw, 44px);
-    padding-bottom: clamp(56px, 7vw, 84px);
-  }
-  .company:last-child { padding-bottom: 0; }
-
-  .badge {
+  .stop {
     position: relative;
-    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--gutter) minmax(0, 1fr);
+    align-items: start;
+    padding-bottom: clamp(68px, 8.5vw, 118px);
+    /* A floor on the vertical run between nodes. Without it a one-bullet stop
+       sits 280px below its neighbour while a three-card stop sits 700px below,
+       and no amount of curve maths makes those two transitions look alike. */
+    min-height: clamp(320px, 34vw, 460px);
+  }
+  .stop:last-child { padding-bottom: 0; }
+
+  /* Absolute so the horizontal swing never disturbs the content columns. */
+  .stop-node {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(calc(-50% + var(--bx) * var(--amp, 0px)));
+    z-index: 3;
+  }
+
+  /* An unlit badge still has to read as a node on the line, otherwise a logo
+     like Verizon's check floats in space with nothing holding it. */
+  .badge {
     width: 56px; height: 56px;
     border-radius: 50%;
     display: grid;
     place-items: center;
     background: #0b0813;
-    box-shadow: 0 0 0 1px var(--border);
+    box-shadow: 0 0 0 1px rgba(168,130,255,0.24);
     transition: box-shadow 0.45s var(--ease);
   }
-  /* Logos are monochrome at rest and show their brand color on hover.
-     SVG marks are painted through a mask so the color is a plain background
-     swap; the PNG just drops its whitening filter. */
+  /* Logos wear their real colors. SVG marks are painted through a mask so the
+     brand color is a plain background fill; PNGs are used as-is. */
   .mark {
     display: block;
-    background: rgba(241,237,251,0.9);
     -webkit-mask: var(--mark) center / contain no-repeat;
     mask: var(--mark) center / contain no-repeat;
-    transition: background 0.35s;
   }
-  .logo-verizon .mark { width: 20px; height: 24px; }
-  .logo-rutgers .mark { width: 24px; height: 21px; }
-  .logo-verizon:hover .mark { background: #e60000; }
-  .logo-rutgers:hover .mark { background: #cc0033; }
+  .logo-verizon .mark { width: 21px; height: 25px; background: #ee0000; }
 
-  .badge img { opacity: 0.9; }
-  .logo-ranksense img { width: 26px; height: auto; filter: brightness(0) invert(1); transition: filter 0.35s; }
-  .logo-ranksense:hover img { filter: none; }
+  .badge img { transition: transform 0.35s var(--ease); }
+  /* RankSense's navy arc all but vanishes on a near-black badge, so it gets a
+     lift rather than a repaint: still their blue, just legible. */
+  .logo-ranksense img { width: 26px; height: auto; filter: brightness(1.4); }
+  .logo-abraira img  { width: 27px; height: 27px; }
+  .badge:hover img, .badge:hover .mark { transform: scale(1.08); }
   .badge.lit {
     box-shadow:
       0 0 0 1px rgba(192,132,252,0.55),
       0 0 22px 2px rgba(168,85,247,0.35);
   }
 
-  .company-head {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 6px 16px;
-    min-height: 56px;
-    align-content: center;
-    margin-bottom: 10px;
-  }
-  .company-name {
-    font-family: var(--font-display);
-    font-size: clamp(20px, 2.1vw, 25px);
-    font-weight: 600;
-    letter-spacing: -0.015em;
-    color: var(--text);
-  }
-  .company-span { font-size: 14.5px; color: var(--muted); }
+  /* Both columns hug the spine, so the page reads as one gathered thread
+     rather than two loose edges. */
+  .stop-role  { grid-row: 1; max-width: 460px; padding-top: 2px; }
+  .stop-cards { grid-row: 1; width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 14px; }
 
-  .role { padding: 22px 0 0; }
-  /* Clear air between positions, so each promotion reads as its own chapter */
-  .role + .role { margin-top: clamp(30px, 4vw, 48px); }
-  .role-date {
+  .stop[data-side="left"]  .stop-role  { grid-column: 1; justify-self: end; }
+  .stop[data-side="left"]  .stop-cards { grid-column: 3; justify-self: start; }
+  .stop[data-side="right"] .stop-role  { grid-column: 3; justify-self: start; }
+  .stop[data-side="right"] .stop-cards { grid-column: 1; justify-self: end; }
+
+  .stop-date {
     display: block;
     font-size: 14px;
     color: var(--muted);
     margin-bottom: 4px;
   }
-  .role-title {
+  .stop-company {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2.1vw, 25px);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .stop-title {
     font-family: var(--font-display);
     font-size: clamp(17px, 1.7vw, 20px);
     font-weight: 600;
-    color: var(--text);
+    color: var(--purple-lt);
     letter-spacing: -0.01em;
-    margin-bottom: 13px;
+    margin: 3px 0 15px;
   }
-  .role-bullets { list-style: none; display: flex; flex-direction: column; gap: 11px; }
-  .role-bullets li {
+  .stop-bullets { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+  .stop-bullets li {
     position: relative;
     padding-left: 20px;
-    font-size: 17px;
+    font-size: 16.5px;
     color: var(--text-dim);
     font-weight: 300;
     line-height: 1.7;
-    max-width: 66ch;
   }
-  .role-bullets li::before {
+  .stop-bullets li::before {
     content: '';
     position: absolute; left: 0; top: 12px;
     width: 9px; height: 1px;
     background: var(--purple);
   }
-  .role-bullets strong { color: var(--purple-lt); font-weight: 600; }
+  .stop-bullets strong { color: var(--purple-lt); font-weight: 600; }
 
-  .role-impact {
-    display: inline-flex; align-items: center;
-    margin-top: 16px;
-    font-size: 13.5px;
-    font-weight: 500;
-    letter-spacing: 0.01em;
+  /* ---- Project cards: artifacts, deliberately not demos ----
+     No screenshot, no CTA, no link affordance. These are work projects, so the
+     card's job is to name the thing and land the number.
+     The fill is near-opaque on purpose: the starfield runs behind this section
+     and a card you can see a supernova through doesn't read as an object. */
+  .pcard {
+    border-radius: 16px;
+    background: rgba(23,16,38,0.88);
+    box-shadow: 0 12px 34px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.045);
+    padding: 16px 18px 15px;
+  }
+  .pcard:hover { background: rgba(31,22,50,0.94); }
+
+  .pcard-title {
+    font-family: var(--font-display);
+    font-size: 16.5px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    margin-bottom: 6px;
+    text-wrap: balance;
+  }
+  .pcard-desc {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    font-weight: 300;
+  }
+  /* Number and label sit on one baseline rather than stacked, which keeps a
+     three-card stack from towering over the bullets opposite it. */
+  .pcard-metric {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 11px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .pcard-metric strong {
+    flex: none;
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
     color: var(--purple-lt);
+    letter-spacing: -0.01em;
   }
 
-  @media (max-width: 680px) {
-    .rail { left: 21px; top: 22px; }
-    .company { grid-template-columns: 44px 1fr; column-gap: 18px; }
+  .stop-note {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--muted);
+    font-style: italic;
+    padding-top: 6px;
+  }
+
+  /* ---- Entrance: nothing exists until the trajectory reaches it ----
+     Opacity and transform only, so the copy is always in the DOM for search,
+     screen readers and print. */
+  .stop-role > *,
+  .stop-bullets li,
+  .stop-note {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+    transition-delay: var(--d, 0ms);
+  }
+  .stop-bullets { opacity: 1; transform: none; transition: none; }
+
+  /* Cards rise into a flush column, staggered. No tilt, no cascade: a stack of
+     work should look filed, not shuffled. */
+  .pcard {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.5s var(--ease) var(--d, 0ms),
+      transform 0.6s var(--ease) var(--d, 0ms),
+      background 0.3s;
+  }
+
+  .stop.in .stop-role > *,
+  .stop.in .stop-bullets li,
+  .stop.in .stop-note,
+  .stop.in .pcard { opacity: 1; transform: none; }
+
+  .stop.in .pcard:hover { transform: translateY(-3px); }
+
+  @media (max-width: 900px) {
+    .journey { --gutter: 0px; }
+    .stop {
+      grid-template-columns: 44px minmax(0, 1fr);
+      column-gap: 18px;
+      padding-bottom: clamp(64px, 10vw, 96px);
+      min-height: 0; /* single column, no curve to regularise */
+    }
+    .stop-node { position: static; grid-column: 1; grid-row: 1; transform: none; }
     .badge { width: 44px; height: 44px; }
-    .logo-verizon .mark { width: 16px; height: 19px; }
-    .logo-rutgers .mark { width: 19px; height: 17px; }
+    .logo-verizon .mark { width: 17px; height: 20px; }
     .logo-ranksense img { width: 21px; }
-    .company-head { min-height: 44px; }
+    .logo-abraira img { width: 22px; height: 22px; }
+
+    .stop[data-side] .stop-role,
+    .stop[data-side] .stop-cards {
+      grid-column: 2;
+      justify-self: stretch;
+      max-width: none;
+    }
+    .stop[data-side] .stop-role  { grid-row: 1; }
+    .stop[data-side] .stop-cards { grid-row: 2; margin-top: 24px; }
+  }
+
+  /* Motion off: everything is already here, it just doesn't perform. */
+  :global(html.no-motion) .stop-role > *,
+  :global(html.no-motion) .stop-bullets li,
+  :global(html.no-motion) .stop-note,
+  :global(html.no-motion) .pcard {
+    opacity: 1;
+    transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stop-role > *, .stop-bullets li, .stop-note, .pcard { opacity: 1; transform: none; }
   }
 </style>
 
@@ -352,43 +553,138 @@ const brokenLetters = 'broken'.split('').map((ch, i) => ({
     io.observe(slot);
   }
 
-  // Journey rail: the line draws itself as you scroll, and each company badge
-  // lights up as the line reaches it.
+  // ---- Journey spine ----
+  // The path is generated from where the badges actually landed, so layout owns
+  // the shape and this only has to draw through it. On mobile the badges share
+  // an x, which makes the same code emit a straight rail.
   const journeyEl = document.getElementById('journey');
-  const railEl = journeyEl?.querySelector<HTMLElement>('.rail');
-  const fillEl = document.getElementById('railFill');
+  const svgEl = document.getElementById('spine');
+  const baseEl = document.getElementById('spineBase');
+  const fillEl = document.getElementById('spineFill');
+  const stops = journeyEl ? Array.from(journeyEl.querySelectorAll<HTMLElement>('[data-stop]')) : [];
   const badges = journeyEl ? Array.from(journeyEl.querySelectorAll<HTMLElement>('[data-node]')) : [];
 
-  if (journeyEl && railEl && fillEl && badges.length) {
-    const sizeRail = () => {
-      const first = badges[0].getBoundingClientRect();
-      const last = badges[badges.length - 1].getBoundingClientRect();
-      railEl.style.height = last.top - first.top + 'px';
+  if (journeyEl && svgEl && baseEl && fillEl && badges.length > 1) {
+    let pathLen = 0;
+    let firstY = 0;
+    let lastY = 0;
+
+    // A trajectory reads as one continuous line only if every turn has roughly
+    // the same steepness. Content heights vary by 3x between stops, so a fixed
+    // swing would make the long runs lazy and the short ones hairpin. Instead
+    // each node's swing is capped by its *shortest* neighbouring run, which
+    // bounds horizontal travel per segment to MAX_SLOPE of the vertical.
+    const MAX_SLOPE = 0.26;
+    const MIN_AMP = 22;
+
+    const shapeTrajectory = () => {
+      // The badge has to stay inside the centre channel, and the grid already
+      // knows how wide that is. Reading it back beats duplicating the clamp.
+      const cols = getComputedStyle(stops[0]).gridTemplateColumns.split(' ').map(parseFloat);
+      const gutter = cols.length === 3 ? cols[1] : 0; // 2 columns means mobile
+      const badgeW = badges[0].getBoundingClientRect().width;
+      // Content fills its column right up to the channel, so the node needs real
+      // clearance at full swing, not just enough to avoid touching.
+      const maxAmp = Math.max(0, (gutter - badgeW) / 2 - 20);
+
+      const ys = badges.map((b) => {
+        const r = b.getBoundingClientRect();
+        return r.top + r.height / 2;
+      });
+      const gaps = ys.slice(1).map((y, i) => y - ys[i]);
+
+      stops.forEach((s, i) => {
+        const before = i > 0 ? gaps[i - 1] : Infinity;
+        const after = i < gaps.length ? gaps[i] : Infinity;
+        const run = Math.min(before, after);
+        // Half of MAX_SLOPE per node: the two nodes either side of a segment
+        // each contribute, so together they stay within the budget.
+        const amp = Math.min(maxAmp, Math.max(MIN_AMP, run * MAX_SLOPE * 0.5));
+        s.style.setProperty('--amp', amp.toFixed(1) + 'px');
+      });
     };
-    sizeRail();
-    window.addEventListener('resize', sizeRail, { passive: true });
+
+    const buildSpine = () => {
+      shapeTrajectory();
+      const jr = journeyEl.getBoundingClientRect();
+      const pts = badges.map((b) => {
+        const r = b.getBoundingClientRect();
+        return {
+          x: r.left - jr.left + r.width / 2,
+          y: r.top - jr.top + r.height / 2,
+        };
+      });
+
+      svgEl.setAttribute('viewBox', `0 0 ${jr.width} ${jr.height}`);
+
+      // Vertical control handles keep the tangent vertical at every badge, so
+      // the line always arrives and leaves cleanly through the node.
+      let d = `M ${pts[0].x} ${pts[0].y}`;
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], b = pts[i];
+        const k = (b.y - a.y) * 0.45;
+        d += ` C ${a.x} ${a.y + k}, ${b.x} ${b.y - k}, ${b.x} ${b.y}`;
+      }
+      baseEl.setAttribute('d', d);
+      fillEl.setAttribute('d', d);
+
+      pathLen = (fillEl as unknown as SVGPathElement).getTotalLength();
+      firstY = pts[0].y;
+      lastY = pts[pts.length - 1].y;
+      fillEl.style.strokeDasharray = String(pathLen);
+      fillEl.style.strokeDashoffset = reduce ? '0' : String(pathLen);
+    };
+
+    buildSpine();
+    window.addEventListener('resize', () => { buildSpine(); update(); }, { passive: true });
+    // Web fonts land after first paint and change every measurement.
+    if ((document as any).fonts?.ready) {
+      (document as any).fonts.ready.then(() => { buildSpine(); update(); });
+    }
+
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      if (reduce) return;
+      const jr = journeyEl.getBoundingClientRect();
+      // The line draws up to a "focus point" 42% down the viewport.
+      const focus = window.innerHeight * 0.42;
+      const span = lastY - firstY || 1;
+      const p = Math.min(Math.max((focus - (jr.top + firstY)) / span, 0), 1);
+      fillEl.style.strokeDashoffset = String(pathLen * (1 - p));
+      badges.forEach((b) => {
+        b.classList.toggle('lit', b.getBoundingClientRect().top + 20 <= focus);
+      });
+    };
 
     if (reduce) {
-      fillEl.style.transform = 'scaleY(1)';
       badges.forEach((b) => b.classList.add('lit'));
+      stops.forEach((s) => s.classList.add('in'));
     } else {
-      let ticking = false;
-      const update = () => {
-        ticking = false;
-        const railRect = railEl.getBoundingClientRect();
-        // The line draws up to a "focus point" 38% down the viewport.
-        const focus = window.innerHeight * 0.38;
-        const p = Math.min(Math.max((focus - railRect.top) / railRect.height, 0), 1);
-        fillEl.style.transform = `scaleY(${p})`;
-        badges.forEach((b) => {
-          b.classList.toggle('lit', b.getBoundingClientRect().top + 20 <= focus);
-        });
-      };
-      const onScroll = () => {
+      window.addEventListener('scroll', () => {
         if (!ticking) { ticking = true; requestAnimationFrame(update); }
-      };
-      window.addEventListener('scroll', onScroll, { passive: true });
+      }, { passive: true });
       update();
+
+      // Each stop assembles itself as the trajectory reaches it. Once revealed
+      // it stays revealed, so scrolling back up doesn't replay the section.
+      const stopIO = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('in');
+          stopIO.unobserve(e.target);
+        });
+      }, { threshold: 0.05, rootMargin: '0px 0px -12% 0px' });
+      stops.forEach((s) => stopIO.observe(s));
+
+      // Safety net: anything already scrolled past never stays blank.
+      window.addEventListener('load', () => {
+        stops.forEach((s) => {
+          if (s.getBoundingClientRect().top < window.innerHeight) s.classList.add('in');
+        });
+        buildSpine();
+        update();
+      });
     }
   }
 </script>
