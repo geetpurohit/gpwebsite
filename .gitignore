@@ -32,3 +32,13 @@ npm-debug.log*
 # macOS / editor
 .DS_Store
 .vscode/
+
+# Universe catalogue data (~220MB) lives in Cloudflare R2, not git.
+# The site fetches it at runtime from DATA_BASE in src/pages/projects/universe.astro,
+# so the CI build does not need these files. Regenerate locally with scripts/build-*.mjs,
+# then publish with: node scripts/sync-r2.mjs universe-data
+public/universe/
+
+# Raw Gaia DR3 download (~9.6GB of CSV) — the intermediate that build-gaia.mjs
+# reduces into public/universe/. Re-fetch with: node scripts/fetch-gaia.mjs dat
+dat/

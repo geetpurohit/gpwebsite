@@ -37,17 +37,37 @@ const description =
     <!-- bottom controls -->
     <div class="ui-bottom">
       <div class="jump-group">
-        <button class="hud-btn" data-log="-3.6">Solar system</button>
-        <button class="hud-btn active" data-log="1.2">Neighborhood</button>
+        <button class="hud-btn active" data-log="-3.6">Solar system</button>
+        <button class="hud-btn" data-log="1.2">Neighborhood</button>
         <button class="hud-btn" data-log="4.6">Milky Way</button>
         <button class="hud-btn" data-log="7.6">Supercluster</button>
         <button class="hud-btn" data-log="8.9">Cosmic web</button>
+        <button class="hud-btn" data-log="9.9">Quasars</button>
+        <button class="hud-btn" data-log="10.02">CMB</button>
       </div>
-      <input id="zoom" class="zoom-slider" type="range" min="0" max="1" step="0.0005" value="0.420" aria-label="Zoom scale" />
+      <input id="zoom" class="zoom-slider" type="range" min="0" max="1" step="0.0005" value="0.0698" aria-label="Zoom scale" />
+      <button class="hud-btn real-btn" id="realBtn" aria-label="Toggle realistic scaling">◦ Enable realistic scaling</button>
       <button class="hud-btn ai-btn" id="aiBtn" aria-label="Toggle AI reconstruction">✦ AI fill: off</button>
       <button class="hud-btn info-btn" id="infoBtn" aria-label="About this map">i</button>
     </div>
-    <div class="ui-hint">Scroll to travel through scale · drag to orbit</div>
+    <div class="ui-hint">Scroll to travel through scale · drag to orbit · click a name to fly there</div>
+
+    <!-- shown while orbiting something other than the Sun -->
+    <div class="focus-chip" id="focusChip" hidden>
+      <span class="fc-label">orbiting</span>
+      <span class="fc-name" id="focusName"></span>
+      <button class="fc-back" id="focusBack">return to the Sun</button>
+    </div>
+
+    <!-- true-scale readout: only shown while realistic scaling is on -->
+    <div class="real-readout" id="realReadout" hidden>
+      <div class="rr-title">Realistic scaling</div>
+      <div class="rr-line">Everything is drawn at its <strong>true angular size</strong>. Nothing is
+        enlarged to stay visible.</div>
+      <div class="rr-metric" id="rrMetric"></div>
+      <div class="rr-note">If the screen looks empty, that is the measurement. The universe is
+        mostly distance.</div>
+    </div>
 
     <!-- info overlay -->
     <div class="info-panel" id="infoPanel" hidden>
@@ -76,14 +96,29 @@ const description =
         Coma, the Great Attractor and the other real clusters, and the filaments and voids between them
         come from a Voronoi-foam model of the cosmic web, boosted to follow the real 2MASS density. The
         structure is a plausible reconstruction, not an observation; the real galaxies ride on top of it.</p>
-      <p><strong>Some things are honest models, not surveys.</strong> The planets sit at their real
-        orbital distances, and the asteroid belt, Kuiper belt, heliopause and Oort cloud are drawn at
-        their real distances too, but as representative clouds, we have no catalogue of individual
-        Oort cloud objects. The two <strong>Voyager probes</strong> sit at their real 2026 positions,
-        the only human-made objects out there, already past the heliopause and climbing out of the
-        ecliptic plane. And the far Milky Way is a schematic spiral, because we sit inside our
-        galaxy and cannot measure most of its stars; the real stars fill the bubble around the Sun,
-        then blend into the model beyond.</p>
+      <p><strong>The solar system is now every measured orbit.</strong> All 1,554,969 minor planets
+        the IAU Minor Planet Center has an orbit for: the asteroid belt, the Jupiter Trojans, the
+        Centaurs, the Kuiper belt, the scattered disc and the comets. These are not a representative
+        cloud. Each point carries its own measured orbital elements and Kepler's equation is solved
+        for it every frame, so the belt you see is genuinely orbiting. The observation arcs behind
+        this data start with Ceres in <strong>1801</strong> and run to orbit updates issued this week.</p>
+      <p><strong>The Oort cloud is the one thing out here nobody has ever catalogued.</strong> Not a
+        single object in it has been directly observed, so that shell is drawn as a model and
+        labelled as one. The real measured points that far out are the long-period comets: 97 have
+        fitted aphelia beyond 1,000 AU, 37 beyond 10,000 AU, and the most distant reaches
+        101,397 AU before falling back. The <strong>heliopause</strong> is drawn blunt-nosed rather
+        than spherical, because the interstellar wind compresses it to ~120 AU at the nose — where
+        both Voyagers actually crossed — and draws it into a long tail behind. The two
+        <strong>Voyager probes</strong> sit at their real 2026 positions, the only human-made objects
+        out there. The far Milky Way is still a schematic spiral, because we sit inside our galaxy
+        and cannot measure most of its stars; the real stars fill the bubble around the Sun, then
+        blend into the model beyond.</p>
+      <p><strong style="color:#7dd3fc">"Enable realistic scaling"</strong> removes every visual aid at
+        once. Normally each object is drawn at a readable size, because at true scale almost nothing
+        in this map would be visible at all. Turn it on and everything is redrawn at its real angular
+        diameter, with brightness falling off by the fraction of a pixel it actually covers. The
+        asteroid belt disappears. Earth becomes about one eight-hundredth of a pixel. What is left is
+        the honest picture: the universe is overwhelmingly empty, and the emptiness is the finding.</p>
       <p><strong>The halo is real again.</strong> Surrounding the disc, the roughly 150 globular
         clusters (Harris catalogue) and the dwarf satellite galaxies (Sagittarius, Fornax, Sculptor,
         Draco, Leo I and dozens more, from the McConnachie catalogue) sit at their real measured
@@ -94,7 +129,14 @@ const description =
         fields dreams up plausible galaxies to fill the sky the surveys never saw, behind the Milky Way
         and outside the SDSS wedge, so you can imagine what the whole cosmic web might look like. It is
         statistically web-like but invented; the crimson points are inferred, never observed.</p>
-      <p class="info-src">Data: AT-HYG / HYG (astronexus, public domain) · 2MRS (Huchra et al. 2012) ·
+      <p><strong>The colour of the microwave background is not real.</strong> The CMB is a
+        2.725 K blackbody, and its hot and cold spots differ by about 100 microkelvin —
+        a variation of roughly 0.004%. Rendering that as visible mottling means amplifying
+        it about twenty-five thousand times. It is also microwave light, which no eye can
+        see at all. The pattern is a real measurement; the colour is a convention for
+        making an imperceptible variation visible.</p>
+      <p class="info-src">Data: IAU Minor Planet Center (MPCORB, CometEls) · AT-HYG / HYG (astronexus,
+        public domain) · 2MRS (Huchra et al. 2012) ·
         SDSS · globular clusters (Harris 1996, 2010 ed.) · Local Group dwarfs (McConnachie 2012).
         Rendered with Three.js. <a href="https://github.com/geetpurohit" target="_blank" rel="noopener">Code on GitHub</a>.</p>
     </div>
@@ -119,14 +161,40 @@ const description =
     const dotTextEl = document.getElementById('dotText');
     const sourceTextEl = document.getElementById('sourceText');
     const zoom = document.getElementById('zoom');
+    const focusChip = document.getElementById('focusChip');
+    const focusName = document.getElementById('focusName');
 
     let GAL_SOURCE = '2MASS + SDSS surveys · 620,033 real galaxies';
     let SUPERCLUSTER_SOURCE = 'Laniakea · 2MASS Redshift Survey';
     let WEBFILL_COUNT = 0, webfillOn = false, SUPERCLUSTER_COUNT = 0, SUPWEB_COUNT = 0;
+    let SSO_COUNT = 0, SSO_SOURCE = 'IAU Minor Planet Center', realScale = false;
+    let RRL_COUNT = 0, OCL_COUNT = 0, CEP_COUNT = 0;
+    let starTree = null, galTree = null, ptBudget = 3.2e6, fpsAvg = 60, lastT = 0;
+    let focusLabel = null;
+    let QSO_COUNT = 0, QSO_ZMAX = 0, CMB_RMS = 0, GSHAPE_N = 0, STREAM_N = 0;
+
+    // Where the ~220MB of catalogue data is served from.
+    //
+    // Production reads from Cloudflare R2: zero egress fees, and because every
+    // node file is immutable it carries a one-year cache header, so the edge
+    // answers almost every request without touching the bucket. It also keeps the
+    // data out of the repo and off the build, which is what lets Pages keep
+    // building from git.
+    //
+    // Development reads from local public/universe instead. That keeps the dev
+    // server fast, working offline, and immune to DNS or network problems — the
+    // page should never fail to load just because R2 is unreachable from a laptop.
+    //
+    // Override either with PUBLIC_UNIVERSE_DATA to test the other path.
+    const DATA_BASE = import.meta.env.PUBLIC_UNIVERSE_DATA
+      || (import.meta.env.DEV ? '/universe' : 'https://universe-data.geetpurohit.com/v1');
+    const OCTREE_BASE = DATA_BASE + '/oct';
 
     const AU = 4.8481e-6;          // parsecs per AU
     const PC_TO_LY = 3.2616;
-    const LOG_MIN = -4.6, LOG_MAX = 9.2;
+    // The far limit sits just INSIDE the last-scattering shell (13.95 Gpc = 10^10.14 pc).
+    // You cannot travel outside the observable universe, so the camera cannot either.
+    const LOG_MIN = -4.6, LOG_MAX = 10.09;
     const logToSlider = (l) => (l - LOG_MIN) / (LOG_MAX - LOG_MIN);
     const sliderToLog = (v) => LOG_MIN + v * (LOG_MAX - LOG_MIN);
 
@@ -137,17 +205,28 @@ const description =
     else run(renderer);
 
     function run(renderer) {
-      renderer.setClearColor(0x01010a, 1);
+      renderer.setClearColor(0x000000, 1);   // stretched later; must start at true zero
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(60, 1, 0.001, 1e12);
 
       // ---------- shared point shader (size scales with camera distance) ----------
+      // Two sizing modes:
+      //   uReal = 0  visibility scaling. Points get a floor of ~1.5px so an unresolved
+      //              source stays visible, and are dimmed by the lost area so total flux
+      //              is still conserved (brightness ~ 1/dist^2).
+      //   uReal = 1  TRUE ANGULAR SIZE. Radius comes from uRealR (scene units) and the
+      //              floor is removed entirely, so objects shrink below a pixel and
+      //              vanish exactly as they would to a real observer. The emptiness is
+      //              the point, so nothing is allowed to cheat here.
       const vert = `
         attribute vec3 aColor;
         attribute float aSize;
+        attribute float aRealR;   // TRUE physical radius, scene units (pc)
         uniform float uSize;
         uniform float uPixelRatio;
         uniform float uFadeR;
+        uniform float uReal;      // 0 = visibility scaling, 1 = true angular size
+        uniform float uPxPerRad;  // viewport pixels per radian of angular size
         varying vec3 vColor;
         varying float vFade;
         varying float vDim;
@@ -156,16 +235,32 @@ const description =
           // soft outer taper (from origin) so the star bubble dissolves instead of ending in a circle
           vFade = uFadeR > 0.5 ? (1.0 - smoothstep(uFadeR * 0.5, uFadeR, length(position))) : 1.0;
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
-          float sz = aSize * uSize * uPixelRatio / max(-mv.z, 1e-9);
-          // flux-conserving points: an unresolved source cannot shrink below ~1 pixel, so
-          // below that hold the footprint and dim by the lost area (brightness ~ 1/dist^2).
-          // this removes sub-pixel twinkle and gives real distance-based brightness.
-          float minPx = 1.5 * uPixelRatio;
+          float dist = max(-mv.z, 1e-12);
           vDim = 1.0;
-          if (sz < minPx) { float t = sz / minPx; vDim = t * t; sz = minPx; }
+          float sz;
+          if (uReal > 0.5) {
+            // angular diameter = 2R/d
+            sz = (2.0 * aRealR / dist) * uPxPerRad;
+            // The driver clamps gl_PointSize to a 1px floor, so shrinking alone can
+            // never make anything disappear. Take the brightness instead: an object
+            // covering a fraction of a pixel delivers that fraction of the light.
+            // This is what actually empties the screen, and it is the true physics.
+            float minPx = 1.0 * uPixelRatio;
+            if (sz < minPx) { float t = sz / minPx; vDim = t * t; sz = minPx; }
+          } else {
+            sz = aSize * uSize * uPixelRatio / dist;
+            // flux-conserving points: an unresolved source cannot shrink below ~1 pixel, so
+            // below that hold the footprint and dim by the lost area (brightness ~ 1/dist^2).
+            // this removes sub-pixel twinkle and gives real distance-based brightness.
+            float minPx = 1.5 * uPixelRatio;
+            if (sz < minPx) { float t = sz / minPx; vDim = t * t; sz = minPx; }
+          }
           gl_PointSize = clamp(sz, 0.0, 52.0);
           gl_Position = projectionMatrix * mv;
         }`;
+      // Writes linear radiance into an HDR buffer; the tone-map pass does the
+      // compression. No core/white boost here — that was washing dense fields to
+      // flat white and destroying stellar colour before anything could be summed.
       const frag = `
         precision mediump float;
         uniform float uOpacity;
@@ -177,40 +272,247 @@ const description =
           float d = length(gl_PointCoord - 0.5);
           float a = smoothstep(0.5, 0.05, d) * vFade * vDim;
           if (a <= 0.001) discard;
-          // keep the physical hue: saturate around luminance, brighten the core without going white
+          // keep the physical hue: saturate around luminance
           vec3 c = vColor;
           float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
           c = clamp(mix(vec3(l), c, uSat), 0.0, 1.0);
-          float core = smoothstep(0.30, 0.0, d) * 0.6;
-          c += core * mix(vec3(1.0), c, 0.6);
           gl_FragColor = vec4(c, a * uOpacity);
         }`;
+      function baseUniforms() {
+        return {
+          uOpacity: { value: 1 }, uSize: { value: 1 },
+          uPixelRatio: { value: renderer.getPixelRatio() },
+          uFadeR: { value: 0 }, uSat: { value: 1.35 },
+          uReal: { value: 0 }, uPxPerRad: { value: 1 },
+        };
+      }
       function makeMat() {
         return new THREE.ShaderMaterial({
-          uniforms: { uOpacity: { value: 1 }, uSize: { value: 1 }, uPixelRatio: { value: renderer.getPixelRatio() }, uFadeR: { value: 0 }, uSat: { value: 1.35 } },
+          uniforms: baseUniforms(),
           vertexShader: vert, fragmentShader: frag,
           transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
         });
       }
+      // Physical radii in parsecs, for true-scale mode.
+      const R_SUN_PC = 2.254e-8;                  // 696,000 km
+      const KM_PC = 3.2408e-14;                   // 1 km in parsecs
+      const R_GALAXY_PC = 15000;                  // typical disc galaxy half-light radius
+
+      // ---------- HDR accumulation + tone mapping ----------
+      // Additive blending into an 8-bit buffer clips at 1.0, which is why dense
+      // fields blew out to flat white: ~1 star per pixel summing linearly with no
+      // headroom. Accumulate into a half-float target instead, then compress with
+      // an asinh stretch — the standard astrophotography curve, linear near zero
+      // and logarithmic once bright, applied to luminance so hue survives.
+      const hdrTarget = new THREE.WebGLRenderTarget(1, 1, {
+        type: THREE.HalfFloatType, format: THREE.RGBAFormat,
+        minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter,
+        depthBuffer: false, generateMipmaps: true,
+        // MSAA. The renderer's own antialias:true only covers the DEFAULT framebuffer;
+        // once the scene renders into this target instead, that flag stopped doing
+        // anything and 1-2px points began flickering on and off as they crossed pixel
+        // boundaries during motion. The target has to request multisampling itself.
+        samples: 4,
+      });
+      // Auto-exposure. The scene spans thirteen decades of scale, from a planet at
+      // 1 AU to the cosmic web, and the on-screen point density swings by orders of
+      // magnitude across that range — no fixed exposure survives it. Mipmapping the
+      // HDR buffer down to 1x1 gives the frame's mean radiance essentially free, and
+      // the stretch is normalised against that instead of a hard-coded white point.
+      // ---------- bloom: separable Gaussian at quarter resolution ----------
+      // Sampling mip levels was cheap but wrong: mipmaps are BOX filters, so any
+      // compact bright source — a galaxy at Local Group scale — bloomed into a
+      // hard-edged square. Tightening the mip range only shrank the squares.
+      // A real separable Gaussian costs two half-passes per axis and blurs round.
+      const bloomOpts = {
+        type: THREE.HalfFloatType, format: THREE.RGBAFormat,
+        minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false,
+      };
+      const bloomA = new THREE.WebGLRenderTarget(1, 1, bloomOpts);
+      const bloomB = new THREE.WebGLRenderTarget(1, 1, bloomOpts);
+      const blurMat = new THREE.ShaderMaterial({
+        glslVersion: THREE.GLSL3,
+        uniforms: { tSrc: { value: null }, uDir: { value: new THREE.Vector2() }, uLod: { value: 0 },
+                    uPre: { value: 0 }, uThresh: { value: 0.34 } },
+        vertexShader: `
+          out vec2 vUv;
+          void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+        fragmentShader: `
+          precision highp float;
+          uniform sampler2D tSrc;
+          uniform vec2 uDir;
+          uniform float uLod;
+          uniform float uPre;
+          uniform float uThresh;
+          in vec2 vUv;
+          out vec4 fragColor;
+          void main() {
+            // 9-tap Gaussian using linear-sampled offsets; forced to LOD 0 so the
+            // source's own mip chain (built for auto-exposure) is never sampled
+            vec3 s = textureLod(tSrc, vUv, uLod).rgb * 0.2270270270;
+            s += (textureLod(tSrc, vUv + uDir * 1.3846153846, uLod).rgb
+                + textureLod(tSrc, vUv - uDir * 1.3846153846, uLod).rgb) * 0.3162162162;
+            s += (textureLod(tSrc, vUv + uDir * 3.2307692308, uLod).rgb
+                + textureLod(tSrc, vUv - uDir * 3.2307692308, uLod).rgb) * 0.0702702703;
+            // prefilter pass only: subtract a floor so ordinary points do not glow,
+            // leaving bloom for things that are actually bright
+            if (uPre > 0.5) s = max(s - uThresh, vec3(0.0));
+            fragColor = vec4(s, 1.0);
+          }`,
+        depthTest: false, depthWrite: false,
+      });
+
+      // ---------- temporally smoothed auto-exposure ----------
+      const expOpts = {
+        type: THREE.HalfFloatType, format: THREE.RGBAFormat,
+        minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false,
+      };
+      let expCur = new THREE.WebGLRenderTarget(1, 1, expOpts);
+      let expPrev = new THREE.WebGLRenderTarget(1, 1, expOpts);
+      let expPrimed = false;
+      const expMat = new THREE.ShaderMaterial({
+        glslVersion: THREE.GLSL3,
+        uniforms: {
+          tHdr: { value: null }, tPrev: { value: null },
+          uMaxLod: { value: 12.0 }, uRate: { value: 0.05 }, uPrimed: { value: 0 },
+        },
+        vertexShader: `
+          out vec2 vUv;
+          void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+        fragmentShader: `
+          precision highp float;
+          uniform sampler2D tHdr;
+          uniform sampler2D tPrev;
+          uniform float uMaxLod;
+          uniform float uRate;
+          uniform float uPrimed;
+          in vec2 vUv;
+          out vec4 fragColor;
+          void main() {
+            vec3 avg = textureLod(tHdr, vec2(0.5), uMaxLod).rgb;
+            float aL = max(dot(avg, vec3(0.2126, 0.7152, 0.0722)), 1e-7);
+            float prev = max(texture(tPrev, vec2(0.5)).r, 1e-7);
+            // smooth in LOG space: the scene spans many decades, so a linear lerp
+            // would crawl across the bright end and snap across the dark end
+            float sm = (uPrimed < 0.5) ? aL : exp(mix(log(prev), log(aL), uRate));
+            fragColor = vec4(sm, 0.0, 0.0, 1.0);
+          }`,
+        depthTest: false, depthWrite: false,
+      });
+      // backdrop buffer: the CMB shell, deliberately excluded from metering
+      const bgTarget = new THREE.WebGLRenderTarget(1, 1, {
+        type: THREE.HalfFloatType, format: THREE.RGBAFormat,
+        minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false,
+      });
+      const bgScene = new THREE.Scene();
+
+      const expScene = new THREE.Scene();
+      {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), expMat);
+        m.frustumCulled = false;
+        expScene.add(m);
+      }
+
+      const toneMat = new THREE.ShaderMaterial({
+        glslVersion: THREE.GLSL3,
+        uniforms: {
+          tHdr: { value: hdrTarget.texture },
+          tBloom: { value: bloomB.texture },
+          tExp: { value: null },
+          tBg: { value: bgTarget.texture },
+          uBgLevel: { value: 1.9 },
+          uKey: { value: 0.055 },     // target mid-grey (low = more highlight headroom)
+          uStretch: { value: 140.0 }, // toe lift: how hard faint detail is raised
+          uMaxLod: { value: 12.0 },
+          uBloom: { value: 0.26 },
+        },
+        vertexShader: `
+          out vec2 vUv;
+          void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+        fragmentShader: `
+          precision highp float;
+          uniform sampler2D tHdr;
+          uniform float uKey;
+          uniform float uStretch;
+          uniform float uMaxLod;
+          uniform float uBloom;
+          uniform sampler2D tBloom;
+          uniform sampler2D tExp;
+          uniform sampler2D tBg;
+          uniform float uBgLevel;
+          in vec2 vUv;
+          out vec4 fragColor;
+          float asinh1(float x) { return log(x + sqrt(x * x + 1.0)); }
+          void main() {
+            // temporally smoothed frame average, so exposure eases instead of
+            // snapping as content enters and leaves the view
+            float aL = max(texture(tExp, vec2(0.5)).r, 1e-6);
+            // white point tracks scene brightness, floored so an almost-empty frame
+            // (which is exactly what realistic scaling produces) cannot be amplified
+            // into noise
+            float white = clamp(aL / uKey, 0.004, 4000.0);
+
+            // pre-blurred, properly Gaussian, so bright compact sources glow round
+            // backdrop first: the early-out below fires exactly where the foreground
+            // is empty, which is precisely where the backdrop must still be drawn
+            vec3 bg = texture(tBg, vUv).rgb * uBgLevel;
+            vec3 bloom = texture(tBloom, vUv).rgb;
+            vec3 c = textureLod(tHdr, vUv, 0.0).rgb + bloom * uBloom;
+            float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+            if (l <= 1e-9) { fragColor = vec4(clamp(bg, 0.0, 1.0), 1.0); return; }
+            // asinh stretch: linear near zero, logarithmic once bright. Normalised so
+            // 'white' maps to 1.0, which is what stops dense fields clipping.
+            float ls = asinh1(l * uStretch) / asinh1(max(white * uStretch, 1.0001));
+            // rescale RGB by the luminance ratio so hue survives compression
+            vec3 outc = c * (ls / l);
+            // desaturate only where genuinely past full scale
+            float over = max(max(outc.r, outc.g), outc.b);
+            if (over > 1.0) outc = mix(outc / over, vec3(1.0), clamp((over - 1.0) / 3.0, 0.0, 1.0));
+            fragColor = vec4(clamp(outc + bg * (1.0 - min(outc.r + outc.g + outc.b, 1.0)), 0.0, 1.0), 1.0);
+          }`,
+        depthTest: false, depthWrite: false,
+      });
+      const blurScene = new THREE.Scene();
+      {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), blurMat);
+        m.frustumCulled = false;
+        blurScene.add(m);
+      }
+      const toneScene = new THREE.Scene();
+      const toneCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+      const toneMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), toneMat);
+      toneMesh.frustumCulled = false;
+      toneScene.add(toneMesh);
 
       const groups = {};
-      // big datasets: Float32 positions + Uint8 (rgb,size) interleaved
-      function pointsPacked(posBuf, colBuf) {
+      // big datasets: Float32 positions + Uint8 (rgb,size) interleaved.
+      // realR is one physical radius for the whole layer (every point is a star, or
+      // every point is a galaxy), which is accurate enough for true-scale mode
+      // since both vanish far below a pixel long before the difference shows.
+      function pointsPacked(posBuf, colBuf, realR) {
         const geo = new THREE.BufferGeometry();
-        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(posBuf), 3));
+        const pos = new Float32Array(posBuf);
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
         const inter = new THREE.InterleavedBuffer(new Uint8Array(colBuf), 4);
         geo.setAttribute('aColor', new THREE.InterleavedBufferAttribute(inter, 3, 0, true));
         geo.setAttribute('aSize', new THREE.InterleavedBufferAttribute(inter, 1, 3, true));
+        const rr = new Float32Array(pos.length / 3).fill(realR ?? R_SUN_PC);
+        geo.setAttribute('aRealR', new THREE.BufferAttribute(rr, 1));
         const pts = new THREE.Points(geo, makeMat());
         pts.frustumCulled = false;
         return pts;
       }
       // small datasets: plain Float32 attributes
-      function pointsFloat(pos, col, size) {
+      function pointsFloat(pos, col, size, realR) {
         const geo = new THREE.BufferGeometry();
         geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
         geo.setAttribute('aColor', new THREE.BufferAttribute(new Float32Array(col), 3));
         geo.setAttribute('aSize', new THREE.BufferAttribute(new Float32Array(size), 1));
+        const n = size.length;
+        const rr = Array.isArray(realR) || ArrayBuffer.isView(realR)
+          ? new Float32Array(realR)
+          : new Float32Array(n).fill(realR ?? R_SUN_PC);
+        geo.setAttribute('aRealR', new THREE.BufferAttribute(rr, 1));
         const pts = new THREE.Points(geo, makeMat());
         pts.frustumCulled = false;
         return pts;
@@ -222,30 +524,62 @@ const description =
         const el = document.createElement('div');
         el.className = 'u-label ' + (cls || '');
         el.textContent = name;
+        const pos = new THREE.Vector3(x, y, z);
+        // click a label to fly there and orbit it
+        el.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          flyTo(pos, name);
+        });
         labelBox.appendChild(el);
-        labelDefs.push({ el, pos: new THREE.Vector3(x, y, z), band });
+        labelDefs.push({ el, pos, band });
       };
+
+      // Move the orbit centre. The zoom is pulled in to roughly frame the object,
+      // never zooming out — arriving somewhere should always feel like approach.
+      function flyTo(pos, name) {
+        tTarget.copy(pos);
+        const d = pos.length();
+        if (d > 1) {
+          const want = Math.log10(Math.max(d * 0.035, 1e-4));
+          if (want < tLog) { tLog = want; zoom.value = logToSlider(tLog); syncBtns(); }
+        }
+        interacted = performance.now();
+        focusName.textContent = name;
+        focusChip.hidden = false;
+        focusLabel = name;
+      }
+      function flyHome() {
+        tTarget.set(0, 0, 0);
+        focusChip.hidden = true;
+        focusLabel = null;
+        interacted = performance.now();
+      }
 
       // ---------- solar system (real orbital distances, Sun at origin) ----------
       function buildSolarSystem() {
         const planets = [
-          // real observed colors
-          ['Mercury', 0.39, 0.62, 0.59, 0.55], ['Venus', 0.72, 0.96, 0.90, 0.72],
-          ['Earth', 1.00, 0.30, 0.55, 0.95], ['Mars', 1.52, 0.86, 0.42, 0.26],
-          ['Jupiter', 5.20, 0.86, 0.74, 0.58], ['Saturn', 9.58, 0.92, 0.82, 0.58],
-          ['Uranus', 19.2, 0.66, 0.90, 0.92], ['Neptune', 30.05, 0.26, 0.45, 0.86],
+          // real observed colors, real equatorial radii in km
+          ['Mercury', 0.39, 0.62, 0.59, 0.55, 2440], ['Venus', 0.72, 0.96, 0.90, 0.72, 6052],
+          ['Earth', 1.00, 0.30, 0.55, 0.95, 6371], ['Mars', 1.52, 0.86, 0.42, 0.26, 3390],
+          ['Jupiter', 5.20, 0.86, 0.74, 0.58, 69911], ['Saturn', 9.58, 0.92, 0.82, 0.58, 58232],
+          ['Uranus', 19.2, 0.66, 0.90, 0.92, 25362], ['Neptune', 30.05, 0.26, 0.45, 0.86, 24622],
         ];
-        const pos = [], col = [], size = [];
-        const push = (x, y, z, r, g, b, s) => { pos.push(x, y, z); col.push(r, g, b); size.push(s); };
+        const pos = [], col = [], size = [], rad = [];
+        // radKm is the object's TRUE radius; boundaries and modelled shells get 0 so
+        // they disappear entirely in true-scale mode rather than faking a surface.
+        const push = (x, y, z, r, g, b, s, radKm) => {
+          pos.push(x, y, z); col.push(r, g, b); size.push(s);
+          rad.push((radKm || 0) * KM_PC);
+        };
         const grp = new THREE.Group();
         // Sun
-        push(0, 0, 0, 1.0, 0.85, 0.45, 9);
+        push(0, 0, 0, 1.0, 0.85, 0.45, 5, 696000);
         addLabel('The Sun', 0, 0, 0, 'solar', 'sun');
         // planets + orbit rings
-        for (const [name, a, r, g, b] of planets) {
+        for (const [name, a, r, g, b, radKm] of planets) {
           const ang = Math.random() * Math.PI * 2, R = a * AU;
           const x = R * Math.cos(ang), z = R * Math.sin(ang);
-          push(x, 0, z, r, g, b, 4.2);
+          push(x, 0, z, r, g, b, 4.2, radKm);
           addLabel(name, x, 0, z, 'solar');
           const seg = 200, arr = new Float32Array((seg + 1) * 3);
           for (let i = 0; i <= seg; i++) {
@@ -254,52 +588,51 @@ const description =
           }
           const lg = new THREE.BufferGeometry();
           lg.setAttribute('position', new THREE.BufferAttribute(arr, 3));
-          const lm = new THREE.LineBasicMaterial({ color: 0x8a7fff, transparent: true, opacity: 0.25, depthTest: false, depthWrite: false });
+          const lm = new THREE.LineBasicMaterial({ color: 0x8a7fff, transparent: true, opacity: 0.02, depthTest: false, depthWrite: false });
           grp.add(new THREE.LineLoop(lg, lm));
         }
-        // Asteroid belt (between Mars and Jupiter, ~2.1-3.3 AU)
-        for (let i = 0; i < 2600; i++) {
-          const a = (2.1 + Math.random() * 1.2) * AU, ang = Math.random() * Math.PI * 2;
-          push(a * Math.cos(ang), gauss() * a * 0.05, a * Math.sin(ang), 0.68, 0.62, 0.54, 1.3 + Math.random() * 0.7);
-        }
+        // The asteroid belt, Kuiper belt and comets used to be random clouds here.
+        // They are now the real MPC catalogue in the `sso` layer, so only the
+        // labels remain — they point at measured objects.
         addLabel('Asteroid belt', 2.7 * AU, 0, 0, 'solar', 'faint');
-        // Kuiper belt (~30-50 AU)
-        for (let i = 0; i < 4000; i++) {
-          const a = (30 + Math.random() * 20) * AU, ang = Math.random() * Math.PI * 2;
-          push(a * Math.cos(ang), gauss() * a * 0.09, a * Math.sin(ang), 0.6, 0.75, 0.9, 1.3 + Math.random() * 0.8);
-        }
         addLabel('Kuiper belt', 42 * AU, 0, 0, 'solar', 'faint');
-        // Comets / scattered disc (eccentric orbits)
-        for (let i = 0; i < 70; i++) {
-          const q = (0.6 + Math.random() * 4) * AU, Q = (45 + Math.random() * 450) * AU;
-          const aa = (q + Q) / 2, e = (Q - q) / (Q + q), nu = Math.random() * Math.PI * 2;
-          const rr = aa * (1 - e * e) / (1 + e * Math.cos(nu)), inc = (Math.random() - 0.5) * 1.3;
-          push(rr * Math.cos(nu), rr * Math.sin(nu) * Math.sin(inc), rr * Math.sin(nu) * Math.cos(inc), 0.7, 0.92, 1.0, 1.6 + Math.random());
+
+        // Heliopause. Not a sphere: the interstellar wind blows in from ecliptic
+        // longitude ~255deg, so the bubble is blunt at the nose (~120 AU, where both
+        // Voyagers actually crossed) and drawn out into a long tail behind.
+        const NOSE = 255 * Math.PI / 180, NOSE_LAT = 5 * Math.PI / 180;
+        const nx = Math.cos(NOSE_LAT) * Math.cos(NOSE), nz = Math.cos(NOSE_LAT) * Math.sin(NOSE), ny = Math.sin(NOSE_LAT);
+        for (let i = 0; i < 3200; i++) {
+          const u = Math.random() * Math.PI * 2, v = Math.acos(2 * Math.random() - 1);
+          let dx = Math.sin(v) * Math.cos(u), dy = Math.cos(v), dz = Math.sin(v) * Math.sin(u);
+          // cos of angle from the nose direction: +1 nose, -1 tail
+          const ca = dx * nx + dy * ny + dz * nz;
+          // 120 AU at the nose, stretching toward ~400 AU down the tail
+          const rr = (120 / (0.62 + 0.38 * ca) ** 0.9) * (0.97 + Math.random() * 0.06) * AU;
+          push(dx * rr, dy * rr, dz * rr, 0.30, 0.50, 0.85, 0.85 + Math.random() * 0.5, 0);
         }
-        // Heliosphere / heliopause shell (~120 AU)
-        for (let i = 0; i < 2400; i++) {
-          const rr = (112 + Math.random() * 16) * AU, u = Math.random() * Math.PI * 2, v = Math.acos(2 * Math.random() - 1);
-          push(rr * Math.sin(v) * Math.cos(u), rr * Math.cos(v), rr * Math.sin(v) * Math.sin(u), 0.3, 0.5, 0.85, 0.85 + Math.random() * 0.5);
-        }
-        addLabel('Heliopause', 120 * AU, 0, 0, 'solar', 'faint');
+        addLabel('Heliopause', 120 * AU * nx, 120 * AU * ny, 120 * AU * nz, 'solar', 'faint');
         // Voyager 1 & 2 — real ~2026 positions (AU, ecliptic lon/lat deg); the farthest human-made objects
         for (const [name, dAU, lon, lat] of [['Voyager 1', 166, 255, 35], ['Voyager 2', 139, 290, -48]]) {
           const lo = lon * Math.PI / 180, la = lat * Math.PI / 180, D = dAU * AU;
           const x = D * Math.cos(la) * Math.cos(lo), y = D * Math.sin(la), z = D * Math.cos(la) * Math.sin(lo);
-          push(x, y, z, 1.0, 0.86, 0.6, 4.6);
+          push(x, y, z, 1.0, 0.86, 0.6, 4.6, 0.005);  // ~5 m across
           addLabel(name, x, y, z, 'solar');
           const tg = new THREE.BufferGeometry();
           tg.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, x, y, z]), 3));
-          grp.add(new THREE.Line(tg, new THREE.LineBasicMaterial({ color: 0x9fd8ff, transparent: true, opacity: 0.3, depthTest: false, depthWrite: false })));
+          grp.add(new THREE.Line(tg, new THREE.LineBasicMaterial({ color: 0x9fd8ff, transparent: true, opacity: 0.03, depthTest: false, depthWrite: false })));
         }
-        // Oort cloud (~2,000 - 100,000 AU spherical shell, log-distributed)
+        // Oort cloud. Zero of its objects have ever been catalogued, so this shell
+        // is a model and is drawn dimmer and labelled as one. The *measured* points
+        // out here are the long-period comets in the `sso` layer: 37 of them have
+        // fitted aphelia beyond 10,000 AU, the farthest at 101,397 AU.
         for (let i = 0; i < 12000; i++) {
           const rr = Math.pow(10, 3.3 + Math.random() * 1.7) * AU, u = Math.random() * Math.PI * 2, v = Math.acos(2 * Math.random() - 1);
-          push(rr * Math.sin(v) * Math.cos(u), rr * Math.cos(v), rr * Math.sin(v) * Math.sin(u), 0.75, 0.78, 0.86, 0.6 + Math.random() * 0.5);
+          push(rr * Math.sin(v) * Math.cos(u), rr * Math.cos(v), rr * Math.sin(v) * Math.sin(u), 0.42, 0.44, 0.52, 0.5 + Math.random() * 0.4, 0);
         }
-        addLabel('Oort cloud', 45000 * AU, 0, 0, 'solar', 'faint');
+        addLabel('Oort cloud (modelled)', 45000 * AU, 0, 0, 'solar', 'model');
 
-        const pts = pointsFloat(pos, col, size);
+        const pts = pointsFloat(pos, col, size, rad);
         grp.add(pts);
         grp.userData.pts = pts;
         grp.userData.lines = grp.children.filter((c) => c.isLine); // orbit rings + Voyager trajectories
@@ -320,14 +653,12 @@ const description =
           ['M49', 16.5, 187.44, 8.00, 0], ['M86', 16.0, 186.55, 12.95, 0], ['M60', 16.5, 190.92, 11.55, 0],
           ['Antennae', 20.0, 180.47, -18.87, 0],
         ];
-        const MPC = 1e6, pos = [], col = [], size = [];
+        const MPC = 1e6;   // labels only now; shapes come from the RC3 galshape layer
         for (const [name, d, ra, dec, lab] of G) {
           const rr = ra * Math.PI / 180, dd = dec * Math.PI / 180, D = d * MPC;
           const x = D * Math.cos(dd) * Math.cos(rr), y = D * Math.cos(dd) * Math.sin(rr), z = D * Math.sin(dd);
-          pos.push(x, y, z); col.push(0.82, 0.86, 1.0); size.push(3.8);
           if (lab) addLabel(name, x, y, z, 'localgroup', 'faint');
         }
-        return pointsFloat(pos, col, size);
       }
 
       // ---------- named clusters & voids of the Local Supercluster / Laniakea ----------
@@ -350,42 +681,106 @@ const description =
         }
       }
 
+      // ---------- galactic <-> equatorial frame ----------
+      // Every real catalogue here — stars, galaxies, globulars, dwarfs — is stored in
+      // equatorial ICRS cartesian. The Milky Way model used to be generated in its own
+      // unrelated frame with the galactic centre at (-8000, 0, 0), which is ~87 degrees
+      // from where the real data actually puts it. That is why the globular clusters
+      // sat off to one side of the disc instead of on the bulge, and why the real star
+      // bubble crossed the model disc as a spike rather than lying inside it.
+      // Generate in galactic coordinates, then rotate into the frame everything else uses.
+      const GAL = (() => {
+        const D = Math.PI / 180;
+        const u = (ra, dec) => [Math.cos(dec) * Math.cos(ra), Math.cos(dec) * Math.sin(ra), Math.sin(dec)];
+        const EX = u(266.40510 * D, -28.936175 * D);  // toward the galactic centre
+        const EZ = u(192.85948 * D, 27.12825 * D);    // toward the north galactic pole
+        const EY = [EZ[1] * EX[2] - EZ[2] * EX[1], EZ[2] * EX[0] - EZ[0] * EX[2], EZ[0] * EX[1] - EZ[1] * EX[0]];
+        return { EX, EY, EZ };
+      })();
+      // galactic cartesian (xg toward centre, yg toward l=90, zg toward the pole) -> equatorial
+      function gal2eq(xg, yg, zg) {
+        const { EX, EY, EZ } = GAL;
+        return [
+          xg * EX[0] + yg * EY[0] + zg * EZ[0],
+          xg * EX[1] + yg * EY[1] + zg * EZ[1],
+          xg * EX[2] + yg * EY[2] + zg * EZ[2],
+        ];
+      }
+      const SUN_TO_GC = 8000;   // pc
+
       // ---------- Milky Way model (real galactocentric scale, Sun at origin) ----------
       function gauss() { return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; }
       function buildMilkyWay() {
-        const R = 15000;      // disk radius, pc
-        const CX = -8000;     // galactic center (Sun at origin, 8000 pc out)
+        const R = 15000;         // disk radius, pc
+        const CX = SUN_TO_GC;    // galactic centre along +xg (Sun at origin)
         const pos = [], col = [], size = [];
-        const push = (x, y, z, r, g, b, s) => { pos.push(x, y, z); col.push(r, g, b); size.push(s); };
+        // call sites pass galactic (alongGC, heightAbovePlane, inPlane); rotate on the way in
+        const push = (xg, hg, yg, r, g, b, s) => {
+          const e = gal2eq(xg, yg, hg);
+          pos.push(e[0], e[1], e[2]); col.push(r, g, b); size.push(s);
+        };
         // keep-probability near the Sun -> 0, so the real star bubble fills the hole (no "pimple")
         const keepNearSun = (x, y, z) => Math.min(1, Math.max(0, (Math.sqrt(x * x + y * y + z * z) - 500) / 2200));
 
-        // 1) spiral disk: 2 major arms + diffuse inter-arm field, flocculent + dust
+        // 1) spiral disk. Four asymmetric arms, not two symmetric ones: a clean
+        // log-spiral reads as geometry rather than a galaxy. Real arms differ in
+        // pitch and strength, split into spurs, and clump into star-forming
+        // complexes. This is still a model — the real arm positions come from the
+        // Cepheid layer — so it is deliberately kept diffuse and understated.
+        const ARMS = [
+          // [phase, pitch, weight] — deliberately uneven, no two alike
+          [0.00, 2.30, 1.00], [1.72, 2.10, 0.82], [3.24, 2.45, 0.93], [4.85, 2.20, 0.66],
+        ];
+        const armTotal = ARMS.reduce((s, a) => s + a[2], 0);
+        // a few dozen star-forming complexes, so density is lumpy rather than uniform
+        const CLUMPS = [];
+        for (let i = 0; i < 130; i++) {
+          const a = ARMS[Math.floor(Math.random() * ARMS.length)];
+          const rr = (0.25 + Math.random() * 0.7) * R;
+          CLUMPS.push({ th: a[0] + Math.log(rr / 500 + 1) * a[1] + gauss() * 0.18, rr, w: 110 + Math.random() * 260 });
+        }
         const Narm = 95000;
         for (let i = 0; i < Narm; i++) {
-          const rr = Math.pow(Math.random(), 0.7) * R;
-          const diffuse = Math.random() < 0.45;
-          let th;
+          let rr = Math.pow(Math.random(), 0.7) * R;
+          const diffuse = Math.random() < 0.52;
+          let th, armStrength = 0;
           if (diffuse) th = Math.random() * Math.PI * 2;
           else {
-            const arm = Math.floor(Math.random() * 2);
-            th = arm * Math.PI + Math.log(rr / 500 + 1) * 2.3 + (0.16 + 0.16 * (rr / R)) * gauss() * Math.PI;
+            // pick an arm by weight, so the arms are genuinely unequal
+            let t = Math.random() * armTotal, k = 0;
+            while (k < ARMS.length - 1 && (t -= ARMS[k][2]) > 0) k++;
+            const [phase, pitch] = ARMS[k];
+            armStrength = ARMS[k][2];
+            const spur = Math.random() < 0.17 ? (Math.random() < 0.5 ? 0.34 : -0.34) : 0; // feathering
+            th = phase + Math.log(rr / 500 + 1) * pitch + spur
+               + (0.15 + 0.17 * (rr / R)) * gauss() * Math.PI;
           }
+          // m=1 lopsidedness: real discs are not rotationally symmetric
+          if (Math.random() > 0.80 + 0.20 * Math.cos(th - 1.1)) continue;
           if (Math.random() < Math.max(0, (rr - R * 0.82) / (R * 0.18))) continue; // soft outer edge
-          const x = CX + rr * Math.cos(th) + R * 0.01 * gauss();
-          const z = rr * Math.sin(th) + R * 0.01 * gauss();
+          // pull a fraction of points into star-forming complexes
+          if (!diffuse && Math.random() < 0.13) {
+            const c = CLUMPS[Math.floor(Math.random() * CLUMPS.length)];
+            th = c.th + gauss() * (c.w / Math.max(c.rr, 1)) * 0.9;
+            rr = c.rr + gauss() * c.w;
+            if (rr < 200 || rr > R) continue;
+          }
+          const x = CX + rr * Math.cos(th) + R * 0.012 * gauss();
+          const z = rr * Math.sin(th) + R * 0.012 * gauss();
           const y = gauss() * (150 + 110 * (rr / R)); // thin-disk scale height grows outward
           if (Math.random() > keepNearSun(x, y, z)) continue;
           const tr = rr / R, roll = Math.random();
           let r, g, b, s;
-          if (!diffuse && roll < 0.06) { r = 1.0; g = 0.55; b = 0.72; s = 0.6 + Math.random() * 0.7; }      // HII pink
-          else if (!diffuse && roll < 0.12) { r = 0.6; g = 0.78; b = 1.0; s = 0.6 + Math.random() * 0.7; }  // blue OB
+          // far fewer showy HII/OB points than before: the pink haze was reading as
+          // the map's main structure when it is the least real thing in it
+          if (!diffuse && roll < 0.025 * armStrength) { r = 1.0; g = 0.62; b = 0.76; s = 0.5 + Math.random() * 0.5; }
+          else if (!diffuse && roll < 0.055 * armStrength) { r = 0.66, g = 0.80, b = 1.0; s = 0.5 + Math.random() * 0.5; }
           else {
-            const w = diffuse ? 0 : 0.14;
+            const w = diffuse ? 0 : 0.10;
             r = 0.7 + w + 0.2 * (1 - tr); g = 0.68 + 0.1 * (1 - tr); b = 0.66 + 0.3 * tr;
-            s = 0.32 + Math.random() * 0.4;
+            s = 0.30 + Math.random() * 0.36;
           }
-          if (Math.random() < 0.16) { r *= 0.45; g *= 0.45; b *= 0.45; } // dust dimming
+          if (Math.random() < 0.18) { r *= 0.42; g *= 0.42; b *= 0.42; } // dust dimming
           push(x, y, z, r, g, b, s);
         }
         // 2) central bar (Milky Way is a barred spiral)
@@ -413,9 +808,315 @@ const description =
           if (Math.random() > keepNearSun(x, y, z)) continue;
           push(x, y, z, 0.85, 0.82, 0.78, 0.28 + Math.random() * 0.32);
         }
-        addLabel('Galactic center', CX, 0, 0, 'mw', 'faint');
-        return pointsFloat(pos, col, size);
+        const gcE = gal2eq(CX, 0, 0);
+        addLabel('Galactic center', gcE[0], gcE[1], gcE[2], 'mw', 'faint');
+        return pointsFloat(pos, col, size, R_SUN_PC);
       }
+
+      // ---------- real minor planets: 1.55M measured orbits ----------
+      // Every asteroid, TNO and comet the Minor Planet Center has an orbit for.
+      // We ship orbital ELEMENTS (16 bytes each) and solve Kepler's equation in the
+      // vertex shader, so the whole catalogue costs 25MB and genuinely orbits
+      // instead of being a frozen snapshot. Observation arcs in this data run from
+      // Ceres in 1801 to orbit updates issued yesterday.
+      const ssoVert = `
+        precision highp float;
+        attribute vec3 aAng;   // ascending node, arg. of perihelion, mean anomaly (turns)
+        attribute vec2 aHC;    // packed absolute magnitude, dynamical class
+        uniform float uSize;
+        uniform float uPixelRatio;
+        uniform float uTime;   // days since the catalogue epoch
+        uniform float uReal;
+        uniform float uPxPerRad;
+        uniform float uAUtoPc;
+        varying vec3 vColor;
+        varying float vDim;
+        varying float vCls;
+
+        const float TAU = 6.2831853072;
+        const float PI  = 3.1415926536;
+
+        vec3 classColor(float c) {
+          if (c < 0.5) return vec3(1.00, 0.45, 0.30);  // near-Earth
+          if (c < 1.5) return vec3(0.85, 0.70, 0.55);  // Hungarias, Mars-crossers
+          if (c < 2.5) return vec3(0.74, 0.67, 0.56);  // main belt
+          if (c < 3.5) return vec3(0.63, 0.62, 0.60);  // outer belt, Hildas
+          if (c < 4.5) return vec3(0.82, 0.66, 0.40);  // Jupiter Trojans (dark D-types)
+          if (c < 5.5) return vec3(0.86, 0.55, 0.44);  // Centaurs (red)
+          if (c < 6.5) return vec3(0.58, 0.80, 0.94);  // classical Kuiper belt
+          if (c < 7.5) return vec3(0.76, 0.72, 0.96);  // scattered disc & sednoids
+          return vec3(0.70, 0.96, 1.00);               // comets
+        }
+
+        void main() {
+          float a = position.x, e = position.y, inc = position.z;
+          vCls = aHC.y;
+          float H = aHC.x / 8.0 - 2.0;
+
+          float Om = aAng.x * TAU, w = aAng.y * TAU;
+          // mean motion in rad/day (Gaussian constant), propagated from the epoch
+          float n = 0.0172021242 / pow(a, 1.5);
+          float M = mod(aAng.z * TAU + n * uTime, TAU);
+
+          // Newton solve of E - e sin E = M. Damped so high-eccentricity comets
+          // (e up to 0.9999) stay stable rather than diverging.
+          float E = (e < 0.8) ? M : PI;
+          for (int k = 0; k < 10; k++) {
+            float s = sin(E), c = cos(E);
+            E -= clamp((E - e * s - M) / max(1.0 - e * c, 1e-5), -1.0, 1.0);
+          }
+          float cE = cos(E), sE = sin(E);
+          float r = a * (1.0 - e * cE);
+          float nu = 2.0 * atan(sqrt((1.0 + e) / max(1.0 - e, 1e-7)) * sin(E * 0.5), cos(E * 0.5));
+
+          float u = nu + w;
+          float cu = cos(u), su = sin(u);
+          float ci = cos(inc), si = sin(inc);
+          float cO = cos(Om), sO = sin(Om);
+          // heliocentric ecliptic, then remapped so the ecliptic lies in scene XZ
+          vec3 ecl = vec3(r * (cO * cu - sO * su * ci), r * (sO * cu + cO * su * ci), r * su * si);
+          vec3 p = vec3(ecl.x, ecl.z, ecl.y) * uAUtoPc;
+
+          vColor = classColor(vCls);
+
+          vec4 mv = modelViewMatrix * vec4(p, 1.0);
+          float dist = max(-mv.z, 1e-12);
+          vDim = 1.0;
+          float sz;
+          if (uReal > 0.5) {
+            // true physical radius from absolute magnitude:
+            // D(km) = 1329/sqrt(albedo) * 10^(-H/5), albedo ~0.14
+            float dKm = 3553.0 * pow(10.0, -H / 5.0);
+            float rPc = dKm * 0.5 * 3.24e-14;
+            sz = (2.0 * rPc / dist) * uPxPerRad;
+            // same 1px driver floor as the shared shader: dim by lost area instead
+            float minPx = 1.0 * uPixelRatio;
+            if (sz < minPx) { float t = sz / minPx; vDim = t * t; sz = minPx; }
+          } else {
+            float vis = clamp(0.30 + (19.0 - H) * 0.042, 0.20, 1.30);
+            sz = vis * uSize * uPixelRatio / dist;
+            float minPx = 1.5 * uPixelRatio;
+            if (sz < minPx) { float t = sz / minPx; vDim = t * t; sz = minPx; }
+          }
+          gl_PointSize = clamp(sz, 0.0, 26.0);
+          gl_Position = projectionMatrix * mv;
+        }`;
+      const ssoFrag = `
+        precision mediump float;
+        uniform float uOpacity;
+        varying vec3 vColor;
+        varying float vDim;
+        varying float vCls;
+        void main() {
+          float d = length(gl_PointCoord - 0.5);
+          float a = smoothstep(0.5, 0.05, d) * vDim;
+          if (a <= 0.001) discard;
+          gl_FragColor = vec4(vColor, a * uOpacity);
+        }`;
+
+      function buildSSO(buf) {
+        const n = buf.byteLength / 16;
+        const dv = new DataView(buf);
+        // de-interleave into GPU-friendly attributes
+        const orb = new Float32Array(n * 3);   // a, e, inclination (radians)
+        const ang = new Float32Array(n * 3);   // node, arg. perihelion, mean anomaly (turns)
+        const hc = new Uint8Array(n * 2);      // packed magnitude, class
+        const D2R = Math.PI / 180;
+        for (let i = 0; i < n; i++) {
+          const o = i * 16;
+          orb[i * 3] = dv.getFloat32(o, true);
+          orb[i * 3 + 1] = dv.getUint16(o + 4, true) / 65535;
+          orb[i * 3 + 2] = (dv.getUint16(o + 6, true) / 65535) * 180 * D2R;
+          ang[i * 3] = dv.getUint16(o + 8, true) / 65535;
+          ang[i * 3 + 1] = dv.getUint16(o + 10, true) / 65535;
+          ang[i * 3 + 2] = dv.getUint16(o + 12, true) / 65535;
+          hc[i * 2] = dv.getUint8(o + 14);
+          hc[i * 2 + 1] = dv.getUint8(o + 15);
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(orb, 3));
+        geo.setAttribute('aAng', new THREE.BufferAttribute(ang, 3));
+        geo.setAttribute('aHC', new THREE.BufferAttribute(hc, 2));
+        const mat = new THREE.ShaderMaterial({
+          uniforms: {
+            uOpacity: { value: 1 }, uSize: { value: 1 },
+            uPixelRatio: { value: renderer.getPixelRatio() },
+            uTime: { value: 0 }, uReal: { value: 0 },
+            uPxPerRad: { value: 1 }, uAUtoPc: { value: AU },
+          },
+          vertexShader: ssoVert, fragmentShader: ssoFrag,
+          transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+        });
+        const pts = new THREE.Points(geo, mat);
+        pts.frustumCulled = false;
+        return pts;
+      }
+
+      // ---------- the CMB as a surface, not a scatter ----------
+      // Each HEALPix pixel is a direction with a measured temperature. Rather than
+      // drawing them as separate points, build a sphere and let the GPU interpolate
+      // colour across its faces, which is what a continuous field should look like.
+      // Rendered BackSide because the observer is inside the shell looking out.
+      function buildCMBShell(posBuf, colBuf, meta) {
+        const src = new Float32Array(posBuf);
+        const srcCol = new Uint8Array(colBuf);
+        const n = src.length / 3;
+        const R = (meta.comovingMpc || 13949) * 1e6;
+
+        // index the samples on a coarse lat/lon grid so each vertex can find a
+        // nearby one cheaply — 786k samples is far too many for a brute-force search
+        const GW = 512, GH = 256;
+        const cells = new Int32Array(GW * GH).fill(-1);
+        const next = new Int32Array(n).fill(-1);
+        const dirs = new Float32Array(n * 3);
+        for (let i = 0; i < n; i++) {
+          const x = src[i * 3], y = src[i * 3 + 1], z = src[i * 3 + 2];
+          const r = Math.hypot(x, y, z) || 1;
+          const ux = x / r, uy = y / r, uz = z / r;
+          dirs[i * 3] = ux; dirs[i * 3 + 1] = uy; dirs[i * 3 + 2] = uz;
+          const lon = Math.atan2(uy, ux), lat = Math.asin(Math.max(-1, Math.min(1, uz)));
+          const gx = Math.min(GW - 1, Math.max(0, Math.floor((lon / (Math.PI * 2) + 0.5) * GW)));
+          const gy = Math.min(GH - 1, Math.max(0, Math.floor((lat / Math.PI + 0.5) * GH)));
+          const c = gy * GW + gx;
+          next[i] = cells[c]; cells[c] = i;
+        }
+
+        const geo = new THREE.SphereGeometry(R, 320, 160);
+        const pos = geo.attributes.position;
+        const col = new Float32Array(pos.count * 3);
+        for (let v = 0; v < pos.count; v++) {
+          const ux = pos.getX(v) / R, uy = pos.getY(v) / R, uz = pos.getZ(v) / R;
+          const lon = Math.atan2(uy, ux), lat = Math.asin(Math.max(-1, Math.min(1, uz)));
+          const gx = Math.min(GW - 1, Math.max(0, Math.floor((lon / (Math.PI * 2) + 0.5) * GW)));
+          const gy = Math.min(GH - 1, Math.max(0, Math.floor((lat / Math.PI + 0.5) * GH)));
+          // average the samples in this cell and its neighbours: smooths the
+          // HEALPix lattice out of existence
+          let r = 0, g = 0, b = 0, w = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            const yy = gy + dy; if (yy < 0 || yy >= GH) continue;
+            for (let dx = -1; dx <= 1; dx++) {
+              const xx = (gx + dx + GW) % GW;
+              for (let i = cells[yy * GW + xx]; i !== -1; i = next[i]) {
+                const d = dirs[i * 3] * ux + dirs[i * 3 + 1] * uy + dirs[i * 3 + 2] * uz;
+                const wt = Math.max(0, d - 0.999);   // only very close directions
+                if (wt <= 0) continue;
+                r += srcCol[i * 4] * wt; g += srcCol[i * 4 + 1] * wt; b += srcCol[i * 4 + 2] * wt; w += wt;
+              }
+            }
+          }
+          let cr, cg, cb;
+          if (w > 0) { cr = r / w / 255; cg = g / w / 255; cb = b / w / 255; }
+          else { cr = 0.42; cg = 0.46; cb = 0.62; }
+          // pull toward luminance and dim: this is the sky behind everything, not a
+          // subject in its own right
+          const lum = 0.2126 * cr + 0.7152 * cg + 0.0722 * cb;
+          const SAT = 0.16, LEVEL = 0.24;
+          col[v * 3]     = (lum + (cr - lum) * SAT) * LEVEL;
+          col[v * 3 + 1] = (lum + (cg - lum) * SAT) * LEVEL;
+          col[v * 3 + 2] = (lum + (cb - lum) * SAT) * LEVEL;
+        }
+        geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+        const mat = new THREE.MeshBasicMaterial({
+          vertexColors: true, side: THREE.BackSide,
+          transparent: true, depthWrite: false, depthTest: false,
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.frustumCulled = false;
+        mesh.renderOrder = -1;   // it is the backdrop; everything inside draws over it
+        return mesh;
+      }
+
+      // ---------- streaming LOD octree ----------
+      // Decouples catalogue size from GPU residency. Each frame we walk the tree,
+      // score nodes by how large they project on screen, and load the best ones
+      // until a point budget is spent. Everything below that stays on disk.
+      // The scheme is additive, so a node drawn together with its loaded ancestors
+      // reconstructs the full catalogue — nothing is duplicated or double-counted.
+      class Octree {
+        constructor(index, base, realR, fadeR) {
+          this.base = base;
+          this.realR = realR ?? R_SUN_PC;
+          this.fadeR = fadeR ?? 0;
+          this.nodes = [];
+          this.byName = new Map();
+          const walk = (n) => {
+            n.state = 0;          // 0 unloaded, 1 loading, 2 loaded
+            n.pts = null;
+            n.want = false;
+            this.nodes.push(n);
+            this.byName.set(n.n, n);
+            (n.ch || []).forEach(walk);
+          };
+          walk(index.root);
+          this.root = index.root;
+          this.total = index.points;
+          this.inflight = 0;
+        }
+        async load(n) {
+          if (n.state) return;
+          n.state = 1; this.inflight++;
+          try {
+            // one request per node: [uint32 count][Float32 xyz*n][Uint8 rgba*n]
+            const buf = await fetch(`${this.base}/${n.n}.bin`).then((r) => r.arrayBuffer());
+            const cnt = new Uint32Array(buf, 0, 1)[0];
+            const p = buf.slice(4, 4 + cnt * 12);
+            const c = buf.slice(4 + cnt * 12, 4 + cnt * 16);
+            n.pts = pointsPacked(p, c, this.realR);
+            if (this.fadeR) n.pts.material.uniforms.uFadeR.value = this.fadeR;
+            n.pts.visible = false;
+            scene.add(n.pts);
+            n.state = 2;
+          } catch (e) { n.state = 0; }
+          this.inflight--;
+        }
+        // budget: max points to keep visible this frame
+        update(cam, pxPerRad, budget, opacity, uSize, real) {
+          for (const n of this.nodes) { n.shown = n.want; n.want = false; }
+          if (opacity <= 0.003) { this.applyVisibility(opacity, uSize, real, pxPerRad); return { shown: 0, resident: 0 }; }
+
+          projScreen.setFromProjectionMatrix(tmpMat.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
+          // priority queue by projected size; nodes are cubes so a bounding sphere is cheap and safe
+          const queue = [this.root];
+          let spent = 0, shown = 0;
+          const scored = [];
+          while (queue.length) {
+            const n = queue.shift();
+            tmpSphere.center.set(n.c[0], n.c[1], n.c[2]);
+            tmpSphere.radius = n.h * 1.7320508;   // cube half-diagonal
+            if (!projScreen.intersectsSphere(tmpSphere)) continue;
+            const dist = Math.max(cam.position.distanceTo(tmpSphere.center) - tmpSphere.radius, 1e-9);
+            const px = (2 * tmpSphere.radius / dist) * pxPerRad;
+            scored.push([px, n]);
+            for (const c of (n.ch || [])) queue.push(c);
+          }
+          scored.sort((a, b) => b[0] - a[0]);
+          for (const [px, n] of scored) {
+            if (spent + n.k > budget) continue;      // skip, but keep checking smaller nodes
+            // hysteresis: 55px to appear, 34px to disappear
+            if (px < (n.shown ? 34 : 55) && n.d > 0) continue;
+            spent += n.k; shown++;
+            n.want = true; n.shown = true;
+            if (n.state === 0 && this.inflight < 6) this.load(n);
+          }
+          this.applyVisibility(opacity, uSize, real, pxPerRad);
+          return { shown, resident: spent };
+        }
+        applyVisibility(opacity, uSize, real, pxPerRad) {
+          for (const n of this.nodes) {
+            if (n.state !== 2) continue;
+            n.pts.visible = n.want && opacity > 0.003;
+            if (!n.pts.visible) continue;
+            const u = n.pts.material.uniforms;
+            u.uOpacity.value = opacity;
+            u.uSize.value = uSize;
+            u.uReal.value = real ? 1 : 0;
+            u.uPxPerRad.value = pxPerRad;
+          }
+        }
+      }
+      const projScreen = new THREE.Frustum();
+      const tmpMat = new THREE.Matrix4();
+      const tmpSphere = new THREE.Sphere();
 
       // ---------- streaming fetch with progress ----------
       async function fetchBuf(url, onProg) {
@@ -439,27 +1140,64 @@ const description =
       let ready = false;
       (async () => {
         try {
-          const meta = await fetch('/universe/meta.json').then((r) => r.json());
-          const [sp, sc] = await Promise.all([
-            fetchBuf('/universe/stars_pos.bin', (f) => { loadPct.textContent = 'Loading ' + Math.round(f * 100) + '%'; }),
-            fetchBuf('/universe/stars_col.bin'),
-          ]);
-          groups.stars = pointsPacked(sp, sc);
-        groups.stars.material.uniforms.uFadeR.value = 6500; // taper the bubble edge (pc from Sun)
-        scene.add(groups.stars);
+          const meta = await fetch(DATA_BASE + '/meta.json').then((r) => r.json());
+
+          // Real minor planets first: this is the default view, so it must be
+          // there before anything is shown.
+          try {
+            const ssoMeta = await fetch(DATA_BASE + '/sso_meta.json').then((r) => r.json());
+            const sb = await fetchBuf(DATA_BASE + '/sso.bin', (f) => {
+              loadPct.textContent = 'Loading ' + ssoMeta.count.toLocaleString() + ' measured orbits — ' + Math.round(f * 100) + '%';
+            });
+            groups.sso = buildSSO(sb);
+            scene.add(groups.sso);
+            SSO_COUNT = ssoMeta.count;
+            SSO_SOURCE = 'IAU Minor Planet Center · ' + SSO_COUNT.toLocaleString() + ' measured orbits';
+          } catch (e) { console.warn('minor planets load failed', e); }
+
+          // The solar system is the opening view, so show it the moment it is ready
+          // and keep pulling the outer layers in behind it. apply() no-ops on any
+          // group that has not arrived yet.
+          groups.solar = buildSolarSystem(); scene.add(groups.solar);
+          loading.style.display = 'none';
+          ready = true;
+
+          // Stream the star catalogue through the LOD octree. Only the root (2.5%)
+          // is needed to draw something; detail arrives as the camera approaches.
+          try {
+            const oi = await fetch(OCTREE_BASE + '/stars/index.json').then((r) => r.json());
+            starTree = new Octree(oi, OCTREE_BASE + '/stars', R_SUN_PC, 6500);
+            await starTree.load(starTree.root);
+            // debug hook for the headless verification harness
+            window.__starTree = starTree;
+          } catch (e) {
+            console.warn('star octree unavailable, falling back to monolithic load', e);
+            const [sp, sc] = await Promise.all([
+              fetchBuf(DATA_BASE + '/stars_pos.bin', (f) => { loadPct.textContent = 'Loading ' + Math.round(f * 100) + '%'; }),
+              fetchBuf(DATA_BASE + '/stars_col.bin'),
+            ]);
+            groups.stars = pointsPacked(sp, sc, R_SUN_PC);
+            groups.stars.material.uniforms.uFadeR.value = 6500;
+            scene.add(groups.stars);
+          }
 
           const [gp, gc] = await Promise.all([
-            fetchBuf('/universe/galaxies_pos.bin'), fetchBuf('/universe/galaxies_col.bin'),
+            fetchBuf(DATA_BASE + '/galaxies_pos.bin'), fetchBuf(DATA_BASE + '/galaxies_col.bin'),
           ]);
-          groups.gal = pointsPacked(gp, gc); scene.add(groups.gal);
+          groups.gal = pointsPacked(gp, gc, R_GALAXY_PC);
+          // The SDSS sample stops at 600 Mpc because galaxies get too faint there,
+          // not because the universe does. Taper the rim so it reads as a survey
+          // limit rather than a wall — same treatment the star bubble already gets.
+          groups.gal.material.uniforms.uFadeR.value = 6.0e8;   // 600 Mpc in parsecs
+          scene.add(groups.gal);
 
           // dedicated Local Supercluster layer (2MRS, K-luminosity weighted)
           if (meta.supercluster && meta.supercluster.count) {
             try {
               const [scp, scc] = await Promise.all([
-                fetchBuf('/universe/supercluster_pos.bin'), fetchBuf('/universe/supercluster_col.bin'),
+                fetchBuf(DATA_BASE + '/supercluster_pos.bin'), fetchBuf(DATA_BASE + '/supercluster_col.bin'),
               ]);
-              groups.supercluster = pointsPacked(scp, scc); scene.add(groups.supercluster);
+              groups.supercluster = pointsPacked(scp, scc, R_GALAXY_PC); scene.add(groups.supercluster);
               SUPERCLUSTER_COUNT = meta.supercluster.count;
               SUPERCLUSTER_SOURCE = SUPERCLUSTER_COUNT.toLocaleString() + ' real 2MRS galaxies · web reconstruction';
               addSuperclusterLabels();
@@ -470,41 +1208,154 @@ const description =
           if (meta.supweb && meta.supweb.count) {
             try {
               const [swp, swc] = await Promise.all([
-                fetchBuf('/universe/supweb_pos.bin'), fetchBuf('/universe/supweb_col.bin'),
+                fetchBuf(DATA_BASE + '/supweb_pos.bin'), fetchBuf(DATA_BASE + '/supweb_col.bin'),
               ]);
-              groups.supweb = pointsPacked(swp, swc); scene.add(groups.supweb);
+              groups.supweb = pointsPacked(swp, swc, R_GALAXY_PC); scene.add(groups.supweb);
               groups.supweb.material.uniforms.uFadeR.value = 300e6; // soft rim (pc) so the 210 Mpc ball has no hard edge
               SUPWEB_COUNT = meta.supweb.count;
             } catch (e) { console.warn('supweb load failed', e); }
           }
 
+          // Quasars: the most luminous persistent objects known, and the only thing
+          // that carries this map past the survey edge at 600 Mpc out toward the
+          // horizon. Colour encodes redshift, so it reads as lookback time.
+          try {
+            const qm = await fetch(DATA_BASE + '/quasars.json').then((r) => r.json());
+            const [qp, qc] = await Promise.all([
+              fetchBuf(DATA_BASE + '/qso_pos.bin'), fetchBuf(DATA_BASE + '/qso_col.bin'),
+            ]);
+            groups.qso = pointsPacked(qp, qc, R_GALAXY_PC);
+            scene.add(groups.qso);
+            QSO_COUNT = qm.count; QSO_ZMAX = qm.maxRedshift;
+          } catch (e) { console.warn('quasar load failed', e); }
+
+          // The CMB: not a catalogue but a surface — the shell at which the universe
+          // became transparent, 380,000 years in. Light cannot carry information from
+          // beyond it, so this is the outermost thing that can be mapped at all.
+          try {
+            const cmbMeta = await fetch(DATA_BASE + '/cmb.json').then((r) => r.json());
+            const [mp, mc] = await Promise.all([
+              fetchBuf(DATA_BASE + '/cmb_pos.bin'), fetchBuf(DATA_BASE + '/cmb_col.bin'),
+            ]);
+            groups.cmb = buildCMBShell(mp, mc, cmbMeta);
+            bgScene.add(groups.cmb);   // rendered separately; never metered
+            CMB_RMS = cmbMeta.rmsMicroK;
+          } catch (e) { console.warn('cmb load failed', e); }
+
           // AI-reconstructed cosmic web (synthetic, off by default)
           if (meta.webfill && meta.webfill.count) {
             try {
               const [wp, wc] = await Promise.all([
-                fetchBuf('/universe/webfill_pos.bin'), fetchBuf('/universe/webfill_col.bin'),
+                fetchBuf(DATA_BASE + '/webfill_pos.bin'), fetchBuf(DATA_BASE + '/webfill_col.bin'),
               ]);
-              groups.webfill = pointsPacked(wp, wc); groups.webfill.visible = false; scene.add(groups.webfill);
+              groups.webfill = pointsPacked(wp, wc, R_GALAXY_PC); groups.webfill.visible = false; scene.add(groups.webfill);
               WEBFILL_COUNT = meta.webfill.count;
             } catch (e) { console.warn('webfill load failed', e); }
           }
 
           groups.mw = buildMilkyWay(); scene.add(groups.mw);
-          groups.localgroup = buildLocalGroup(); scene.add(groups.localgroup);
-          groups.solar = buildSolarSystem(); scene.add(groups.solar);
+          buildLocalGroup();   // labels only
 
           // real halo objects: globular clusters + dwarf satellites, filling the disc-to-Local-Group gap
           try {
-            const halo = await fetch('/universe/halo.json').then((r) => r.json());
-            groups.haloGC = pointsFloat(halo.gc.pos, halo.gc.col, halo.gc.size); scene.add(groups.haloGC);
-            groups.haloDW = pointsFloat(halo.dw.pos, halo.dw.col, halo.dw.size); scene.add(groups.haloDW);
-            for (const l of halo.labels) addLabel(l.name, l.x, l.y, l.z, 'halo', 'faint');
+            const halo = await fetch(DATA_BASE + '/halo.json').then((r) => r.json());
+            // Globulars were uniform dots too. Rebuilt from Harris as King-like spheres
+            // at their measured half-light radius and concentration, so a sparse
+            // outer-halo cluster no longer looks like Omega Centauri.
+            try {
+              const gcj = await fetch(DATA_BASE + '/globulars.json').then((r) => r.json());
+              groups.haloGC = pointsFloat(gcj.pos, gcj.col, gcj.size, 10);
+              scene.add(groups.haloGC);
+              for (const l of (gcj.labels || [])) addLabel(l.name, l.x, l.y, l.z, 'halo', 'faint');
+            } catch (e) {
+              groups.haloGC = pointsFloat(halo.gc.pos, halo.gc.col, halo.gc.size, 10);
+              scene.add(groups.haloGC);
+            }
+            // Dwarf satellites were all drawn the same size; in reality they span
+            // M_V -18 (the LMC) to -2 (ultra-faints). Rebuilt from McConnachie so the
+            // marker scales with real luminosity.
+            try {
+              const dw = await fetch(DATA_BASE + '/dwarfs.json').then((r) => r.json());
+              groups.haloDW = pointsFloat(dw.pos, dw.col, dw.size, 300);
+              scene.add(groups.haloDW);
+              for (const l of (dw.labels || [])) addLabel(l.name, l.x, l.y, l.z, "halo", "faint");
+            } catch (e) {
+              groups.haloDW = pointsFloat(halo.dw.pos, halo.dw.col, halo.dw.size, 300);
+              scene.add(groups.haloDW);
+            }
+            // labels now come from globulars.json and dwarfs.json instead
           } catch (e) { console.warn('halo load failed', e); }
 
-          for (const l of (meta.stars.labels || [])) addLabel(l.name, l.x, l.y, l.z, 'stars');
+          // Halo tracers. Parallax runs out a few thousand parsecs from the Sun, which
+          // is why the halo used to look empty — not because nothing is there. RR Lyrae
+          // are standard candles, so their distances come from brightness instead, and
+          // they reach 139 kpc. These are the stellar halo.
+          try {
+            const tr = await fetch(DATA_BASE + '/halo_tracers.json').then((r) => r.json());
+            const [rp, rc] = await Promise.all([
+              fetchBuf(DATA_BASE + '/rrl_pos.bin'), fetchBuf(DATA_BASE + '/rrl_col.bin'),
+            ]);
+            groups.rrl = pointsPacked(rp, rc, R_SUN_PC * 5); // horizontal-branch giants
+            scene.add(groups.rrl);
+            RRL_COUNT = tr.rrl.count;
 
-          loading.style.display = 'none';
-          ready = true;
+            const [op, oc] = await Promise.all([
+              fetchBuf(DATA_BASE + '/ocl_pos.bin'), fetchBuf(DATA_BASE + '/ocl_col.bin'),
+            ]);
+            groups.ocl = pointsPacked(op, oc, 5); // ~5 pc half-light radius
+            scene.add(groups.ocl);
+            OCL_COUNT = tr.ocl.count;
+            for (const l of (tr.ocl.labels || [])) addLabel(l.name, l.x, l.y, l.z, 'oclLabel', 'faint');
+          } catch (e) { console.warn('halo tracers load failed', e); }
+
+          // Galaxy shapes: measured diameter, axis ratio and position angle from RC3,
+          // so each galaxy is an inclined disc or a spheroid oriented the way it
+          // actually is on the sky, rather than an identical featureless dot.
+          try {
+            const gs = await fetch(DATA_BASE + '/galshapes.json').then((r) => r.json());
+            GSHAPE_N = gs.galaxies;
+            const gi = await fetch(OCTREE_BASE + '/gal/index.json').then((r) => r.json());
+            galTree = new Octree(gi, OCTREE_BASE + '/gal', R_SUN_PC * 1e3);
+            await galTree.load(galTree.root);
+          } catch (e) {
+            console.warn('galaxy octree unavailable, falling back', e);
+            try {
+              const [gsp, gsc] = await Promise.all([
+                fetchBuf(DATA_BASE + '/galshape_pos.bin'), fetchBuf(DATA_BASE + '/galshape_col.bin'),
+              ]);
+              groups.gshape = pointsPacked(gsp, gsc, R_SUN_PC * 1e3);
+              scene.add(groups.gshape);
+            } catch (e2) { console.warn('galaxy shapes load failed', e2); }
+          }
+
+          // Stellar streams: globular clusters and dwarf galaxies caught mid-disruption,
+          // stretched into ribbons by the Milky Way's tide. This is the most direct
+          // visible evidence that the halo was assembled from shredded debris.
+          try {
+            const st = await fetch(DATA_BASE + '/streams.json').then((r) => r.json());
+            const [sp2, sc2] = await Promise.all([
+              fetchBuf(DATA_BASE + '/stream_pos.bin'), fetchBuf(DATA_BASE + '/stream_col.bin'),
+            ]);
+            groups.stream = pointsPacked(sp2, sc2, R_SUN_PC * 3);
+            scene.add(groups.stream);
+            STREAM_N = st.streams;
+            for (const l of (st.labels || [])) addLabel(l.name, l.x, l.y, l.z, 'stream', 'faint');
+          } catch (e) { console.warn('stream load failed', e); }
+
+          // Cepheids: real young standard candles that trace the ACTUAL spiral arms,
+          // including on the far side of the galaxy. The model disc is a smooth
+          // idealisation; these are where the arms measurably are.
+          try {
+            const cm = await fetch(DATA_BASE + '/cepheids.json').then((r) => r.json());
+            const [cp, cc] = await Promise.all([
+              fetchBuf(DATA_BASE + '/cep_pos.bin'), fetchBuf(DATA_BASE + '/cep_col.bin'),
+            ]);
+            groups.cep = pointsPacked(cp, cc, R_SUN_PC * 40); // yellow supergiants
+            scene.add(groups.cep);
+            CEP_COUNT = cm.count;
+          } catch (e) { console.warn('cepheid load failed', e); }
+
+          for (const l of (meta.stars.labels || [])) addLabel(l.name, l.x, l.y, l.z, 'stars');
         } catch (err) {
           loadPct.textContent = 'Could not load the map data.';
           console.error(err);
@@ -512,12 +1363,22 @@ const description =
       })();
 
       // ---------- orbit + zoom ----------
+      // Start at the solar system: the most zoomed-in scale, and the only one where
+      // every single point on screen is a measured object.
+      // The camera used to be welded to the Sun (lookAt 0,0,0), which capped any
+      // other object at a few percent of the screen no matter how far you zoomed.
+      // It now orbits a movable target, so you can fly to a galaxy and inspect it.
+      const camTarget = new THREE.Vector3(0, 0, 0);
+      const tTarget = new THREE.Vector3(0, 0, 0);
       let az = 0.7, pol = 1.2, tAz = 0.7, tPol = 1.2;
       let dragging = false, lx = 0, ly = 0, interacted = 0;
-      let logDist = 1.2, tLog = 1.2;
+      let logDist = -3.6, tLog = -3.6;
 
       root.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('.ui-bottom') || e.target.closest('.info-panel') || e.target.closest('.ui-tl') || e.target.closest('.ui-tr')) return;
+        // .u-label must be excluded too: setPointerCapture below redirects the
+        // pointerup to root, so a captured label never receives its click event.
+        if (e.target.closest('.ui-bottom') || e.target.closest('.info-panel') || e.target.closest('.ui-tl')
+            || e.target.closest('.ui-tr') || e.target.closest('.focus-chip') || e.target.closest('.u-label')) return;
         dragging = true; lx = e.clientX; ly = e.clientY; interacted = performance.now();
         root.setPointerCapture(e.pointerId); root.classList.add('grabbing');
       });
@@ -557,10 +1418,30 @@ const description =
         if (webfillOn && tLog < 6.5) { tLog = 8.3; zoom.value = logToSlider(tLog); }
       });
       document.getElementById('infoClose').addEventListener('click', () => { infoPanel.hidden = true; });
+      document.getElementById('focusBack').addEventListener('click', flyHome);
+
+      // realistic scaling
+      const realBtn = document.getElementById('realBtn');
+      const realReadout = document.getElementById('realReadout');
+      const rrMetric = document.getElementById('rrMetric');
+      realBtn.addEventListener('click', () => {
+        realScale = !realScale;
+        realBtn.textContent = (realScale ? '● ' : '◦ ') + (realScale ? 'Realistic scaling: on' : 'Enable realistic scaling');
+        realBtn.classList.toggle('real-on', realScale);
+        realReadout.hidden = !realScale;
+      });
 
       // ---------- helpers ----------
       const clamp01 = (x) => Math.max(0, Math.min(1, x));
       const sstep = (x, a, b) => clamp01((x - a) / (b - a));
+      // distance from the Sun, in whichever unit reads best
+      function fmtDist(pc) {
+        const ly = pc * PC_TO_LY;
+        if (ly < 1e3) return ly.toFixed(1) + ' ly';
+        if (ly < 1e6) return (ly / 1e3).toFixed(0) + ' thousand ly';
+        if (ly < 1e9) return (ly / 1e6).toFixed(1) + ' million ly';
+        return (ly / 1e9).toFixed(2) + ' billion ly';
+      }
       function fmtScale(camPc) {
         const across = camPc * 1.6; // rough on-screen span
         if (across < 3e-4) return (across / AU).toFixed(1) + ' AU across';
@@ -571,14 +1452,40 @@ const description =
         if (ly < 1e9) return (ly / 1e6).toFixed(0) + ' million light years across';
         return (ly / 1e9).toFixed(1) + ' billion light years across';
       }
+      // Reference object for the true-scale readout, chosen to suit the scale.
+      function realMetric(camPc, pxPerRad, L) {
+        let name, R;
+        if (L < -1.0) { name = 'Earth'; R = 6371 * KM_PC; }
+        else if (L < 4.0) { name = 'the Sun'; R = R_SUN_PC; }
+        else { name = 'a galaxy'; R = R_GALAXY_PC; }
+        const px = (2 * R / camPc) * pxPerRad;
+        if (px >= 1) return name + ' spans ' + (px < 10 ? px.toFixed(1) : Math.round(px).toLocaleString()) + ' pixels';
+        const inv = 1 / px;
+        const fmt = inv > 1e6 ? inv.toExponential(1).replace('e+', ' × 10^') : Math.round(inv).toLocaleString();
+        return name + ' is 1/' + fmt + ' of a pixel';
+      }
       function layerInfo(L) {
-        if (L < -2.0) return ['The solar system', 'Planets, belts, heliosphere & Oort cloud', 'Each point is a planet, asteroid or comet'];
+        if (L < -2.0) return ['The solar system', SSO_SOURCE, 'Each point is a measured planet, asteroid or comet'];
         if (L < 0.8) return ['Nearest stars', 'AT-HYG (Gaia) catalogue · 1,999,778 real stars', 'Each point is a star'];
         if (L < 3.3) return ['Local stellar neighborhood', 'AT-HYG (Gaia) catalogue · 1,999,778 real stars', 'Each point is a star'];
-        if (L < 5.0) return ['The Milky Way & halo', 'Model disc + real globular clusters & dwarf satellites', 'Points: galaxy model, real clusters & dwarf galaxies'];
-        if (L < 6.6) return ['The Local Group', 'Nearby galaxies · real distances', 'Each point is a galaxy'];
+        if (L < 5.0) return ['The Milky Way & halo',
+          RRL_COUNT ? RRL_COUNT.toLocaleString() + ' RR Lyrae · ' + STREAM_N + ' stellar streams · ' + CEP_COUNT.toLocaleString() + ' Cepheids'
+                    : 'Model disc + real globular clusters & dwarf satellites',
+          'Points: real RR Lyrae, clusters & dwarf galaxies, model disc'];
+        if (L < 6.6) return ['The Local Group',
+          GSHAPE_N ? GSHAPE_N.toLocaleString() + ' galaxies shaped from RC3 \u00b7 measured size, tilt & orientation'
+                   : 'Nearby galaxies \u00b7 real distances',
+          'Each galaxy is drawn at its real inclination'];
         if (L < 8.4) return ['The Local Supercluster', SUPERCLUSTER_SOURCE, 'Each point is a galaxy'];
-        return ['The cosmic web', GAL_SOURCE, 'Each point is an entire galaxy'];
+        if (L < 9.3) return ['The cosmic web', GAL_SOURCE, 'Each point is an entire galaxy'];
+        if (L >= 9.8) return ['The cosmic microwave background',
+          CMB_RMS ? 'WMAP 9-year ILC \u00b7 z = 1090 \u00b7 anisotropy ' + CMB_RMS + ' \u00b5K'
+                  : 'WMAP 9-year ILC map',
+          'The surface where the universe became transparent'];
+        return ['The observable universe',
+          QSO_COUNT ? QSO_COUNT.toLocaleString() + ' quasars to z = ' + QSO_ZMAX.toFixed(1) + ' \u00b7 Milliquas'
+                    : 'Million Quasars Catalogue',
+          'Each point is a quasar \u2014 colour is redshift'];
       }
 
       // ---------- resize ----------
@@ -588,6 +1495,15 @@ const description =
         renderer.setSize(w, h, false);
         camera.aspect = w / h; camera.updateProjectionMatrix();
         const pr = renderer.getPixelRatio();
+        const tw = Math.max(1, Math.round(w * pr)), th = Math.max(1, Math.round(h * pr));
+        hdrTarget.setSize(tw, th);
+        // quarter resolution: cheaper, and widens the effective blur radius
+        bgTarget.setSize(Math.max(1, tw >> 1), Math.max(1, th >> 1));
+        bloomA.setSize(Math.max(1, tw >> 2), Math.max(1, th >> 2));
+        bloomB.setSize(Math.max(1, tw >> 2), Math.max(1, th >> 2));
+        // top mip index, so the tone pass samples the true 1x1 average
+        toneMat.uniforms.uMaxLod.value = Math.log2(Math.max(tw, th));
+        expMat.uniforms.uMaxLod.value = Math.log2(Math.max(tw, th));
         for (const k in groups) {
           const m = groups[k].userData.pts ? groups[k].userData.pts.material : groups[k].material;
           if (m) m.uniforms.uPixelRatio.value = pr;
@@ -597,9 +1513,21 @@ const description =
 
       // ---------- loop ----------
       const tmp = new THREE.Vector3();
+      const placed = [];   // flat [x0,y0, x1,y1, ...] of label slots taken this frame
       const SIZE_BASE = 2.6;
       function frame() {
         requestAnimationFrame(frame);
+        {
+          const now = performance.now();
+          if (lastT) {
+            const dt = now - lastT;
+            if (dt > 0 && dt < 500) fpsAvg += (1000 / dt - fpsAvg) * 0.05;
+            // hold ~50fps: grow the budget when there is headroom, cut it when not
+            if (fpsAvg < 45) ptBudget = Math.max(4e5, ptBudget * 0.96);
+            else if (fpsAvg > 58) ptBudget = Math.min(2.4e7, ptBudget * 1.02);
+          }
+          lastT = now;
+        }
         logDist += (tLog - logDist) * 0.09;
         const idle = performance.now() - interacted > 4000;
         if (idle && !dragging) tAz += 0.0005;
@@ -607,25 +1535,38 @@ const description =
 
         const camPc = Math.pow(10, logDist);
         camera.near = camPc * 1e-3; camera.far = camPc * 1e4; camera.updateProjectionMatrix();
+        camTarget.lerp(tTarget, 0.07);
         camera.position.set(
-          camPc * Math.sin(pol) * Math.sin(az),
-          camPc * Math.cos(pol),
-          camPc * Math.sin(pol) * Math.cos(az)
+          camTarget.x + camPc * Math.sin(pol) * Math.sin(az),
+          camTarget.y + camPc * Math.cos(pol),
+          camTarget.z + camPc * Math.sin(pol) * Math.cos(az)
         );
-        camera.lookAt(0, 0, 0);
+        camera.lookAt(camTarget);
         camera.updateMatrixWorld(); // refresh matrices before projecting labels this frame
 
         if (ready) {
           const uSize = SIZE_BASE * camPc;
+          // pixels per radian of angular size, for true-scale mode
+          const pxPerRad = window.innerHeight / (2 * Math.tan((camera.fov * Math.PI / 180) / 2));
           const op = {
             solar: 1 - sstep(logDist, -0.3, 0.6),
+            // minor planets span the belt out to the far scattered disc
+            sso: 1 - sstep(logDist, 0.4, 1.4),
             stars: (1 - sstep(logDist, 3.7, 4.9)) * sstep(logDist, -3.2, -1.6),
             mw: sstep(logDist, 2.4, 3.8) * (1 - sstep(logDist, 5.0, 5.9)),
             halo: sstep(logDist, 3.3, 4.1) * (1 - sstep(logDist, 6.4, 7.2)),
+            rrl: sstep(logDist, 2.6, 3.4) * (1 - sstep(logDist, 6.2, 7.0)),
+            stream: sstep(logDist, 2.8, 3.5) * (1 - sstep(logDist, 6.0, 6.8)),
+            ocl: sstep(logDist, 2.2, 3.0) * (1 - sstep(logDist, 5.4, 6.2)),
+            cep: sstep(logDist, 2.4, 3.2) * (1 - sstep(logDist, 5.8, 6.6)),
+            oclLabel: sstep(logDist, 2.2, 3.0) * (1 - sstep(logDist, 3.6, 4.2)),
             localgroup: sstep(logDist, 4.2, 5.0) * (1 - sstep(logDist, 7.8, 8.6)),
             supercluster: sstep(logDist, 5.6, 6.6) * (1 - sstep(logDist, 8.2, 8.9)),
             supweb: 1.0 * sstep(logDist, 5.8, 6.8) * (1 - sstep(logDist, 8.0, 8.6)),
-            gal: sstep(logDist, 7.9, 8.7),
+            gal: sstep(logDist, 7.9, 8.7) * (1 - sstep(logDist, 9.7, 10.2)),
+            qso: sstep(logDist, 8.3, 8.9),
+            cmb: sstep(logDist, 9.5, 9.95),
+            gshape: sstep(logDist, 4.2, 5.0) * (1 - sstep(logDist, 8.2, 9.0)),
             webfill: (webfillOn ? 0.7 : 0) * sstep(logDist, 7.9, 8.7),
           };
           const linesOp = 1 - sstep(logDist, -2.6, -1.8); // orbit rings fade when leaving inner system
@@ -633,39 +1574,141 @@ const description =
             if (!g) return;
             const pts = g.userData.pts || g;
             pts.visible = o > 0.003;
-            pts.material.uniforms.uOpacity.value = o;
-            pts.material.uniforms.uSize.value = uSize;
-            if (g.userData.lines) { const lo = linesO ?? o; for (const ln of g.userData.lines) { ln.visible = lo > 0.003; ln.material.opacity = 0.25 * lo; } }
+            const u = pts.material.uniforms;
+            u.uOpacity.value = o;
+            u.uSize.value = uSize;
+            if (u.uReal) u.uReal.value = realScale ? 1 : 0;
+            if (u.uPxPerRad) u.uPxPerRad.value = pxPerRad;
+            if (g.userData.lines) { const lo = linesO ?? o; for (const ln of g.userData.lines) { ln.visible = lo > 0.003; ln.material.opacity = 0.02 * lo; } }
           };
+          // ~12 days per second, so the belt visibly turns without being distracting
+          if (groups.sso) groups.sso.material.uniforms.uTime.value = (performance.now() / 1000) * 12;
+          apply(groups.sso, op.sso);
           apply(groups.solar, op.solar, linesOp);
-          apply(groups.stars, op.stars);
+          if (starTree) starTree.update(camera, pxPerRad, ptBudget, op.stars, uSize, realScale);
+          else apply(groups.stars, op.stars);
           apply(groups.mw, op.mw);
+          apply(groups.rrl, op.rrl);
+          apply(groups.stream, op.stream);
+          apply(groups.cep, op.cep);
+          apply(groups.ocl, op.ocl);
           apply(groups.haloGC, op.halo);
           apply(groups.haloDW, op.halo);
           apply(groups.localgroup, op.localgroup);
           apply(groups.supweb, op.supweb);
           apply(groups.supercluster, op.supercluster);
           apply(groups.gal, op.gal);
+          apply(groups.qso, op.qso);
+          if (groups.cmb) {
+            groups.cmb.visible = op.cmb > 0.003;
+            groups.cmb.material.opacity = op.cmb;
+          }
+          if (galTree) galTree.update(camera, pxPerRad, ptBudget * 0.6, op.gshape, uSize, realScale);
+          else apply(groups.gshape, op.gshape);
           apply(groups.webfill, op.webfill);
 
           const [name, src, dot] = layerInfo(logDist);
-          layerNameEl.textContent = name; sourceTextEl.textContent = src;
+          layerNameEl.textContent = focusLabel || name;
+          sourceTextEl.textContent = focusLabel ? 'orbiting a target ' + fmtDist(tTarget.length()) + ' from the Sun' : src;
           dotTextEl.textContent = dot;
           spanTextEl.textContent = fmtScale(camPc);
+          if (realScale) rrMetric.textContent = realMetric(camPc, pxPerRad, logDist);
 
           const w = window.innerWidth, h = window.innerHeight;
+          // Declutter: many labels collapse onto the same few pixels at wide zooms
+          // (the whole halo crowds the bulge), which rendered as unreadable smears.
+          // Place in order and drop any that would collide with one already placed.
+          placed.length = 0;
           for (const Ld of labelDefs) {
             const o = op[Ld.band] ?? 0;
-            if (o < 0.3) { Ld.el.style.opacity = '0'; continue; }
+            if (o < 0.3) { Ld.el.style.opacity = '0'; Ld.el.style.pointerEvents = 'none'; continue; }
             tmp.copy(Ld.pos).project(camera);
-            if (tmp.z > 1 || tmp.z < -1) { Ld.el.style.opacity = '0'; continue; }
+            if (tmp.z > 1 || tmp.z < -1) { Ld.el.style.opacity = '0'; Ld.el.style.pointerEvents = 'none'; continue; }
             const sx = (tmp.x * 0.5 + 0.5) * w, sy = (-tmp.y * 0.5 + 0.5) * h;
-            if (sx < -80 || sx > w + 80 || sy < -40 || sy > h + 40) { Ld.el.style.opacity = '0'; continue; }
+            if (sx < -80 || sx > w + 80 || sy < -40 || sy > h + 40) { Ld.el.style.opacity = '0'; Ld.el.style.pointerEvents = 'none'; continue; }
+            let collides = false;
+            for (let i = 0; i < placed.length; i += 2) {
+              if (Math.abs(placed[i] - sx) < 108 && Math.abs(placed[i + 1] - sy) < 13) { collides = true; break; }
+            }
+            if (collides) { Ld.el.style.opacity = '0'; Ld.el.style.pointerEvents = 'none'; continue; }
+            placed.push(sx, sy);
             Ld.el.style.transform = `translate(9px,-50%) translate(${sx}px,${sy}px)`;
             Ld.el.style.opacity = String(Math.min(1, o) * 0.9);
+            Ld.el.style.pointerEvents = 'auto';
           }
         }
+        // accumulate linear radiance, then compress it — never straight to screen
+        renderer.setRenderTarget(hdrTarget);
+        renderer.clear();
         renderer.render(scene, camera);
+        renderer.setRenderTarget(null);
+        // build the mip chain so the tone pass can read the frame average from the
+        // smallest level; three does not do this for render targets on its own
+        const texProps = renderer.properties.get(hdrTarget.texture);
+        if (texProps && texProps.__webglTexture) {
+          const gl = renderer.getContext();
+          gl.bindTexture(gl.TEXTURE_2D, texProps.__webglTexture);
+          gl.generateMipmap(gl.TEXTURE_2D);
+          renderer.resetState();
+        }
+        // backdrop pass: its own buffer, so the exposure never sees it
+        if (groups.cmb && groups.cmb.visible) {
+          renderer.setRenderTarget(bgTarget);
+          renderer.clear();
+          renderer.render(bgScene, camera);
+          renderer.setRenderTarget(null);
+          toneMat.uniforms.uBgLevel.value = 1.9;
+        } else {
+          toneMat.uniforms.uBgLevel.value = 0.0;
+        }
+
+        // update the smoothed exposure from the freshly-built mip chain
+        {
+          expMat.uniforms.tHdr.value = hdrTarget.texture;
+          expMat.uniforms.tPrev.value = expPrev.texture;
+          expMat.uniforms.uPrimed.value = expPrimed ? 1 : 0;
+          renderer.setRenderTarget(expCur);
+          renderer.render(expScene, toneCam);
+          renderer.setRenderTarget(null);
+          toneMat.uniforms.tExp.value = expCur.texture;
+          const t = expCur; expCur = expPrev; expPrev = t;   // ping-pong
+          expPrimed = true;
+        }
+
+        // Gaussian bloom, ping-ponging between the two quarter-res targets.
+        //
+        // The stride MUST stay near one texel. These 9-tap offsets (1.38, 3.23)
+        // are the linear-sampling weights, which rely on bilinear filtering to
+        // fill the gaps between taps. Push the stride to 2+ texels and the taps
+        // land ~7 texels apart with nothing between them, so the kernel becomes
+        // five discrete spikes per axis — and separable H+V of spikes is a 5x5
+        // grid of copies, which reads as a SQUARE. Widen with more iterations,
+        // never with a longer stride.
+        {
+          const bw = bloomA.width, bh = bloomA.height;
+          const STRIDES = [1.0, 1.15];
+          let src = hdrTarget.texture;
+          for (let i = 0; i < STRIDES.length; i++) {
+            const st = STRIDES[i];
+            // horizontal
+            blurMat.uniforms.tSrc.value = src;
+            blurMat.uniforms.uLod.value = i === 0 ? 2.0 : 0.0;  // first read is the box-averaged mip
+            blurMat.uniforms.uPre.value = i === 0 ? 1.0 : 0.0;  // threshold once, on the way in
+            blurMat.uniforms.uDir.value.set(st / bw, 0);
+            renderer.setRenderTarget(bloomA);
+            renderer.render(blurScene, toneCam);
+            // vertical
+            blurMat.uniforms.tSrc.value = bloomA.texture;
+            blurMat.uniforms.uLod.value = 0.0;
+            blurMat.uniforms.uPre.value = 0.0;
+            blurMat.uniforms.uDir.value.set(0, st / bh);
+            renderer.setRenderTarget(bloomB);
+            renderer.render(blurScene, toneCam);
+            src = bloomB.texture;
+          }
+          renderer.setRenderTarget(null);
+        }
+        renderer.render(toneScene, toneCam);
       }
       frame();
     }
@@ -681,6 +1724,8 @@ const description =
     .uni-root.grabbing #uni { cursor: grabbing; }
 
     .u-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    :global(.u-label) { pointer-events: none; cursor: pointer; user-select: none; -webkit-user-select: none; }
+    :global(.u-label:hover) { text-decoration: underline; }
     /* labels are created dynamically, so their styles must be :global to apply */
     :global(.u-label) {
       position: absolute; top: 0; left: 0; white-space: nowrap; opacity: 0; transition: opacity .3s;
@@ -689,6 +1734,8 @@ const description =
     }
     :global(.u-label.sun) { color: #ffd27f; }
     :global(.u-label.faint) { color: #7dd3fc; font-size: 10.5px; opacity: 0.85; }
+    /* modelled, not measured — visually distinct so the two are never confused */
+    :global(.u-label.model) { color: #9aa0b4; font-size: 10.5px; font-style: italic; opacity: 0.75; }
 
     .ui-tl { position: absolute; top: 20px; left: 22px; z-index: 60; }
     .back { display: inline-block; font-family: var(--font-display); font-size: 13px; color: var(--muted); transition: color .25s; }
@@ -728,12 +1775,42 @@ const description =
     .ai-btn { color: #f0a; border-color: rgba(255,60,160,0.35); }
     .ai-btn:hover { background: rgba(255,60,160,0.12); color: #ff7ac6; }
     .ai-btn.ai-on { background: #b02766; border-color: transparent; color: #fff; }
+    .real-btn { color: #7dd3fc; border-color: rgba(125,211,252,0.35); white-space: nowrap; }
+    .real-btn:hover { background: rgba(125,211,252,0.12); color: #bae6fd; }
+    .real-btn.real-on { background: #0e7490; border-color: transparent; color: #fff; }
+
+    .real-readout {
+      position: absolute; left: 22px; bottom: 96px; z-index: 60; width: min(320px, calc(100% - 44px));
+      padding: 14px 16px; border-radius: 12px; pointer-events: none;
+      background: rgba(6,4,16,0.78); border: 1px solid rgba(125,211,252,0.28); backdrop-filter: blur(12px);
+    }
+    .real-readout[hidden] { display: none; }
+    .rr-title { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #7dd3fc; letter-spacing: 0.02em; }
+    .rr-line { font-size: 12.5px; line-height: 1.55; color: var(--text-dim); font-weight: 300; margin-top: 6px; }
+    .rr-line strong { color: var(--text); font-weight: 500; }
+    .rr-metric {
+      font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; color: #ffd27f;
+      margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .rr-note { font-size: 11.5px; line-height: 1.5; color: var(--muted); margin-top: 8px; font-style: italic; }
     .zoom-slider {
       flex: 1; min-width: 120px; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 999px;
       background: linear-gradient(90deg, #ffd27f, #d8b4fe, #7dd3fc); outline: none; cursor: pointer;
     }
     .zoom-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 2px solid #1a1230; box-shadow: 0 0 8px rgba(255,255,255,0.6); }
     .zoom-slider::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 2px solid #1a1230; }
+
+    .focus-chip {
+      position: absolute; left: 22px; top: 96px; z-index: 60; display: flex; align-items: center; gap: 10px;
+      padding: 9px 13px; border-radius: 11px; background: rgba(6,4,16,0.8);
+      border: 1px solid rgba(168,130,255,0.35); backdrop-filter: blur(12px);
+    }
+    .focus-chip[hidden] { display: none; }
+    .fc-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .fc-name { font-family: var(--font-display); font-weight: 700; font-size: 13.5px; color: var(--text); }
+    .fc-back { border: 1px solid var(--border); border-radius: 8px; padding: 4px 9px; font-size: 11.5px;
+      background: rgba(255,255,255,0.05); color: var(--text-dim); cursor: pointer; }
+    .fc-back:hover { background: rgba(168,130,255,0.15); color: var(--text); }
 
     .ui-hint { position: absolute; left: 50%; transform: translateX(-50%); bottom: 4px; z-index: 60; font-size: 11px; color: var(--muted); pointer-events: none; }
 

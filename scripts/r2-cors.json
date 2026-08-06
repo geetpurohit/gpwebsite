@@ -1,0 +1,13 @@
+[
+  {
+    "AllowedOrigins": [
+      "https://geetpurohit.com",
+      "https://www.geetpurohit.com",
+      "http://localhost:4321"
+    ],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["range"],
+    "ExposeHeaders": ["content-length", "content-range"],
+    "MaxAgeSeconds": 86400
+  }
+]
