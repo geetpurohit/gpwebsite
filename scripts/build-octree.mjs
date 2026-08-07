@@ -59,23 +59,36 @@ fs.mkdirSync(outDir, { recursive: true });
 const nodes = [];
 let written = 0, totalPts = 0;
 
+// Everything below stays in Int32Array index buffers and never builds a JS number
+// array. At Gaia scale (~98M points) `Array.from` on the root alone would cost the
+// best part of a gigabyte, and a comparator sort would be ~2.6 billion JS calls.
+// Importance is a single byte, so a counting sort is both exact and O(n).
+function sortByBrightnessDesc(idx) {
+  const n = idx.length;
+  const counts = new Int32Array(256);
+  for (let i = 0; i < n; i++) counts[COL[idx[i] * 4 + 3]]++;
+  // brightest (255) lands first
+  const cur = new Int32Array(256);
+  let acc = 0;
+  for (let v = 255; v >= 0; v--) { cur[v] = acc; acc += counts[v]; }
+  const out = new Int32Array(n);
+  for (let i = 0; i < n; i++) { const s = idx[i]; out[cur[COL[s * 4 + 3]]++] = s; }
+  return out;
+}
+
 // idx: Int32Array of point indices belonging to this node
 function build(idx, name, c, h, depth) {
   if (idx.length === 0) return null;
 
   // brightest first — the size byte is the brightness proxy
-  const order = Array.from(idx);
-  order.sort((a, b) => COL[b * 4 + 3] - COL[a * 4 + 3]);
-
-  const keepCount = (depth >= MAX_DEPTH) ? order.length : Math.min(MAX_PER_NODE, order.length);
-  const keep = order.slice(0, keepCount);
-  const rest = order.slice(keepCount);
+  const sorted = sortByBrightnessDesc(idx);
+  const keepCount = (depth >= MAX_DEPTH) ? sorted.length : Math.min(MAX_PER_NODE, sorted.length);
 
   // write this node's own points
-  const p = new Float32Array(keep.length * 3);
-  const q = new Uint8Array(keep.length * 4);
-  for (let i = 0; i < keep.length; i++) {
-    const s = keep[i];
+  const p = new Float32Array(keepCount * 3);
+  const q = new Uint8Array(keepCount * 4);
+  for (let i = 0; i < keepCount; i++) {
+    const s = sorted[i];
     p[i * 3] = POS[s * 3]; p[i * 3 + 1] = POS[s * 3 + 1]; p[i * 3 + 2] = POS[s * 3 + 2];
     q[i * 4] = COL[s * 4]; q[i * 4 + 1] = COL[s * 4 + 1]; q[i * 4 + 2] = COL[s * 4 + 2]; q[i * 4 + 3] = COL[s * 4 + 3];
   }
@@ -83,30 +96,50 @@ function build(idx, name, c, h, depth) {
   // Cloudflare Pages file limits and for R2 Class B operation billing.
   // Layout: [uint32 count][Float32 xyz * count][Uint8 rgba * count]
   const head = Buffer.alloc(4);
-  head.writeUInt32LE(keep.length, 0);
+  head.writeUInt32LE(keepCount, 0);
   fs.writeFileSync(path.join(outDir, name + '.bin'),
     Buffer.concat([head, Buffer.from(p.buffer), Buffer.from(q.buffer)]));
-  written++; totalPts += keep.length;
+  written++; totalPts += keepCount;
+  if (written % 250 === 0) {
+    process.stdout.write(`\r  nodes ${written.toLocaleString()}  points ${totalPts.toLocaleString()}   `);
+  }
 
-  const node = { n: name, c: c.map((v) => +v.toFixed(2)), h: +h.toFixed(2), k: keep.length, d: depth, ch: [] };
+  const node = { n: name, c: c.map((v) => +v.toFixed(2)), h: +h.toFixed(2), k: keepCount, d: depth, ch: [] };
   nodes.push(node);
 
-  if (rest.length) {
-    // partition the remainder into octants
-    const buckets = Array.from({ length: 8 }, () => []);
-    for (const s of rest) {
+  const restLen = sorted.length - keepCount;
+  let buckets = null;
+  if (restLen) {
+    // partition the remainder into octants: count, allocate exactly, then fill
+    const oct = new Uint8Array(restLen);
+    const ocount = new Int32Array(8);
+    for (let i = 0; i < restLen; i++) {
+      const s = sorted[keepCount + i];
       const o = (POS[s * 3] > c[0] ? 1 : 0) | (POS[s * 3 + 1] > c[1] ? 2 : 0) | (POS[s * 3 + 2] > c[2] ? 4 : 0);
-      buckets[o].push(s);
+      oct[i] = o; ocount[o]++;
     }
+    buckets = new Array(8);
+    for (let o = 0; o < 8; o++) buckets[o] = ocount[o] ? new Int32Array(ocount[o]) : null;
+    const fill = new Int32Array(8);
+    for (let i = 0; i < restLen; i++) {
+      const o = oct[i];
+      buckets[o][fill[o]++] = sorted[keepCount + i];
+    }
+  }
+
+  if (buckets) {
     const hh = h / 2;
     for (let o = 0; o < 8; o++) {
-      if (!buckets[o].length) continue;
+      if (!buckets[o]) continue;
       const cc = [
         c[0] + ((o & 1) ? hh : -hh),
         c[1] + ((o & 2) ? hh : -hh),
         c[2] + ((o & 4) ? hh : -hh),
       ];
       const child = build(buckets[o], name + o, cc, hh, depth + 1);
+      // drop the reference as soon as the subtree is done so the deepest path,
+      // not the whole level, bounds peak memory
+      buckets[o] = null;
       if (child) node.ch.push(child);
     }
   }

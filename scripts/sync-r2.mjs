@@ -56,17 +56,29 @@ const MUTABLE = 'public, max-age=300';
 const ctFor = (f) => (f.endsWith('.json') ? 'application/json' : 'application/octet-stream');
 const ccFor = (f) => (f.endsWith('.json') ? MUTABLE : IMMUTABLE);
 
+// Build intermediates that are fully superseded by an octree and have no runtime
+// fallback path. gaia_pos/gaia_col alone are 1.45 GB — seven times the entire rest
+// of the bucket — and nothing ever fetches them, so uploading them would be pure
+// cost. Layers that DO have a monolithic fallback in universe.astro are not listed
+// here; deleting those is a separate call.
+const SKIP = new Set(['gaia_pos.bin', 'gaia_col.bin']);
+
 function walk(dir) {
   const out = [];
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const fp = path.join(dir, e.name);
     if (e.isDirectory()) out.push(...walk(fp));
-    else out.push(fp);
+    else if (!SKIP.has(e.name)) out.push(fp);
   }
   return out;
 }
 
 const files = walk(ROOT);
+const skipped = walk.skipped = [...SKIP].filter((f) => fs.existsSync(path.join(ROOT, f)));
+if (skipped.length) {
+  const mb = skipped.reduce((s, f) => s + fs.statSync(path.join(ROOT, f)).size, 0) / 1e6;
+  console.log(`skipping ${skipped.length} build intermediate(s), ${mb.toFixed(0)} MB: ${skipped.join(', ')}`);
+}
 const total = files.reduce((s, f) => s + fs.statSync(f).size, 0);
 console.log(`files: ${files.length.toLocaleString()}  |  total: ${(total / 1e6).toFixed(1)} MB`);
 console.log(`bucket: ${bucket}  |  prefix: ${PREFIX}  |  ${DRY ? 'DRY RUN' : 'uploading'}`);
